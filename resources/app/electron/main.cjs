@@ -77,16 +77,21 @@ let APP_ROOT = app.isPackaged
   ? path.join(process.resourcesPath, 'app')
   : path.join(__dirname, '..');
 
-// Defensive: if server.cjs not found at expected path, try parent directory
-// (handles NSIS double-nesting edge case)
+// Walk up directory tree to find server.cjs (handles NSIS double-nesting)
 let SERVER_ENTRY = path.join(APP_ROOT, 'dist', 'server.cjs');
 if (app.isPackaged && !fs.existsSync(SERVER_ENTRY)) {
-  const parentRoot = path.join(path.dirname(process.resourcesPath), 'resources', 'app');
-  const altEntry = path.join(parentRoot, 'dist', 'server.cjs');
-  if (fs.existsSync(altEntry)) {
-    dlog(`[FIX] server.cjs found at alt path: ${altEntry}`);
-    SERVER_ENTRY = altEntry;
-    APP_ROOT = parentRoot;
+  dlog(`[FIX] server.cjs not found at ${SERVER_ENTRY}, searching up...`);
+  let searchDir = path.dirname(process.resourcesPath);
+  for (let i = 0; i < 5; i++) {
+    const candidate = path.join(searchDir, 'resources', 'app', 'dist', 'server.cjs');
+    dlog(`[FIX] trying: ${candidate}`);
+    if (fs.existsSync(candidate)) {
+      SERVER_ENTRY = candidate;
+      APP_ROOT = path.join(searchDir, 'resources', 'app');
+      dlog(`[FIX] FOUND server.cjs at: ${candidate}`);
+      break;
+    }
+    searchDir = path.dirname(searchDir);
   }
 }
 
@@ -168,10 +173,16 @@ async function startBackend() {
     ? path.join(process.resourcesPath, 'agent', 'myraa-agent.exe')
     : path.join(APP_ROOT, 'agent_dist', 'myraa-agent', 'myraa-agent.exe');
 
-  // Defensive: if agent not found, try parent directory (double-nesting fix)
-  const agentPath = app.isPackaged && !fs.existsSync(agentExe)
-    ? path.join(path.dirname(process.resourcesPath), 'resources', 'agent', 'myraa-agent.exe')
-    : agentExe;
+  // Walk up to find agent if double-nested
+  let agentPath = agentExe;
+  if (app.isPackaged && !fs.existsSync(agentPath)) {
+    let searchDir = path.resolve(agentPath, '..', '..');
+    for (let i = 0; i < 5; i++) {
+      const candidate = path.join(searchDir, 'resources', 'agent', 'myraa-agent.exe');
+      if (fs.existsSync(candidate)) { agentPath = candidate; break; }
+      searchDir = path.dirname(searchDir);
+    }
+  }
 
   const env = {
     ...process.env,
