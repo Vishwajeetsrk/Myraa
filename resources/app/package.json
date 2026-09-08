@@ -8,7 +8,7 @@
     "url": "https://github.com/vishwajeetsrk/JARVIS-AI-OS"
   },
   "private": true,
-  "version": "8.3.0",
+  "version": "8.3.1",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -24,6 +24,13 @@
     "dist:mac": "electron-builder --mac --config electron-builder.v2.yml --publish never",
     "dist:linux": "electron-builder --linux --config electron-builder.v2.yml --publish never",
     "dist:all": "electron-builder -wml --config electron-builder.v2.yml --publish never",
+    "build:full": "node ../../scripts/build.cjs --win",
+    "build:sign": "node ../../scripts/build.cjs --win --sign",
+    "build:release": "node ../../scripts/build.cjs --win --sign --verify",
+    "sign": "node ../../scripts/sign.cjs",
+    "verify": "node ../../scripts/verify.cjs",
+    "release:package": "node ../../scripts/release-package.cjs",
+    "test:installer": "node ../../scripts/test-installer.cjs",
     "myraa:architecture-check": "node ../../scripts/myraa-architecture-check.cjs",
     "version": "node ../../scripts/version.cjs",
     "version:patch": "node ../../scripts/version.cjs patch",

@@ -1,0 +1,23 @@
+{
+  "version": "8.3.1",
+  "productName": "MYRAA AI",
+  "productNameFull": "MYRAA AI Desktop Assistant",
+  "publisher": "MYRAA",
+  "publisherUrl": "https://github.com/vishwajeetsrk/JARVIS-AI-OS",
+  "copyright": "Copyright © 2026 MYRAA — Vishwajeet & Open Source Community",
+  "appId": "com.myraa.desktop",
+  "description": "MYRAA — a private AI desktop companion powered by your own API keys. Memory, agents, plugins, 3D avatar, voice, and more.",
+  "channels": {
+    "stable": { "autoUpdate": true, "prerelease": false },
+    "beta": { "autoUpdate": false, "prerelease": true },
+    "development": { "autoUpdate": false, "prerelease": true }
+  },
+  "minAutoUpdateVersion": "8.0.0",
+  "buildMeta": {
+    "nodeVersion": "20",
+    "electronVersion": "31.7.7",
+    "builderVersion": "25.1.8",
+    "platform": "win32",
+    "arch": "x64"
+  }
+}

@@ -25,6 +25,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const APP_DIR = path.join(ROOT, 'resources', 'app');
 const PKG_PATH = path.join(APP_DIR, 'package.json');
+const VERSION_JSON = path.join(APP_DIR, 'version.json');
 const CARGO_PATH = path.join(ROOT, 'src-tauri', 'Cargo.toml');
 const TAURI_PATH = path.join(ROOT, 'src-tauri', 'tauri.conf.json');
 const NSIS_PATH = path.join(APP_DIR, 'build', 'nsis-installer.nsh');
@@ -79,6 +80,14 @@ function setNsisVersion(filePath, version) {
     fs.writeFileSync(filePath, s);
     ok('   nsis-installer.nsh DetailPrint = ' + version);
   }
+}
+
+function setVersionJson(filePath, version) {
+  if (!fs.existsSync(filePath)) { console.warn('  ! version.json missing, creating...'); }
+  const data = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : {};
+  data.version = version;
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
+  ok('   version.json .version = ' + version);
 }
 
 function buildDate() {
@@ -138,6 +147,7 @@ if (argv.length === 0) {
   console.log('Consumers:');
   setCargoVersion(CARGO_PATH, current);      // no-op read (idempotent re-write)
   setTauriVersion(TAURI_PATH, current);
+  setVersionJson(VERSION_JSON, current);
   process.exit(0);
 }
 
@@ -159,6 +169,7 @@ ok('package.json version = ' + next);
 setCargoVersion(CARGO_PATH, next);
 setTauriVersion(TAURI_PATH, next);
 setNsisVersion(NSIS_PATH, next);
+setVersionJson(VERSION_JSON, next);
 writeVersionMd(VERSION_MD_PATH, next);
 
 console.log('');
