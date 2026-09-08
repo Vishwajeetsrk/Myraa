@@ -49,7 +49,7 @@ app.on('child-process-gone', (event, details) => {
   }
 });
 
-const debugLog = 'C:\\Users\\Vishwajeet\\AppData\\Local\\Programs\\MYRAA-AI-OS\\electron_debug.log';
+const debugLog = path.join(app.getPath('userData'), 'electron_debug.log');
 function dlog(msg) {
   try {
     fs.appendFileSync(debugLog, `[${new Date().toISOString()}] ${msg}\n`);

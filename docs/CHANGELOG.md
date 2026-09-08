@@ -2,6 +2,21 @@
 
 All notable changes to MYRAA AI OS are documented here.
 
+## [8.1.0] - 2026-09-08
+
+### Added
+
+#### Hot-Loadable Plugin System
+- `plugin_manager.cjs`: discover, load, unload, enable, disable plugins
+- Plugin directory: `resources/app/plugins/<name>/` with `plugin.json` manifest + `index.cjs` entry
+- Plugin hooks: `onChat`, `onTool`, `onMemory`, `onTimer` — called during execution
+- Plugin tools: register new MCP tools from plugins, callable via `executeTool()`
+- Plugin settings: per-plugin key-value store, persisted to `.myraa-data/plugin-state.json`
+- HTTP endpoints: `/api/plugins` (list, stats, load, unload, enable, disable, settings, execute)
+- MCP integration: plugin tools seamlessly callable alongside built-in tools
+- Sample plugin: `myraa-utils` — 3 tools (myraa_time, myraa_hash, myraa_encode) + chat hook
+- 27/27 plugin tests pass
+
 ## [8.0.0] - 2026-09-08
 
 ### Added

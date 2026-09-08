@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "savedAt": "2026-09-03T17:59:25.567Z",
+  "savedAt": "2026-09-08T17:37:17.603Z",
   "situation": {
     "state": "OBSERVING",
     "currentActivity": "cognitive runtime online",
-    "activeApp": null,
-    "activeWindow": null,
-    "currentProject": "Team of Vishwajeet",
+    "activeApp": "MYRAA AI OS.exe",
+    "activeWindow": "Error",
+    "currentProject": "Myraa",
     "conversationTopic": null,
     "currentGoalId": null,
     "currentTaskId": null,
@@ -20,9 +20,9 @@
     "relevantFiles": [],
     "recentImportantEvents": [
       {
-        "id": "7c63c10f-cbf2-428f-9686-472893a3d0c8",
+        "id": "a331a673-9663-4fb5-a886-b47e9092f5eb",
         "type": "system.cognition_started",
-        "timestamp": "2026-09-03T17:59:23.558Z",
+        "timestamp": "2026-09-08T17:37:05.393Z",
         "importance": 0.52,
         "source": "system"
       }
@@ -31,7 +31,7 @@
     "recentSuccesses": [],
     "pendingRisk": null,
     "autonomyPaused": false,
-    "updatedAt": "2026-09-03T17:59:23.558Z"
+    "updatedAt": "2026-09-08T17:37:15.591Z"
   },
   "unfinishedGoals": []
 }
