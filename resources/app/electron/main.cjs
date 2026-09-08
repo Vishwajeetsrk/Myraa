@@ -73,11 +73,23 @@ const SERVER_READY_TIMEOUT_MS = 40_000;
 
 // In development we run from the repo root; when packaged the app files live in
 // resources/app (asar-unpacked handling is added in the packaging phase).
-const APP_ROOT = app.isPackaged
+let APP_ROOT = app.isPackaged
   ? path.join(process.resourcesPath, 'app')
   : path.join(__dirname, '..');
 
-const SERVER_ENTRY = path.join(APP_ROOT, 'dist', 'server.cjs');
+// Defensive: if server.cjs not found at expected path, try parent directory
+// (handles NSIS double-nesting edge case)
+let SERVER_ENTRY = path.join(APP_ROOT, 'dist', 'server.cjs');
+if (app.isPackaged && !fs.existsSync(SERVER_ENTRY)) {
+  const parentRoot = path.join(path.dirname(process.resourcesPath), 'resources', 'app');
+  const altEntry = path.join(parentRoot, 'dist', 'server.cjs');
+  if (fs.existsSync(altEntry)) {
+    dlog(`[FIX] server.cjs found at alt path: ${altEntry}`);
+    SERVER_ENTRY = altEntry;
+    APP_ROOT = parentRoot;
+  }
+}
+
 const APP_ICON = path.join(APP_ROOT, 'build', 'icon.ico');
 
 /** @type {import('child_process').ChildProcess | null} */
@@ -156,6 +168,11 @@ async function startBackend() {
     ? path.join(process.resourcesPath, 'agent', 'myraa-agent.exe')
     : path.join(APP_ROOT, 'agent_dist', 'myraa-agent', 'myraa-agent.exe');
 
+  // Defensive: if agent not found, try parent directory (double-nesting fix)
+  const agentPath = app.isPackaged && !fs.existsSync(agentExe)
+    ? path.join(path.dirname(process.resourcesPath), 'resources', 'agent', 'myraa-agent.exe')
+    : agentExe;
+
   const env = {
     ...process.env,
     NODE_ENV: 'production',
@@ -169,8 +186,8 @@ async function startBackend() {
     // auto-start entry. It must never point at source scripts or Python.
     env.MYRAA_EXECUTABLE = process.execPath;
   }
-  if (fs.existsSync(agentExe)) {
-    env.MYRAA_AGENT_EXE = agentExe;
+  if (fs.existsSync(agentPath)) {
+    env.MYRAA_AGENT_EXE = agentPath;
   }
 
   const runtimeExe = process.execPath;
