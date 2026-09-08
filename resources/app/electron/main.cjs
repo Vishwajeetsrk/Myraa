@@ -25,6 +25,12 @@ const fs = require('fs');
 // --- MYRAA updater (additive) — safe auto-check + manual check via IPC.
 const updater = require('./updater.cjs');
 
+// ── MYRAA core path & launcher (centralized, no hardcoded user paths) ──────
+let pathManager = null;
+let launcherSteps = null;
+try { pathManager = require('../dist/core/paths/path_manager.cjs'); } catch (e) {}
+try { launcherSteps = require('../dist/launcher/launcher.cjs'); } catch (e) {}
+
 // ── About & diagnostics IPC (real version, install, health) ───────────────
 function _readAboutSync() {
   try {
@@ -461,6 +467,79 @@ function createSplashWindow() {
   splashWindow.on('closed', () => (splashWindow = null));
 }
 
+// ── MYRAA Recovery Window (replaces Windows "cannot find" dialog) ──────────
+let recoveryWindow = null;
+function showRecoveryWindow(title, subtitle, detail, steps) {
+  if (recoveryWindow && !recoveryWindow.isDestroyed()) { try { recoveryWindow.close(); } catch (e) {} }
+  // Close splash if still open
+  if (splashWindow && !splashWindow.isDestroyed()) { try { splashWindow.close(); } catch (e) {} }
+  recoveryWindow = new BrowserWindow({
+    width: 440, height: 420, frame: false, transparent: true, resizable: false,
+    center: true, show: true, alwaysOnTop: true, backgroundColor: '#00000000',
+    icon: APP_ICON, webPreferences: { nodeIntegration: true, contextIsolation: false },
+  });
+  recoveryWindow.loadFile(path.join(__dirname, 'recovery.html'));
+  recoveryWindow.webContents.once('did-finish-load', () => {
+    try {
+      recoveryWindow.webContents.send('myraa:recovery-update', { title: title || 'MYRAA needs attention', subtitle: subtitle || 'We hit a startup issue — but we can fix it.', detail: detail || '', steps: steps || [], showActions: true });
+    } catch (e) {}
+  });
+  recoveryWindow.on('closed', () => { recoveryWindow = null; });
+}
+
+// Recovery IPC — retry / browse / repair (registered once)
+let _recoveryIpcRegistered = false;
+function ensureRecoveryIpc() {
+  if (_recoveryIpcRegistered) return;
+  _recoveryIpcRegistered = true;
+  try {
+    ipcMain.handle('myraa:recovery-retry', async () => {
+      if (recoveryWindow && !recoveryWindow.isDestroyed()) { try { recoveryWindow.close(); } catch (e) {} }
+      dlog('[RECOVERY] Retry requested — re-running bootstrap');
+      await bootstrap();
+    });
+    ipcMain.handle('myraa:recovery-browse', async () => {
+      try {
+        const res = await dialog.showOpenDialog(recoveryWindow || null, { title: 'Select MYRAA executable', filters: [{ name: 'MYRAA', extensions: ['exe'] }], properties: ['openFile'] });
+        if (res.canceled || !res.filePaths[0]) return;
+        const chosen = res.filePaths[0];
+        dlog(`[RECOVERY] Browse chose: ${chosen}`);
+        // Save to install registry so next launch finds it
+        try {
+          const pm = pathManager || require('../dist/core/paths/path_manager.cjs');
+          pm.ensureDataDirs();
+          const regPath = pm.getInstallRegistryPath();
+          let reg = {};
+          try { reg = JSON.parse(fs.readFileSync(regPath, 'utf8')); } catch (e) {}
+          reg.executable_path = chosen;
+          reg.install_path = path.dirname(chosen);
+          reg.last_verified = new Date().toISOString();
+          fs.writeFileSync(regPath, JSON.stringify(reg, null, 2));
+          dlog(`[RECOVERY] Registry updated → ${chosen}`);
+        } catch (e) { dlog(`[RECOVERY] Registry write failed: ${e.message}`); }
+        if (recoveryWindow && !recoveryWindow.isDestroyed()) { try { recoveryWindow.close(); } catch (e) {} }
+        await bootstrap();
+      } catch (e) { dlog(`[RECOVERY] Browse failed: ${e.message}`); }
+    });
+    ipcMain.handle('myraa:recovery-repair', async () => {
+      dlog('[RECOVERY] Repair requested');
+      try {
+        const rep = require('../dist/launcher/repair.cjs');
+        const result = await rep.runRepair();
+        dlog(`[RECOVERY] Repair result: ${JSON.stringify(result).slice(0, 400)}`);
+        if (result.ok) {
+          if (recoveryWindow && !recoveryWindow.isDestroyed()) { try { recoveryWindow.close(); } catch (e) {} }
+          await bootstrap();
+        } else {
+          if (recoveryWindow && !recoveryWindow.isDestroyed()) {
+            try { recoveryWindow.webContents.send('myraa:recovery-update', { title: 'Repair needs help', subtitle: result.hint || 'Could not auto-repair. Please browse to MYRAA.exe or reinstall.', detail: (result.searched || []).slice(0, 3).join('\n'), steps: result.steps || [], showActions: true }); } catch (e) {}
+          }
+        }
+      } catch (e) { dlog(`[RECOVERY] Repair error: ${e.message}`); }
+    });
+  } catch (e) { dlog(`[RECOVERY] IPC setup failed: ${e.message}`); }
+}
+
 function createMainWindow() {
   if (splashWindow && !splashWindow.isDestroyed()) {
     try { splashWindow.close(); } catch {}
@@ -677,7 +756,26 @@ function createMainWindow() {
 async function bootstrap() {
   dlog(`Bootstrap function running.`);
   app.setAppUserModelId('com.myraa.desktop');
+  ensureRecoveryIpc();
   createSplashWindow();
+
+  // ── 6-step launcher verification (central path + health) ──────────────────
+  let launcherResult = null;
+  if (launcherSteps && launcherSteps.runLauncherSteps) {
+    try { launcherResult = await launcherSteps.runLauncherSteps(dlog); } catch (e) { dlog(`[LAUNCHER] ${e.message}`); }
+    // If launcher detected missing exe, show recovery immediately (don't try backend)
+    if (launcherResult && launcherResult.ok === false && launcherResult.reason === 'executable_not_found') {
+      dlog(`[BOOTSTRAP] Launcher: executable not found — showing recovery`);
+      if (splashWindow && !splashWindow.isDestroyed()) { try { splashWindow.close(); } catch (e) {} }
+      showRecoveryWindow(
+        'MYRAA installation moved',
+        "We couldn't find MYRAA in its previous location. Let's fix it.",
+        `Searched ${launcherResult.searched ? launcherResult.searched.length : 0} locations. Click Browse to point to the new MYRAA.exe, or Repair to auto-search.`,
+        launcherResult.steps || []
+      );
+      return;
+    }
+  }
 
   try {
     dlog(`Starting backend...`);
@@ -687,16 +785,24 @@ async function bootstrap() {
     dlog(`Backend ready! Creating main window...`);
     createMainWindow();
     dlog(`Main window created.`);
-    // Quiet background update check (safe: no auto-download/install).
     updater.scheduleStartupCheck();
   } catch (err) {
-    dlog(`Bootstrap error: ${err.message}`);
-    if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
-    dialog.showErrorBox(
-      'MYRAA failed to start',
-      `${err instanceof Error ? err.message : String(err)}`,
-    );
-    app.quit();
+    const msg = err instanceof Error ? err.message : String(err);
+    const isBundleMissing = msg.includes('Backend bundle not found') || msg.includes('server.cjs');
+    dlog(`Bootstrap error: ${msg}`);
+    if (splashWindow && !splashWindow.isDestroyed()) { try { splashWindow.close(); } catch (e) {} }
+
+    if (isBundleMissing) {
+      // Show MYRAA recovery instead of Windows system dialog
+      showRecoveryWindow(
+        'MYRAA needs repair',
+        'The application files are incomplete or were moved.',
+        msg.slice(0, 400),
+        launcherResult ? launcherResult.steps : []
+      );
+    } else {
+      showRecoveryWindow('MYRAA failed to start', msg.slice(0, 500), '', launcherResult ? launcherResult.steps : []);
+    }
   }
 }
 

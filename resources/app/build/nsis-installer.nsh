@@ -13,23 +13,38 @@
 
 ; ── Custom Init ─────────────────────────────────────────────────────────────
 !macro customInit
-  ; Remove stale double-nested dir from older installers
+  ; Remove stale double-nested dirs from older installers (all known variants)
   RMDir /r "$PROGRAMFILES64\MYRAA AI OS\MYRAA AI OS"
   RMDir /r "$PROGRAMFILES64\MYRAA AI\MYRAA AI"
+  RMDir /r "$PROGRAMFILES64\MYRAA\MYRAA"
+  ; Also clean legacy portable-extracted-into-ProgramFiles case
+  RMDir /r "$PROGRAMFILES64\MYRAA-Portable*"
 
-  ; Detect running MYRAA processes before install/upgrade
-  nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq MYRAA AI.exe" /NH'
+  ; Detect running MYRAA processes before install/upgrade (both current + legacy names)
+  nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq MYRAA.exe" /NH'
   Pop $0
   ${If} $0 == "0"
     MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
-      "MYRAA AI is currently running.$\n$\nPlease close it before continuing the installation." \
+      "MYRAA is currently running.$\n$\nPlease close it before continuing the installation." \
       IDOK proceed_install IDCANCEL abort_install
     abort_install:
       Quit
     proceed_install:
-      ; Force kill if still running
-      nsExec::ExecToStack 'taskkill /F /IM "MYRAA AI.exe" /T'
-      Sleep 1000
+      nsExec::ExecToStack 'taskkill /F /IM "MYRAA.exe" /T'
+      Sleep 800
+  ${Else}
+    nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq MYRAA AI.exe" /NH'
+    Pop $0
+    ${If} $0 == "0"
+      MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION \
+        "MYRAA AI is currently running.$\n$\nPlease close it before continuing the installation." \
+        IDOK proceed_install2 IDCANCEL abort_install2
+      abort_install2:
+        Quit
+      proceed_install2:
+        nsExec::ExecToStack 'taskkill /F /IM "MYRAA AI.exe" /T'
+        Sleep 800
+    ${EndIf}
   ${EndIf}
 
   ; Also check for the server process
@@ -64,7 +79,8 @@
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "DisplayIcon" "$INSTDIR\MYRAA AI.exe"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "Publisher" "MYRAA"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "DisplayVersion" "${VERSION}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "URLInfoAbout" "https://github.com/vishwajeetsrk/JARVIS-AI-OS"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "URLInfoAbout" "https://github.com/vishwajeetsrk/Myraa"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "HelpLink" "https://github.com/vishwajeetsrk/Myraa/issues"
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "NoRepair" 1
 
