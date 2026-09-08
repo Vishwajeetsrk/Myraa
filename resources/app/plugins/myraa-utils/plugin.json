@@ -1,0 +1,9 @@
+{
+  "name": "myraa-utils",
+  "version": "1.0.0",
+  "description": "Built-in utility plugin for MYRAA AI OS",
+  "author": "MYRAA Team",
+  "main": "index.cjs",
+  "hooks": ["onChat", "onTool"],
+  "tools": ["myraa_time", "myraa_hash", "myraa_encode"]
+}

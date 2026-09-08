@@ -49,6 +49,33 @@ try {
   console.log('[v6] free_api_registry mounted (' + freeApis.stats().total + ' APIs, ' + freeApis.CATEGORIES.length + ' categories)');
 } catch (e) { console.warn('[v6] free_api_registry:', e.message); }
 
+// ── PLUGIN SYSTEM (hot-loadable MYRAA plugins) ─────────────────────────────
+try {
+  const { PluginManager } = require('./plugin_manager.cjs');
+  const pluginMgr = new PluginManager();
+
+  // Auto-load enabled plugins on startup
+  const discovered = pluginMgr.discover();
+  let loadedCount = 0;
+  for (const p of discovered) {
+    if (p._enabled) { const r = pluginMgr.load(p.name); if (r.ok) loadedCount++; }
+  }
+  console.log(`[v6] plugin_manager mounted (${loadedCount}/${discovered.length} plugins loaded)`);
+
+  router.get('/api/plugins', (req, res) => res.json({ ok: true, plugins: pluginMgr.list(), stats: pluginMgr.stats() }));
+  router.get('/api/plugins/stats', (req, res) => res.json({ ok: true, ...pluginMgr.stats() }));
+  router.post('/api/plugins/:name/load', (req, res) => res.json(pluginMgr.load(req.params.name)));
+  router.post('/api/plugins/:name/unload', (req, res) => res.json(pluginMgr.unload(req.params.name)));
+  router.post('/api/plugins/:name/enable', (req, res) => res.json(pluginMgr.enable(req.params.name)));
+  router.post('/api/plugins/:name/disable', (req, res) => res.json(pluginMgr.disable(req.params.name)));
+  router.get('/api/plugins/:name/settings', (req, res) => res.json({ ok: true, settings: pluginMgr.state.settings[req.params.name] || {} }));
+  router.post('/api/plugins/:name/settings', (req, res) => { for (const [k, v] of Object.entries(req.body || {})) pluginMgr.setSetting(req.params.name, k, v); res.json({ ok: true }); });
+  router.post('/api/plugins/execute/:tool', (req, res) => { const r = pluginMgr.executeTool(req.params.tool, req.body || {}); res.json(r || { ok: false, error: 'Plugin tool not found' }); });
+
+  // Expose to MCP engine
+  globalThis.__myraa_pluginMgr = pluginMgr;
+} catch (e) { console.warn('[v6] plugin_manager:', e.message); }
+
 // ── UNIFIED PERMISSION CHECK (bridges Rust + MCP risk models) ────────────────
 const UNIFIED_RISK_MAP = {
   'fs.list': 'READ_ONLY', 'fs.read': 'READ_ONLY', 'fs.search': 'READ_ONLY',

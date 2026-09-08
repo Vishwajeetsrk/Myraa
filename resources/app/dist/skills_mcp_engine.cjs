@@ -648,6 +648,12 @@ async function executeTool(name, args) {
     return await freeApiRegistry.execute(args.api_id, params);
   }
 
+  // 6. Hot-loadable Plugins
+  if (globalThis.__myraa_pluginMgr) {
+    const pluginResult = globalThis.__myraa_pluginMgr.executeTool(name, args);
+    if (pluginResult !== null) return pluginResult;
+  }
+
   switch (name) {
     case 'file_search':
       return desktop.searchFiles(args.query, args.maxResults || 10);
