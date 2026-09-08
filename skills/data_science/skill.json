@@ -1,0 +1,38 @@
+{
+  "id": "data_science",
+  "name": "Data Science",
+  "title": "Data Science",
+  "version": "1.0.0",
+  "category": "AI & Intelligence",
+  "description": "Analyze datasets, run statistical workflows, generate plots, explain results, and produce reproducible reports.",
+  "tags": [
+    "ai",
+    "automation",
+    "data_science",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

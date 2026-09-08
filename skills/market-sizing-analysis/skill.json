@@ -1,0 +1,40 @@
+{
+  "id": "market_sizing_analysis",
+  "name": "Market Sizing Analysis",
+  "title": "Market Sizing Analysis",
+  "version": "2.5.0",
+  "category": "Business & Productivity",
+  "description": "Calculate TAM/SAM/SOM for market opportunities using top-down, bottom-up, and value theory methodologies. Use this sk...",
+  "tags": [
+    "analysis",
+    "automation",
+    "business",
+    "market",
+    "myraa-skill",
+    "sizing"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

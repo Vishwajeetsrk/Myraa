@@ -1,0 +1,40 @@
+{
+  "id": "google_cloud_waf_cost_optimization",
+  "name": "Google Cloud Waf Cost Optimization",
+  "title": "Google Cloud Waf Cost Optimization",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Generates cost optimization guidance for Google Cloud workloads based on the Google Cloud Well-Architected Framework ...",
+  "tags": [
+    "ai",
+    "automation",
+    "cloud",
+    "cost",
+    "google",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

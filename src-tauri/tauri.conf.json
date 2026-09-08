@@ -1,0 +1,116 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/v2/config.schema.json",
+  "productName": "MYRAA AI OS",
+  "version": "7.5.0",
+  "identifier": "com.myraa.desktop",
+  "build": {
+    "beforeDevCommand": "",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "",
+    "frontendDist": "../resources/app/dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "MYRAA — AI Operating System",
+        "url": "/",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 940,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "center": true,
+        "backgroundColor": "#0a0a0f"
+      },
+      {
+        "label": "companion",
+        "title": "MYRAA Companion",
+        "url": "/companion",
+        "width": 380,
+        "height": 580,
+        "minWidth": 300,
+        "minHeight": 420,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "visible": false,
+        "skipTaskbar": false,
+        "center": false,
+        "x": 1200,
+        "y": 80
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "trayIcon": {
+      "id": "myraa-tray",
+      "iconPath": "icons/icon.png",
+      "tooltip": "MYRAA AI OS"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "both",
+        "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico",
+        "headerImage": "icons/icon.png"
+      },
+      "wix": {
+        "language": "en-US"
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "entitlements": null
+    },
+    "linux": {
+      "deb": {
+        "depends": [
+          "libgtk-3-0",
+          "libwebkit2gtk-4.1-0",
+          "libappindicator3-dev",
+          "librsvg2-dev",
+          "patchelf"
+        ]
+      }
+    },
+    "resources": [
+      "../resources/app/assets/**/*"
+    ],
+    "externalBin": []
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    },
+    "notification": {},
+    "autostart": {},
+    "window-state": {},
+    "updater": {
+      "pubkey": "",
+      "endpoints": [
+        "https://github.com/vishwajeetsrk/JARVIS-AI-OS/releases/latest/download/latest.json"
+      ]
+    },
+    "singleInstance": {}
+  }
+}

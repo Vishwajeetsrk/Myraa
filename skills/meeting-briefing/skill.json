@@ -1,0 +1,39 @@
+{
+  "id": "meeting_briefing",
+  "name": "Meeting Briefing",
+  "title": "Meeting Briefing",
+  "version": "2.5.0",
+  "category": "Personal Assistant",
+  "description": "Prepare structured briefings for meetings with legal relevance and track resulting action items. Use when preparing f...",
+  "tags": [
+    "automation",
+    "briefing",
+    "meeting",
+    "myraa-skill",
+    "personal assistant"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "schedule_coordination",
+    "task_management",
+    "daily_briefing",
+    "habit_tracking"
+  ],
+  "input_types": [
+    "calendar_events",
+    "notes",
+    "user_goals"
+  ],
+  "output_types": [
+    "briefing",
+    "schedule_plan",
+    "reminder_triggers"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

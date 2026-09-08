@@ -1,0 +1,38 @@
+{
+  "id": "codeception_skill",
+  "name": "Codeception Intelligence",
+  "title": "Codeception Intelligence",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": ">",
+  "tags": [
+    "ai",
+    "automation",
+    "codeception",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

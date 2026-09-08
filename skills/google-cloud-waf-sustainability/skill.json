@@ -1,0 +1,40 @@
+{
+  "id": "google_cloud_waf_sustainability",
+  "name": "Google Cloud Waf Sustainability",
+  "title": "Google Cloud Waf Sustainability",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": ">-",
+  "tags": [
+    "automation",
+    "cloud",
+    "creative",
+    "google",
+    "myraa-skill",
+    "sustainability"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

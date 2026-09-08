@@ -1,0 +1,40 @@
+{
+  "id": "microsoft_code_reference",
+  "name": "Microsoft Code Reference",
+  "title": "Microsoft Code Reference",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Look up Microsoft API references, find working code samples, and verify SDK code is correct. Use when working with Az...",
+  "tags": [
+    "automation",
+    "code",
+    "coding",
+    "microsoft",
+    "myraa-skill",
+    "reference"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

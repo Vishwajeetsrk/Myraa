@@ -1,0 +1,39 @@
+{
+  "id": "torch_geometric",
+  "name": "Torch Geometric",
+  "title": "Torch Geometric",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "PyTorch Geometric (PyG) for graph neural networks \u2014 node/link/graph classification, message passing (GCN, GAT, GraphS...",
+  "tags": [
+    "automation",
+    "coding",
+    "geometric",
+    "myraa-skill",
+    "torch"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

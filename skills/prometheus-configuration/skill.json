@@ -1,0 +1,39 @@
+{
+  "id": "prometheus_configuration",
+  "name": "Prometheus Configuration",
+  "title": "Prometheus Configuration",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Set up Prometheus for comprehensive metric collection, storage, and monitoring of infrastructure and applications. Us...",
+  "tags": [
+    "ai",
+    "automation",
+    "configuration",
+    "myraa-skill",
+    "prometheus"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

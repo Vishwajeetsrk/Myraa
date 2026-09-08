@@ -1,0 +1,39 @@
+{
+  "id": "pr_draft_summary",
+  "name": "Pr Draft Summary",
+  "title": "Pr Draft Summary",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Prepare the required local PR title, description, and branch suggestion after eligible implementation work is complete.",
+  "tags": [
+    "automation",
+    "coding",
+    "draft",
+    "myraa-skill",
+    "summary"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

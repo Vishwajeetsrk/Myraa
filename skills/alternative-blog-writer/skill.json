@@ -1,0 +1,40 @@
+{
+  "id": "alternative_blog_writer",
+  "name": "Alternative Blog Writer",
+  "title": "Alternative Blog Writer",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Write informative, simple, and highly SEO-optimized \"alternative\" or \"competitor comparison\" blog articles designed t...",
+  "tags": [
+    "alternative",
+    "automation",
+    "blog",
+    "creative",
+    "myraa-skill",
+    "writer"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "final_release_review",
+  "name": "Final Release Review",
+  "title": "Final Release Review",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Assess a Python SDK release candidate or release plan against the previous release and recommend ship or block.",
+  "tags": [
+    "ai",
+    "automation",
+    "final",
+    "myraa-skill",
+    "release",
+    "review"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

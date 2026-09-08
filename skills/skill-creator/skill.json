@@ -1,0 +1,38 @@
+{
+  "id": "skill_creator",
+  "name": "Creator Intelligence",
+  "title": "Creator Intelligence",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Guide for creating or updating skills that extend Manus via specialized knowledge, workflows, or tool integrations. F...",
+  "tags": [
+    "ai",
+    "automation",
+    "creator",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

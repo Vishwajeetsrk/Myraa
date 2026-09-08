@@ -1,0 +1,39 @@
+{
+  "id": "gsap_core",
+  "name": "Gsap Core",
+  "title": "Gsap Core",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Official GSAP skill for the core API \u2014 gsap.to(), from(), fromTo(), easing, duration, stagger, defaults, gsap.matchMe...",
+  "tags": [
+    "automation",
+    "coding",
+    "core",
+    "gsap",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

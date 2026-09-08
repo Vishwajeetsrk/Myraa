@@ -1,0 +1,39 @@
+{
+  "id": "markdown_to_html",
+  "name": "Markdown To Html",
+  "title": "Markdown To Html",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "Convert Markdown files to HTML similar to `marked.js`, `pandoc`, `gomarkdown/markdown`, or similar tools; or writing ...",
+  "tags": [
+    "automation",
+    "file",
+    "html",
+    "markdown",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

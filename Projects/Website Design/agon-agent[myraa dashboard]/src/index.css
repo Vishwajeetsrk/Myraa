@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Orbitron", sans-serif;
+  --font-hud: "Rajdhani", sans-serif;
+  --font-mono2: "Share Tech Mono", monospace;
+  --color-abyss: #030608;
+  --color-panel: #071318;
+  --color-cyan-neon: #22d3ee;
+  --color-gold: #e8c15a;
+  --color-crimson: #ff2d4d;
+}
+
+html, body, #root {
+  height: 100%;
+  background: #020507;
+}
+body {
+  font-family: "Rajdhani", sans-serif;
+  color: #d7f6ff;
+  overflow-x: hidden;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(34,211,238,0.12), transparent 60%),
+    radial-gradient(900px 500px at 85% 110%, rgba(255,45,77,0.10), transparent 60%),
+    radial-gradient(800px 500px at 10% 110%, rgba(232,193,90,0.07), transparent 60%),
+    #020507;
+}
+.font-display { font-family: "Orbitron", sans-serif; }
+.font-mono2 { font-family: "Share Tech Mono", monospace; }
+
+/* ------- HUD panels ------- */
+.hud-panel {
+  position: relative;
+  background: linear-gradient(160deg, rgba(10,26,34,0.88), rgba(4,12,17,0.92));
+  border: 1px solid rgba(34,211,238,0.18);
+  box-shadow: inset 0 0 40px rgba(34,211,238,0.05), 0 0 24px rgba(0,0,0,0.6);
+  backdrop-filter: blur(12px);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+.hud-panel::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(34,211,238,0.5), transparent 30%, transparent 70%, rgba(34,211,238,0.5));
+  height: 1px; top: 0; opacity: 0.6;
+}
+.hud-corner::after {
+  content: "";
+  position: absolute; width: 42px; height: 42px;
+  right: 6px; top: 6px;
+  border-top: 2px solid rgba(34,211,238,0.7);
+  border-right: 2px solid rgba(34,211,238,0.7);
+  pointer-events: none;
+  opacity: 0.7;
+}
+.hud-red {
+  border-color: rgba(255,45,77,0.28) !important;
+}
+.hud-gold {
+  border-color: rgba(232,193,90,0.28) !important;
+}
+
+.scanlines::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,0.22) 2px 3px);
+  mix-blend-mode: overlay;
+}
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(34,211,238,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,211,238,0.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+/* ------- hologram ------- */
+.holo-frame {
+  mask-image: linear-gradient(to bottom, black 82%, transparent 99%);
+}
+.holo-tint {
+  filter: saturate(1.15) contrast(1.08) brightness(1.05);
+}
+.holo-scan {
+  position: absolute; left: 0; right: 0; height: 120px;
+  background: linear-gradient(to bottom, transparent, rgba(34,211,238,0.28), rgba(180,250,255,0.55), rgba(34,211,238,0.28), transparent);
+  filter: blur(1px);
+  animation: scanY 3.8s linear infinite;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+@keyframes scanY {
+  0% { top: -15%; } 100% { top: 105%; }
+}
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+@keyframes spinRev { to { transform: rotate(-360deg); } }
+@keyframes pulseGlow { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes dashMove { to { stroke-dashoffset: -200; } }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+@keyframes eqBar { 0%,100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+@keyframes floatY { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes bootBar { 0% { width: 0%; } 100% { width: 100%; } }
+.ring-spin { animation: spinSlow 22s linear infinite; }
+.ring-spin-rev { animation: spinRev 30s linear infinite; }
+.ring-spin-fast { animation: spinSlow 9s linear infinite; }
+.blink { animation: blink 1.4s ease-in-out infinite; }
+.float-y { animation: floatY 5s ease-in-out infinite; }
+
+/* ticker */
+@keyframes tickerX { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.ticker-track { animation: tickerX 28s linear infinite; }
+
+/* scrollbar */
+.thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+.thin-scroll::-webkit-scrollbar-track { background: rgba(34,211,238,0.06); }
+.thin-scroll::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.35); border-radius: 99px; }
+
+.text-glow-cyan { text-shadow: 0 0 12px rgba(34,211,238,0.8), 0 0 32px rgba(34,211,238,0.4); }
+.text-glow-red { text-shadow: 0 0 12px rgba(255,45,77,0.8), 0 0 32px rgba(255,45,77,0.4); }
+.text-glow-gold { text-shadow: 0 0 12px rgba(232,193,90,0.7), 0 0 28px rgba(232,193,90,0.35); }
+
+.hex-clip { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+
+input[type="range"].hud-range {
+  -webkit-appearance: none; appearance: none; height: 4px; border-radius: 99px;
+  background: linear-gradient(90deg, #22d3ee var(--fill,50%), rgba(34,211,238,0.15) var(--fill,50%));
+  outline: none;
+}
+input[type="range"].hud-range::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px; border-radius: 99px;
+  background: #a5f3fc; border: 2px solid #22d3ee;
+  box-shadow: 0 0 12px rgba(34,211,238,0.9); cursor: pointer;
+}
+input[type="range"].hud-range.red {
+  background: linear-gradient(90deg, #ff2d4d var(--fill,50%), rgba(255,45,77,0.15) var(--fill,50%));
+}
+input[type="range"].hud-range.red::-webkit-slider-thumb {
+  background: #ffd7dd; border-color: #ff2d4d; box-shadow: 0 0 12px rgba(255,45,77,0.9);
+}
+
+.btn-hud {
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}

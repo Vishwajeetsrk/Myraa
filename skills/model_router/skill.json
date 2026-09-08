@@ -1,0 +1,38 @@
+{
+  "id": "model_router",
+  "name": "Model Router",
+  "title": "Model Router",
+  "version": "1.0.0",
+  "category": "Security",
+  "description": "Select the best available provider/model based on modality, latency, cost, privacy, tool support, and task complexity.",
+  "tags": [
+    "automation",
+    "model_router",
+    "myraa-skill",
+    "security"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "threat_analysis",
+    "vulnerability_detection",
+    "compliance_audit",
+    "safe_execution"
+  ],
+  "input_types": [
+    "code",
+    "config",
+    "endpoint"
+  ],
+  "output_types": [
+    "audit_report",
+    "security_score",
+    "remediation_plan"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

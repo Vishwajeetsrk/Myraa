@@ -1,0 +1,39 @@
+{
+  "id": "venice_models",
+  "name": "Venice Models",
+  "title": "Venice Models",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Discover Venice models, their capabilities, constraints, and pricing. Covers GET /models (with ?type filter), /models...",
+  "tags": [
+    "ai",
+    "automation",
+    "models",
+    "myraa-skill",
+    "venice"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "typst_pdf_maker",
+  "name": "Typst Pdf Maker",
+  "title": "Typst Pdf Maker",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "Generate professional, high-quality PDF documents with Typst. Use for reports, academic papers, resumes, structured d...",
+  "tags": [
+    "automation",
+    "file",
+    "maker",
+    "myraa-skill",
+    "pdf",
+    "typst"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

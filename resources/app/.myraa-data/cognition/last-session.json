@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "savedAt": "2026-09-07T19:28:18.941Z",
+  "situation": {
+    "state": "OBSERVING",
+    "currentActivity": "cognitive runtime online",
+    "activeApp": null,
+    "activeWindow": null,
+    "currentProject": "app",
+    "conversationTopic": null,
+    "currentGoalId": null,
+    "currentTaskId": null,
+    "userActivity": "active",
+    "userSpeaking": false,
+    "myraaSpeaking": false,
+    "myraaWasInterrupted": false,
+    "silenceStartedAt": null,
+    "silenceSeconds": 0,
+    "openApplications": [
+      "EXCEL.EXE",
+      "WINWORD.EXE"
+    ],
+    "relevantFiles": [],
+    "recentImportantEvents": [
+      {
+        "id": "23d3cf69-226e-42eb-87ea-c5984a0e6357",
+        "type": "system.cognition_started",
+        "timestamp": "2026-09-07T19:27:39.697Z",
+        "importance": 0.52,
+        "source": "system"
+      }
+    ],
+    "recentFailures": [],
+    "recentSuccesses": [],
+    "pendingRisk": null,
+    "autonomyPaused": false,
+    "updatedAt": "2026-09-07T19:28:16.929Z"
+  },
+  "unfinishedGoals": []
+}

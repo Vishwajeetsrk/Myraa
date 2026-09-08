@@ -1,0 +1,39 @@
+{
+  "id": "call_prep",
+  "name": "Call Prep",
+  "title": "Call Prep",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Prepare for a sales call with account context, attendee research, and suggested agenda. Works standalone with user in...",
+  "tags": [
+    "ai",
+    "automation",
+    "call",
+    "myraa-skill",
+    "prep"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "defensive_security",
+  "name": "Defensive Security",
+  "title": "Defensive Security",
+  "version": "1.0.0",
+  "category": "Security",
+  "description": "Assist with secure code review, configuration analysis, vulnerability remediation, patching, detection, and authorize...",
+  "tags": [
+    "automation",
+    "defensive_security",
+    "myraa-skill",
+    "security"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "threat_analysis",
+    "vulnerability_detection",
+    "compliance_audit",
+    "safe_execution"
+  ],
+  "input_types": [
+    "code",
+    "config",
+    "endpoint"
+  ],
+  "output_types": [
+    "audit_report",
+    "security_score",
+    "remediation_plan"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

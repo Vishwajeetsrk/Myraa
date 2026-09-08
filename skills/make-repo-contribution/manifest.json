@@ -1,0 +1,40 @@
+{
+  "id": "make_repo_contribution",
+  "name": "Make Repo Contribution",
+  "title": "Make Repo Contribution",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "All changes to code must follow the guidance documented in the repository. Before any issue is filed, branch is made,...",
+  "tags": [
+    "automation",
+    "contribution",
+    "file",
+    "make",
+    "myraa-skill",
+    "repo"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

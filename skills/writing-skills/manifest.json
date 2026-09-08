@@ -1,0 +1,39 @@
+{
+  "id": "writing_skills",
+  "name": "Writing Skills",
+  "title": "Writing Skills",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment",
+  "tags": [
+    "automation",
+    "coding",
+    "myraa-skill",
+    "skills",
+    "writing"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

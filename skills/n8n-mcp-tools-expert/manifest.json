@@ -1,0 +1,40 @@
+{
+  "id": "n8n_mcp_tools_expert",
+  "name": "N8n Mcp Tools Expert",
+  "title": "N8n Mcp Tools Expert",
+  "version": "2.5.0",
+  "category": "Security",
+  "description": "Expert guide for using n8n-mcp MCP tools effectively. Use when searching for nodes, validating configurations, access...",
+  "tags": [
+    "automation",
+    "expert",
+    "mcp",
+    "myraa-skill",
+    "n8n",
+    "security"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "threat_analysis",
+    "vulnerability_detection",
+    "compliance_audit",
+    "safe_execution"
+  ],
+  "input_types": [
+    "code",
+    "config",
+    "endpoint"
+  ],
+  "output_types": [
+    "audit_report",
+    "security_score",
+    "remediation_plan"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

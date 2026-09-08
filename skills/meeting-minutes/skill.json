@@ -1,0 +1,39 @@
+{
+  "id": "meeting_minutes",
+  "name": "Meeting Minutes",
+  "title": "Meeting Minutes",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Generate concise, actionable meeting minutes for internal meetings. Includes metadata, attendees, agenda, decisions, ...",
+  "tags": [
+    "automation",
+    "coding",
+    "meeting",
+    "minutes",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

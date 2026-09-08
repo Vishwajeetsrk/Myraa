@@ -1,0 +1,39 @@
+{
+  "id": "memory_management",
+  "name": "Memory Management",
+  "title": "Memory Management",
+  "version": "2.5.0",
+  "category": "Business & Productivity",
+  "description": "Two-tier memory system that makes Claude a true workplace collaborator. Decodes shorthand, acronyms, nicknames, and i...",
+  "tags": [
+    "automation",
+    "business",
+    "management",
+    "memory",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

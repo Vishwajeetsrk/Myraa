@@ -1,0 +1,39 @@
+{
+  "id": "prompt_translator",
+  "name": "Prompt Translator",
+  "title": "Prompt Translator",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "\u628a\u4e00\u6761 AI \u89c6\u9891\u63d0\u793a\u8bcd\u4ece\u6e90\u6a21\u578b(\u5982 Sora 2)\u7684\u5199\u6cd5\u98ce\u683c\u8f6c\u6362\u4e3a\u76ee\u6807\u6a21\u578b(\u5982 Kling 3.0 / Wan 2.7 / Veo 3.1 \u7b49)\u7684\u6700\u4f73\u5b9e\u8df5\u5199\u6cd5\u3002\u57fa\u4e8e 110 \u6761 10 \u573a\u666f \u00d7 11 \u6a21\u578b\u5bf9\u7167\u57fa\u51c6\u6570\u636e(prompts...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "prompt",
+    "translator"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

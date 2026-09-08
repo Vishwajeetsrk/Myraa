@@ -1,0 +1,39 @@
+{
+  "id": "secops_hunt",
+  "name": "Secops Hunt",
+  "title": "Secops Hunt",
+  "version": "2.5.0",
+  "category": "Security",
+  "description": "Expert guidance for proactive threat hunting. Use this when the user asks to \"hunt\" for threads, IOCs, or specific TTPs.",
+  "tags": [
+    "automation",
+    "hunt",
+    "myraa-skill",
+    "secops",
+    "security"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "threat_analysis",
+    "vulnerability_detection",
+    "compliance_audit",
+    "safe_execution"
+  ],
+  "input_types": [
+    "code",
+    "config",
+    "endpoint"
+  ],
+  "output_types": [
+    "audit_report",
+    "security_score",
+    "remediation_plan"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "ticket_triage",
+  "name": "Ticket Triage",
+  "title": "Ticket Triage",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Triage and prioritize a support ticket or customer issue. Use when a new ticket comes in and needs categorization, as...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "ticket",
+    "triage"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "excalidraw_diagram",
+  "name": "Excalidraw Diagram",
+  "title": "Excalidraw Diagram",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "Generate Excalidraw diagrams from text content. Supports three output modes - Obsidian (.md), Standard (.excalidraw),...",
+  "tags": [
+    "automation",
+    "diagram",
+    "excalidraw",
+    "file",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

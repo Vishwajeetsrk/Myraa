@@ -1,0 +1,39 @@
+{
+  "id": "ab_test_setup",
+  "name": "Ab Test Setup",
+  "title": "Ab Test Setup",
+  "version": "2.5.0",
+  "category": "Business & Productivity",
+  "description": "Design, analyze, and document A/B tests for conversion, onboarding, pricing, lifecycle, and product experiments. Use ...",
+  "tags": [
+    "automation",
+    "business",
+    "myraa-skill",
+    "setup",
+    "test"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "audio_voice",
+  "name": "Audio And Voice",
+  "title": "Audio And Voice",
+  "version": "1.0.0",
+  "category": "Creative & Design",
+  "description": "Handle speech input/output pipelines including transcription, speech generation, and conversational voice interaction.",
+  "tags": [
+    "audio_voice",
+    "automation",
+    "creative",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

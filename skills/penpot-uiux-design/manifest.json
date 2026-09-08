@@ -1,0 +1,40 @@
+{
+  "id": "penpot_uiux_design",
+  "name": "Penpot Uiux Design",
+  "title": "Penpot Uiux Design",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Comprehensive guide for creating professional UI/UX designs in Penpot using MCP tools. Use this skill when: (1) Creat...",
+  "tags": [
+    "automation",
+    "creative",
+    "design",
+    "myraa-skill",
+    "penpot",
+    "uiux"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

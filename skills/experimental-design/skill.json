@@ -1,0 +1,39 @@
+{
+  "id": "experimental_design",
+  "name": "Experimental Design",
+  "title": "Experimental Design",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Design experiments and studies BEFORE data is collected \u2014 choosing a design, randomizing, blocking, and laying out tr...",
+  "tags": [
+    "automation",
+    "coding",
+    "design",
+    "experimental",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

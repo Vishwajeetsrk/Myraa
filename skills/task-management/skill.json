@@ -1,0 +1,39 @@
+{
+  "id": "task_management",
+  "name": "Task Management",
+  "title": "Task Management",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Simple task management using a shared TASKS.md file. Reference this when the user asks about their tasks, wants to ad...",
+  "tags": [
+    "ai",
+    "automation",
+    "management",
+    "myraa-skill",
+    "task"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

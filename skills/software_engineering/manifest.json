@@ -1,0 +1,38 @@
+{
+  "id": "software_engineering",
+  "name": "Software Engineering",
+  "title": "Software Engineering",
+  "version": "1.0.0",
+  "category": "Coding & Development",
+  "description": "Understand repositories, plan changes, edit code, run tests, debug failures, and verify implementation quality.",
+  "tags": [
+    "automation",
+    "coding",
+    "myraa-skill",
+    "software_engineering"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

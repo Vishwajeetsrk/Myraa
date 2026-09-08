@@ -1,0 +1,39 @@
+{
+  "id": "stop_slop",
+  "name": "Stop Slop",
+  "title": "Stop Slop",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Remove AI writing patterns from prose. Use when drafting, editing, or reviewing text to eliminate predictable AI tells.",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "slop",
+    "stop"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

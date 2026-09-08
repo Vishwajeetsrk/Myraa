@@ -1,0 +1,39 @@
+{
+  "id": "push_to_github",
+  "name": "Push To Github",
+  "title": "Push To Github",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Runs all necessary checks (lint, tests) and pushes to GitHub. Use this as the final safety gate.",
+  "tags": [
+    "automation",
+    "coding",
+    "github",
+    "myraa-skill",
+    "push"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

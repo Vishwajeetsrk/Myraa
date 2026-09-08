@@ -1,0 +1,39 @@
+{
+  "id": "doc_coauthoring",
+  "name": "Doc Coauthoring",
+  "title": "Doc Coauthoring",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation,...",
+  "tags": [
+    "automation",
+    "coauthoring",
+    "creative",
+    "doc",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

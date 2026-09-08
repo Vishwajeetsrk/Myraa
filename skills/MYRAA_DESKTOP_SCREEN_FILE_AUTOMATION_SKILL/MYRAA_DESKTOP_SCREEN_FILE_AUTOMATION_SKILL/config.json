@@ -1,0 +1,19 @@
+{
+  "trusted_auto_send_default": false,
+  "require_recipient_verification": true,
+  "require_download_completion_verification": true,
+  "require_file_exists_verification": true,
+  "require_external_action_confirmation": true,
+  "allowed_archive_extensions": [
+    ".zip"
+  ],
+  "destination_aliases": {
+    "desktop": "Desktop",
+    "downloads": "Downloads",
+    "download": "Downloads",
+    "documents": "Documents",
+    "document": "Documents",
+    "pictures": "Pictures",
+    "images": "Pictures"
+  }
+}

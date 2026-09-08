@@ -1,0 +1,38 @@
+{
+  "id": "computer_use",
+  "name": "Computer Use",
+  "title": "Computer Use",
+  "version": "1.0.0",
+  "category": "Computer Automation",
+  "description": "Observe permitted screens, reason about UI state, execute mouse/keyboard actions, verify results, and stop safely whe...",
+  "tags": [
+    "automation",
+    "computer automation",
+    "computer_use",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "browser_automation",
+    "desktop_control",
+    "screen_ocr",
+    "task_execution"
+  ],
+  "input_types": [
+    "url",
+    "screen_state",
+    "instruction"
+  ],
+  "output_types": [
+    "action_log",
+    "screenshot",
+    "task_result"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

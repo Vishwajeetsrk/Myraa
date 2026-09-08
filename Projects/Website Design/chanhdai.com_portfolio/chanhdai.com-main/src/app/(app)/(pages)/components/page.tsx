@@ -1,0 +1,272 @@
+import type { Metadata, Route } from "next"
+import Link from "next/link"
+import { addQueryParams } from "@/utils/url"
+import { Grip, LayoutDashboard } from "lucide-react"
+import type { CollectionPage, WithContext } from "schema-dts"
+
+import { CARBON_ADS } from "@/config/ads"
+import { JSON_LD_ID } from "@/config/json-ld"
+import { registryConfig } from "@/config/registry"
+import { UTM_PARAMS, X_HANDLE } from "@/config/site"
+import { jsonLdBreadcrumbList, JsonLdScript } from "@/lib/json-ld"
+import { absoluteUrl } from "@/lib/utils"
+import { Button } from "@/components/base/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/base/ui/tooltip"
+import { CarbonAds } from "@/components/carbon-ads"
+import { TrustedRegistryIcon } from "@/components/icons"
+import {
+  PageHeading,
+  PageHeadingTagline,
+  PageHeadingTitle,
+} from "@/components/page-heading"
+import { RegistryCommandAnimated } from "@/components/registry-command-animated"
+import { ComponentIcon } from "@/features/doc/components/component-icon"
+import { getComponentDocs } from "@/features/doc/data/documents"
+import type { Doc } from "@/features/doc/types/document"
+import {
+  HandwrittenArrow,
+  HandwrittenNote,
+} from "@/features/portfolio/components/handwritten-note"
+
+import {
+  ComponentItem,
+  ComponentItemDot,
+  ComponentItemIcon,
+  ComponentItemTitle,
+} from "./component-item"
+
+const title = "Components"
+const description = "Pixel-perfect, uniquely crafted."
+
+const ogImage = `/og/simple?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: {
+    canonical: "/components",
+  },
+  openGraph: {
+    url: "/components",
+    type: "website",
+    images: {
+      url: ogImage,
+      width: 1200,
+      height: 630,
+      alt: title,
+    },
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: X_HANDLE,
+    creator: X_HANDLE,
+    images: [ogImage],
+  },
+}
+
+function getCollectionPageJsonLd(
+  docs: { name: string; slug: string }[]
+): WithContext<CollectionPage> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": absoluteUrl("/components"),
+    name: title,
+    description,
+    url: absoluteUrl("/components"),
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: docs.length,
+      itemListElement: docs.map((doc, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: absoluteUrl(`/components/${doc.slug}`),
+      })),
+    },
+    isPartOf: { "@id": JSON_LD_ID.website },
+  }
+}
+
+export default function Page() {
+  const allComponents = getComponentDocs()
+    .slice()
+    .sort((a, b) =>
+      a.metadata.title.localeCompare(b.metadata.title, "en", {
+        sensitivity: "base",
+      })
+    )
+
+  const trustedRegistryUrl = addQueryParams(
+    "https://ui.shadcn.com/docs/directory",
+    {
+      q: registryConfig.namespace,
+      ...UTM_PARAMS,
+    }
+  )
+
+  return (
+    <>
+      <JsonLdScript
+        data={getCollectionPageJsonLd(
+          allComponents.map((doc) => ({
+            name: doc.metadata.title,
+            slug: doc.slug,
+          }))
+        )}
+      />
+
+      <JsonLdScript
+        data={jsonLdBreadcrumbList([
+          {
+            name: "Home",
+            href: "/",
+          },
+          {
+            name: "Components",
+            href: "/components",
+          },
+        ])}
+      />
+
+      <div>
+        <PageHeading>
+          <PageHeadingTagline>Components</PageHeadingTagline>
+          <PageHeadingTitle>Pixel-perfect, uniquely crafted.</PageHeadingTitle>
+        </PageHeading>
+
+        <div className="h-4" />
+
+        <div className="screen-line-top screen-line-bottom screen-line-bottom-border screen-line-top-border">
+          <RegistryCommandAnimated />
+        </div>
+
+        <div className="stripe-divider" />
+
+        <div className="screen-line-bottom h-px" />
+
+        <div className="relative">
+          <HandwrittenNote
+            className="top-2 right-full mr-2 hidden w-36 flex-col items-end lg:flex"
+            aria-hidden
+          >
+            <span className="-rotate-6">free, copy &amp; paste</span>
+            <HandwrittenArrow className="-scale-x-100 -rotate-6" />
+          </HandwrittenNote>
+        </div>
+
+        <div className="flex items-center gap-1.5 p-1.5 pl-4">
+          <h2 className="flex-1 text-sm/none font-medium tracking-wider text-muted-foreground">
+            {allComponents.length} components
+          </h2>
+
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  className="size-7"
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label="List"
+                >
+                  <Grip />
+                </Button>
+              }
+            />
+            <TooltipContent>
+              <p>List</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  className="size-7 border-none text-muted-foreground"
+                  variant="ghost"
+                  size="icon-sm"
+                  nativeButton={false}
+                  render={<Link href="/components/showcase" />}
+                  aria-label="Showcase"
+                >
+                  <LayoutDashboard />
+                </Button>
+              }
+            />
+            <TooltipContent>
+              <p>Showcase</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        <div className="screen-line-bottom h-px" />
+
+        <ComponentList items={allComponents} showAds />
+
+        <div className="screen-line-top flex justify-center p-4 before:-top-px">
+          <a
+            className="flex h-7 items-center gap-1 rounded-full bg-primary pr-2.5 pl-2 text-sm font-medium whitespace-nowrap text-primary-foreground select-none [&>svg]:pointer-events-none [&>svg]:size-4 [&>svg]:shrink-0"
+            href={trustedRegistryUrl}
+            target="_blank"
+            rel="noopener"
+          >
+            <TrustedRegistryIcon />
+            Trusted Registry
+          </a>
+        </div>
+
+        <div className="screen-line-bottom h-px" />
+
+        <div className="h-4" />
+      </div>
+    </>
+  )
+}
+
+function ComponentList({
+  items,
+  showNew = true,
+  showAds = false,
+}: {
+  items: Doc[]
+  showNew?: boolean
+  showAds?: boolean
+}) {
+  return (
+    <div className="relative overflow-x-clip">
+      <div className="pointer-events-none absolute inset-0 -z-1 grid grid-cols-1 max-sm:hidden sm:grid-cols-2 md:grid-cols-3">
+        <div className="border-r border-line" />
+        <div className="border-r border-line max-md:hidden" />
+      </div>
+
+      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+        {showAds && CARBON_ADS && (
+          <li className="screen-line-bottom flex justify-center bg-background dot-grid p-2 after:z-0 empty:hidden max-md:col-span-full md:col-start-3 md:row-span-5 md:row-start-1">
+            <CarbonAds />
+          </li>
+        )}
+
+        {items.map((c) => (
+          <li key={c.slug} className="screen-line-bottom">
+            <ComponentItem href={`/components/${c.slug}` as Route}>
+              <ComponentItemIcon>
+                <ComponentIcon slug={c.slug} />
+                {showNew && (c.metadata.new || c.metadata.updated) && (
+                  <ComponentItemDot
+                    aria-label={c.metadata.new ? "New" : "Updated"}
+                  />
+                )}
+              </ComponentItemIcon>
+              <ComponentItemTitle as="h3">
+                {c.metadata.title}
+              </ComponentItemTitle>
+            </ComponentItem>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}

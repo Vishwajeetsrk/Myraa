@@ -1,0 +1,39 @@
+{
+  "id": "instagram_posting",
+  "name": "Instagram Posting",
+  "title": "Instagram Posting",
+  "version": "2.5.0",
+  "category": "Computer Automation",
+  "description": "Automates the process of posting to an already logged-in Instagram account using a browser-capable agent. Use this sk...",
+  "tags": [
+    "automation",
+    "computer automation",
+    "instagram",
+    "myraa-skill",
+    "posting"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "browser_automation",
+    "desktop_control",
+    "screen_ocr",
+    "task_execution"
+  ],
+  "input_types": [
+    "url",
+    "screen_state",
+    "instruction"
+  ],
+  "output_types": [
+    "action_log",
+    "screenshot",
+    "task_result"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

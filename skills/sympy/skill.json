@@ -1,0 +1,38 @@
+{
+  "id": "sympy",
+  "name": "Sympy Intelligence",
+  "title": "Sympy Intelligence",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Use when you need exact symbolic math in Python \u2014 algebra, calculus, equation solving, symbolic linear algebra, or co...",
+  "tags": [
+    "automation",
+    "coding",
+    "myraa-skill",
+    "sympy"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

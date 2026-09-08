@@ -1,0 +1,39 @@
+{
+  "id": "oversized_cursor",
+  "name": "Oversized Cursor",
+  "title": "Oversized Cursor",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "House-style oversized macOS cursor technique for HyperFrames launch videos. Load whenever a scene involves cursors or...",
+  "tags": [
+    "automation",
+    "creative",
+    "cursor",
+    "myraa-skill",
+    "oversized"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

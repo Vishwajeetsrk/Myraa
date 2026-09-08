@@ -1,0 +1,40 @@
+{
+  "id": "dispatching_parallel_agents",
+  "name": "Dispatching Parallel Agents",
+  "title": "Dispatching Parallel Agents",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies",
+  "tags": [
+    "agents",
+    "ai",
+    "automation",
+    "dispatching",
+    "myraa-skill",
+    "parallel"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

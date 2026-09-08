@@ -1,0 +1,38 @@
+{
+  "id": "workflow",
+  "name": "Workflow Intelligence",
+  "title": "Workflow Intelligence",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Creates durable, resumable workflows using Vercel's Workflow SDK. Use when building workflows that need to survive re...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "workflow"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

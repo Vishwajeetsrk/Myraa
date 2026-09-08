@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#121824"/>
+    </linearGradient>
+    <linearGradient id="cyan_purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#bg_grad)" stroke="#1e293b" stroke-width="2"/>
+  <rect x="32" y="32" width="64" height="68" rx="10" stroke="url(#cyan_purple)" stroke-width="4" fill="none"/><line x1="32" y1="50" x2="96" y2="50" stroke="#00f0ff" stroke-width="3"/><circle cx="50" cy="66" r="3" fill="#a855f7"/><circle cx="64" cy="66" r="3" fill="#a855f7"/><circle cx="78" cy="66" r="3" fill="#a855f7"/><circle cx="50" cy="80" r="3" fill="#a855f7"/><circle cx="64" cy="80" r="3" fill="#00f0ff"/><line x1="48" y1="24" x2="48" y2="34" stroke="#00f0ff" stroke-width="3" stroke-linecap="round"/><line x1="80" y1="24" x2="80" y2="34" stroke="#00f0ff" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MYRAA — Mobile Command Center</title>
+  <style>
+    :root {
+      --bg: #020612;
+      --card-bg: rgba(13, 20, 36, 0.85);
+      --border: rgba(0, 229, 255, 0.22);
+      --primary: #00e5ff;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      padding: 16px 14px 40px;
+      overflow-x: hidden;
+    }
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      margin-bottom: 16px;
+    }
+    .title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      color: var(--primary);
+      text-transform: uppercase;
+      font-family: ui-monospace, monospace;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-family: monospace;
+      background: rgba(34, 197, 94, 0.15);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+
+    /* Command Bar */
+    .command-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+    input[type="text"] {
+      flex: 1;
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
+    }
+    .btn {
+      background: linear-gradient(135deg, #00e5ff 0%, #3b82f6 100%);
+      color: #020617;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: ui-monospace, monospace;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-mic {
+      background: rgba(0, 229, 255, 0.15);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      width: 42px;
+      padding: 0;
+      font-size: 16px;
+    }
+    .btn-mic.listening {
+      background: #ef4444;
+      color: #fff;
+      border-color: #ef4444;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+    /* Quick suggestions */
+    .chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 10px 0 2px;
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .chip:active { background: rgba(0, 229, 255, 0.15); color: var(--primary); }
+
+    /* Pairing */
+    .pair-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.25);
+      color: #fca5a5;
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .pair-hint span { flex: 1; }
+
+    /* Action Grid */
+    .section-title {
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      color: var(--primary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin: 14px 4px 8px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card-full {
+      grid-column: span 2;
+    }
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .btn-sm {
+      flex: 1;
+      padding: 8px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f1f5f9;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-sm:active {
+      background: rgba(0, 229, 255, 0.2);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Virtual Trackpad */
+    #trackpad {
+      height: 150px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px dashed rgba(0, 229, 255, 0.4);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-family: monospace;
+      color: #64748b;
+      touch-action: none;
+      user-select: none;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--primary);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-family: monospace;
+      opacity: 0;
+      transition: all 0.25s;
+      z-index: 1000;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="title">✨ MYRAA REMOTE</div>
+    <div class="status-badge" id="connBadge" style="border-color: rgba(248,113,113,0.35); background: rgba(248,113,113,0.12); color:#fca5a5;"><div class="dot" style="background:#f87171; box-shadow:0 0 8px #f87171;"></div> NOT PAIRED</div>
+  </div>
+
+  <!-- Pairing -->
+  <div class="command-box" id="pairCard" style="display:none;">
+    <div class="card-title">🔐 Pair this phone</div>
+    <div class="pair-hint">
+      <span>1️⃣ On your PC open <b>http://127.0.0.1:3000/api/remote/pairing-info</b> (or MYRAA Desktop → Devices → Pair) and copy the <b>pairing secret</b>.</span>
+    </div>
+    <div id="pairInfo" style="font-size:11px; color:var(--text-dim); margin-bottom:8px;">Loading pairing info…</div>
+    <div class="input-row">
+      <input type="text" id="secretInput" placeholder="Pairing secret (from your PC)" autocomplete="off">
+      <button class="btn btn-sm" id="pairBtn" style="padding:10px 16px;">Pair</button>
+    </div>
+  </div>
+
+  <!-- Command Box -->
+  <div class="command-box">
+    <div class="input-row">
+      <input type="text" id="cmdInput" placeholder="Ask Myraa (e.g. play movie, send file)...">
+      <button class="btn btn-mic" id="micBtn">🎙️</button>
+      <button class="btn" id="sendBtn">Send</button>
+    </div>
+    <div class="chips">
+      <div class="chip" onclick="quick('find resume and send by whatsapp')">📁 Send Resume (WhatsApp)</div>
+      <div class="chip" onclick="quick('find report and send by email')">✉️ Send Report (Email)</div>
+      <div class="chip" onclick="quick('play interstellar movie on youtube')">🎬 Play Movie</div>
+      <div class="chip" onclick="quick('play lofi beats for coding')">🎵 Play Music</div>
+      <div class="chip" onclick="quick('minimize all windows')">🪟 Minimize All</div>
+    </div>
+  </div>
+
+  <!-- Media & Video Controls -->
+  <div class="section-title">Media & Movie Entertainment</div>
+  <div class="grid">
+    <div class="card card-full">
+      <div class="card-title">🎬 YouTube & Movie Search</div>
+      <div class="input-row">
+        <input type="text" id="mediaQuery" placeholder="Song, artist, or movie title...">
+        <button class="btn-sm" style="background: rgba(0,229,255,0.15); border-color: var(--primary);" onclick="playMedia(false)">Play Video</button>
+        <button class="btn-sm" style="background: rgba(236,72,153,0.15); border-color: #ec4899;" onclick="playMedia(true)">Play Movie</button>
+      </div>
+      <div class="btn-row" style="margin-top: 6px;">
+        <button class="btn-sm" onclick="sendMedia('play_pause')">⏯️ Play / Pause</button>
+        <button class="btn-sm" onclick="sendMedia('prev')">⏮️ Prev</button>
+        <button class="btn-sm" onclick="sendMedia('next')">⏭️ Next</button>
+        <button class="btn-sm" onclick="sendMedia('volume_up')">🔊 Vol +</button>
+        <button class="btn-sm" onclick="sendMedia('volume_down')">🔉 Vol -</button>
+        <button class="btn-sm" onclick="sendMedia('mute')">🔇 Mute</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- File Dispatcher -->
+  <div class="section-title">File Finder & Dispatch</div>
+  <div class="card card-full" style="margin-bottom: 16px;">
+    <div class="card-title">📁 Search & Send from PC</div>
+    <div class="input-row">
+      <input type="text" id="fileQuery" placeholder="Search file name (e.g. report, resume)...">
+      <button class="btn-sm" onclick="findAndSend('whatsapp')">WhatsApp ↗</button>
+      <button class="btn-sm" onclick="findAndSend('email')">Email ↗</button>
+    </div>
+  </div>
+
+  <!-- PC & Window Automation -->
+  <div class="section-title">PC & Windows Controller (100% Accurate)</div>
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">🪟 Window Controls</div>
+      <div class="btn-row">
+        <button class="btn-sm" onclick="winAction('minimize')">Minimize</button>
+        <button class="btn-sm" onclick="winAction('maximize')">Maximize</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn-sm" onclick="winAction('show_desktop')">Win + D</button>
+        <button class="btn-sm" style="color: #f87171;" onclick="winAction('close')">Close App</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💻 Launch Apps</div>
+      <div class="btn-row">
+        <button class="btn-sm" onclick="openApp('chrome')">Chrome</button>
+        <button class="btn-sm" onclick="openApp('code')">VS Code</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn-sm" onclick="openApp('excel')">Excel</button>
+        <button class="btn-sm" onclick="openApp('calc')">Calc</button>
+        <button class="btn-sm" onclick="openApp('notepad')">Notes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Virtual Trackpad & Mouse -->
+  <div class="section-title">Virtual Trackpad & Mouse</div>
+  <div class="card card-full" style="margin-bottom: 16px;">
+    <div id="trackpad">
+      <span>Swipe to Move • Tap to Click</span>
+    </div>
+    <div class="btn-row" style="margin-top: 8px;">
+      <button class="btn-sm" onclick="mouseClick('left')">Left Click</button>
+      <button class="btn-sm" onclick="mouseClick('right')">Right Click</button>
+      <button class="btn-sm" onclick="mouseClick('double')">Double Click</button>
+      <button class="btn-sm" onclick="mouseScroll(120)">Scroll Up</button>
+      <button class="btn-sm" onclick="mouseScroll(-120)">Scroll Down</button>
+    </div>
+  </div>
+
+  <!-- Live Screenshot Mirror -->
+  <div class="section-title">Live PC Screen Mirror</div>
+  <div class="card card-full">
+    <button class="btn-sm" style="background: rgba(0,229,255,0.15); border-color: var(--primary); margin-bottom: 8px;" onclick="fetchScreenshot()">
+      📸 Capture Current Desktop Screen
+    </button>
+    <div id="screenContainer" style="display: none; text-align: center;">
+      <img id="screenImg" style="width: 100%; border-radius: 12px; border: 1px solid var(--border);" src="" alt="Desktop Screen">
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    // ── Paired-device token ────────────────────────────────────────────────
+    const TOKEN_KEY = 'myraa_device_token';
+    const getToken = () => localStorage.getItem(TOKEN_KEY);
+    const setToken = (t) => { if (t) localStorage.setItem(TOKEN_KEY, t); };
+
+    async function remoteCall(url, options = {}) {
+      const init = { ...options };
+      init.headers = Object.assign({}, init.headers || {}, { 'X-Myraa-Token': getToken() || '' });
+      if (init.body && typeof init.body === 'string') {
+        try {
+          const obj = JSON.parse(init.body);
+          obj.deviceToken = getToken() || '';
+          init.body = JSON.stringify(obj);
+        } catch (e) {}
+      }
+      const res = await fetch(url, init);
+      if (res.status === 401) refreshPairStatus(true);
+      return res;
+    }
+
+    function updateBadge() {
+      const b = document.getElementById('connBadge');
+      const paired = Boolean(getToken());
+      const pairCard = document.getElementById('pairCard');
+      if (paired) {
+        b.style.borderColor = 'rgba(34,197,94,0.3)';
+        b.style.background = 'rgba(34,197,94,0.15)';
+        b.style.color = '#86efac';
+        b.innerHTML = '<div class="dot"></div> PAIRED';
+        pairCard.style.display = 'none';
+      } else {
+        b.style.borderColor = 'rgba(248,113,113,0.35)';
+        b.style.background = 'rgba(248,113,113,0.12)';
+        b.style.color = '#fca5a5';
+        b.innerHTML = '<div class="dot" style="background:#f87171; box-shadow:0 0 8px #f87171;"></div> NOT PAIRED';
+        pairCard.style.display = 'block';
+      }
+    }
+
+    async function refreshPairStatus(force = false) {
+      updateBadge();
+      if (getToken()) return;
+      const info = document.getElementById('pairInfo');
+      try {
+        const r = await fetch('/api/remote/pairing-info');
+        const d = await r.json();
+        if (d.ok) {
+          info.innerHTML = `<b>${d.pairingPayload.pcName || 'MYRAA'}</b> · ${d.pairingPayload.endpoint || ''}<br>One-time pairing code: <b style="color:var(--primary); letter-spacing:3px;">${d.pairingPayload.pairingCode || ''}</b>`;
+        } else {
+          info.textContent = 'Could not reach MYRAA. Are you on the same Wi-Fi?';
+        }
+      } catch (e) {
+        if (force) info.textContent = 'Permission denied. Enter the pairing secret from your PC.';
+        else info.textContent = 'Could not reach MYRAA. Are you on the same Wi-Fi?';
+      }
+    }
+
+    async function pairDevice() {
+      const secret = document.getElementById('secretInput').value.trim();
+      if (!secret) { showToast('Enter the pairing secret shown on your PC'); return; }
+      showToast('Pairing…');
+      try {
+        const info = await (await fetch('/api/remote/pairing-info')).json();
+        const code = info.ok ? (info.pairingPayload.pairingCode || '') : '';
+        const res = await remoteCall('/api/remote/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            deviceName: 'Myraa Mobile (' + (navigator.userAgent || 'web').slice(0, 28) + ')',
+            deviceId: 'dev_mobile_' + Date.now(),
+            secret,
+            pairingCode: code
+          })
+        });
+        const d = await res.json().catch(() => ({}));
+        if (d.ok && d.deviceToken) {
+          setToken(d.deviceToken);
+          document.getElementById('secretInput').value = '';
+          updateBadge();
+          showToast('Paired! MYRAA Remote unlocked');
+        } else {
+          showToast(d.error || 'Pairing failed');
+        }
+      } catch (e) {
+        showToast('Pairing failed — check connection');
+      }
+    }
+    document.getElementById('pairBtn').onclick = pairDevice;
+
+    async function sendCommand(text) {
+      if (!text) return;
+      showToast("Sending to MYRAA...");
+      try {
+        const res = await remoteCall('/api/mobile/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: text })
+        });
+        const data = await res.json();
+        if (res.status === 401) { showToast("Not paired — enter the pairing secret above"); return; }
+        showToast(data.message || "Command executed!");
+      } catch (e) {
+        showToast("Error executing command");
+      }
+    }
+
+    function quick(cmd) {
+      document.getElementById('cmdInput').value = cmd;
+      sendCommand(cmd);
+    }
+
+    document.getElementById('sendBtn').onclick = () => {
+      const inp = document.getElementById('cmdInput');
+      sendCommand(inp.value);
+      inp.value = '';
+    };
+
+    // Voice recognition on mobile
+    const micBtn = document.getElementById('micBtn');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.lang = 'en-US';
+      rec.onstart = () => micBtn.classList.add('listening');
+      rec.onend = () => micBtn.classList.remove('listening');
+      rec.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        document.getElementById('cmdInput').value = text;
+        sendCommand(text);
+      };
+      micBtn.onclick = () => rec.start();
+    } else {
+      micBtn.onclick = () => showToast("Speech not supported on this browser. Type command above.");
+    }
+
+    // Media
+    function playMedia(isMovie) {
+      const q = document.getElementById('mediaQuery').value;
+      sendCommand(`play ${isMovie ? 'movie' : 'video'} ${q}`);
+    }
+    function sendMedia(action) {
+      remoteCall('/api/mcp/v1/tools/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'media_control', arguments: { action } })
+      }).then(() => showToast(`Media: ${action}`));
+    }
+
+    // Files
+    function findAndSend(channel) {
+      const q = document.getElementById('fileQuery').value;
+      sendCommand(`find file ${q} and send by ${channel}`);
+    }
+
+    // Windows
+    function winAction(action) {
+      remoteCall('/api/mcp/v1/tools/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'window_control', arguments: { action } })
+      }).then(() => showToast(`Window: ${action}`));
+    }
+    function openApp(appName) {
+      sendCommand(`open ${appName}`);
+    }
+
+    // Mouse
+    function mouseClick(type) {
+      const action = type === 'double' ? 'double_click' : (type === 'right' ? 'right_click' : 'click');
+      remoteCall('/api/mcp/v1/tools/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'mouse_control', arguments: { action } })
+      }).then(() => showToast(`${type} click`));
+    }
+    function mouseScroll(deltaY) {
+      remoteCall('/api/mcp/v1/tools/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'mouse_control', arguments: { action: 'scroll', deltaY } })
+      }).then(() => showToast(`Scrolled`));
+    }
+
+    // Trackpad gesture
+    const trackpad = document.getElementById('trackpad');
+    let lastTouch = null;
+    trackpad.addEventListener('touchstart', (e) => {
+      lastTouch = e.touches[0];
+    });
+    trackpad.addEventListener('touchmove', (e) => {
+      if (!lastTouch) return;
+      const t = e.touches[0];
+      const dx = (t.clientX - lastTouch.clientX) * 2;
+      const dy = (t.clientY - lastTouch.clientY) * 2;
+      lastTouch = t;
+
+      remoteCall('/api/mcp/v1/tools/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'mouse_control', arguments: { action: 'move_relative', dx, dy } })
+      }).catch(() => {});
+    });
+    trackpad.addEventListener('touchend', () => { lastTouch = null; });
+
+    // Screen
+    async function fetchScreenshot() {
+      showToast("Fetching desktop screen...");
+      try {
+        const res = await remoteCall('/api/mobile/screenshot');
+        if (res.status === 401) { showToast("Not paired — enter the pairing secret above"); return; }
+        const data = await res.json();
+        if (data && data.image) {
+          document.getElementById('screenImg').src = data.image;
+          document.getElementById('screenContainer').style.display = 'block';
+          showToast("Screen captured!");
+        }
+      } catch (e) {
+        showToast("Error capturing screen");
+      }
+    }
+
+    updateBadge();
+    refreshPairStatus();
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "excel": {
+    "header_bg": {
+      "value": "0A192F",
+      "learnedAt": "2026-09-08T06:55:34.865Z",
+      "source": "user_correction"
+    },
+    "header_font_color": {
+      "value": "FFAA00",
+      "learnedAt": "2026-09-08T10:24:37.644Z",
+      "source": "user_correction"
+    }
+  },
+  "word": {
+    "header_color": {
+      "value": "#8B5CF6",
+      "learnedAt": "2026-09-08T06:55:58.459Z",
+      "source": "user_correction"
+    }
+  }
+}

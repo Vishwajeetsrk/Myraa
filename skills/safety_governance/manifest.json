@@ -1,0 +1,38 @@
+{
+  "id": "safety_governance",
+  "name": "Safety And Governance",
+  "title": "Safety And Governance",
+  "version": "1.0.0",
+  "category": "Security",
+  "description": "Apply authorization boundaries, confirmation rules, secret handling, audit logging, and risk classification.",
+  "tags": [
+    "automation",
+    "myraa-skill",
+    "safety_governance",
+    "security"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "threat_analysis",
+    "vulnerability_detection",
+    "compliance_audit",
+    "safe_execution"
+  ],
+  "input_types": [
+    "code",
+    "config",
+    "endpoint"
+  ],
+  "output_types": [
+    "audit_report",
+    "security_score",
+    "remediation_plan"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

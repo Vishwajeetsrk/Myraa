@@ -1,0 +1,39 @@
+{
+  "id": "grafana_dashboards",
+  "name": "Grafana Dashboards",
+  "title": "Grafana Dashboards",
+  "version": "2.5.0",
+  "category": "Business & Productivity",
+  "description": "Create and manage production Grafana dashboards for real-time visualization of system and application metrics. Use wh...",
+  "tags": [
+    "automation",
+    "business",
+    "dashboards",
+    "grafana",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

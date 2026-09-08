@@ -1,0 +1,40 @@
+{
+  "id": "video_template_frame_glitch_title",
+  "name": "Video Template Frame Glitch Title",
+  "title": "Video Template Frame Glitch Title",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Use this plugin when the user wants a \"Glitch Title Frame\" HyperFrames motion video \u2014 Digital glitch, chromatic offse...",
+  "tags": [
+    "automation",
+    "creative",
+    "frame",
+    "glitch",
+    "myraa-skill",
+    "template"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

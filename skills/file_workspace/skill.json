@@ -1,0 +1,38 @@
+{
+  "id": "file_workspace",
+  "name": "File Workspace",
+  "title": "File Workspace",
+  "version": "1.0.0",
+  "category": "Business & Productivity",
+  "description": "Read, organize, transform, index, search, and generate user-authorized files and project artifacts.",
+  "tags": [
+    "automation",
+    "business",
+    "file_workspace",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

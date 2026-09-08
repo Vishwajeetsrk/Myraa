@@ -1,0 +1,40 @@
+{
+  "id": "muapi_product_showcase_video",
+  "name": "Muapi Product Showcase Video",
+  "title": "Muapi Product Showcase Video",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Create a dynamic product showcase with explosive ingredient arrangements, followed by a realistic motion animation.",
+  "tags": [
+    "automation",
+    "creative",
+    "muapi",
+    "myraa-skill",
+    "product",
+    "showcase"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

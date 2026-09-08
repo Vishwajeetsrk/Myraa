@@ -1,0 +1,40 @@
+{
+  "id": "content_gap_analysis",
+  "name": "Content Gap Analysis",
+  "title": "Content Gap Analysis",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Identify and prioritize content gaps for a website by comparing it against competitors and search demand. Use when as...",
+  "tags": [
+    "ai",
+    "analysis",
+    "automation",
+    "content",
+    "gap",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

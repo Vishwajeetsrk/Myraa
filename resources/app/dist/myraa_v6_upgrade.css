@@ -1,0 +1,398 @@
+/* =============================================================================
+   MYRAA v6.0 APEX — UPGRADE & ENHANCEMENT STYLESHEET
+   Layer: Supplementary Modernization & Micro-Interactions
+   Rule: Zero Emojis Standard, 100% Non-Breaking, High-Polish Glassmorphism
+   ============================================================================= */
+
+/* ── 1. SKILLS CATEGORY FILTER TABS ────────────────────────────────────────── */
+.skills-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.skill-cat-pill {
+  background: rgba(16, 24, 39, 0.7);
+  border: 1px solid var(--border-subtle, rgba(56, 207, 255, 0.12));
+  border-radius: var(--radius-full, 9999px);
+  color: var(--text-muted, #657086);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 5px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.skill-cat-pill:hover {
+  background: rgba(23, 34, 53, 0.9);
+  color: var(--text-primary, #F5F7FA);
+  border-color: rgba(56, 207, 255, 0.3);
+}
+
+.skill-cat-pill.active {
+  background: rgba(56, 207, 255, 0.14);
+  color: var(--accent-cyan, #38CFFF);
+  border-color: var(--accent-cyan, #38CFFF);
+  box-shadow: 0 0 12px rgba(56, 207, 255, 0.2);
+  font-weight: 600;
+}
+
+/* Skill card enhancements */
+.skill-card-modern {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card, rgba(16, 24, 39, 0.75));
+  border: 1px solid var(--border-subtle, rgba(56, 207, 255, 0.12));
+  border-radius: var(--radius-lg, 16px);
+  padding: 16px;
+  min-height: 140px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.skill-card-modern:hover {
+  border-color: rgba(56, 207, 255, 0.35);
+  background: var(--bg-card-hover, rgba(23, 34, 53, 0.85));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(56, 207, 255, 0.1);
+}
+
+.skill-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.skill-card-badge {
+  font-size: 10px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.skill-card-badge.executable {
+  background: rgba(66, 211, 155, 0.12);
+  border: 1px solid rgba(66, 211, 155, 0.3);
+  color: var(--success, #42D39B);
+}
+
+.skill-card-badge.catalog {
+  background: rgba(56, 207, 255, 0.1);
+  border: 1px solid rgba(56, 207, 255, 0.25);
+  color: var(--accent-cyan, #38CFFF);
+}
+
+.skill-card-desc {
+  font-size: 12px;
+  color: var(--text-secondary, #9BA8BD);
+  line-height: 1.5;
+  margin-bottom: 12px;
+  flex: 1;
+}
+
+.skill-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text-muted, #657086);
+  padding-top: 8px;
+  border-top: 1px solid var(--border-divider, rgba(255, 255, 255, 0.06));
+}
+
+/* ── 2. ENHANCED CHAT & CODE RENDERING ──────────────────────────────────────── */
+.chat-stream-box {
+  scroll-behavior: smooth;
+}
+
+.chat-message-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 86%;
+  animation: chatMsgSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes chatMsgSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-message-row.user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.chat-message-row.myraa {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.chat-bubble {
+  padding: 12px 16px;
+  border-radius: var(--radius-lg, 16px);
+  font-size: 13.5px;
+  line-height: 1.65;
+  word-break: break-word;
+  position: relative;
+}
+
+.chat-bubble.user {
+  background: linear-gradient(135deg, rgba(30, 155, 255, 0.18) 0%, rgba(56, 207, 255, 0.12) 100%);
+  border: 1px solid rgba(56, 207, 255, 0.3);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.chat-bubble.myraa {
+  background: rgba(16, 24, 39, 0.88);
+  border: 1px solid var(--border-divider, rgba(255, 255, 255, 0.08));
+  color: var(--text-primary, #F5F7FA);
+  border-bottom-left-radius: 4px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.chat-bubble p {
+  margin: 0 0 8px 0;
+}
+
+.chat-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.chat-bubble code:not(pre code) {
+  background: rgba(56, 207, 255, 0.1);
+  border: 1px solid rgba(56, 207, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: var(--accent-cyan, #38CFFF);
+}
+
+.chat-bubble strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.chat-bubble ul, .chat-bubble ol {
+  margin: 6px 0 6px 18px;
+  padding: 0;
+}
+
+.chat-bubble li {
+  margin-bottom: 4px;
+}
+
+/* Fenced Code Block */
+.myraa-code-block {
+  margin: 8px 0;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid rgba(56, 207, 255, 0.2);
+  background: #060912;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.code-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: rgba(16, 24, 39, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.code-lang-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--accent-cyan, #38CFFF);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.code-copy-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  color: var(--text-muted, #9BA8BD);
+  padding: 3px 9px;
+  font-size: 10.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  font-family: var(--font-sans, sans-serif);
+}
+
+.code-copy-btn:hover {
+  background: rgba(56, 207, 255, 0.12);
+  border-color: var(--accent-cyan, #38CFFF);
+  color: var(--accent-cyan, #38CFFF);
+}
+
+.code-copy-btn.copied {
+  background: rgba(66, 211, 155, 0.15);
+  border-color: var(--success, #42D39B);
+  color: var(--success, #42D39B);
+}
+
+.myraa-code-block pre {
+  margin: 0;
+  padding: 12px 16px;
+  overflow-x: auto;
+  font-family: var(--font-mono, monospace);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #c9d8eb;
+}
+
+/* ── 3. SLASH COMMAND POPUP ─────────────────────────────────────────────────── */
+.slash-palette-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: rgba(14, 21, 35, 0.96);
+  border: 1px solid rgba(56, 207, 255, 0.35);
+  border-radius: var(--radius-lg, 16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(56, 207, 255, 0.15);
+  overflow: hidden;
+  z-index: 100;
+  animation: slashFadeUp 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+@keyframes slashFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slash-option-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.12s ease;
+}
+
+.slash-option-item:last-child {
+  border-bottom: none;
+}
+
+.slash-option-item:hover, .slash-option-item.selected {
+  background: rgba(56, 207, 255, 0.1);
+}
+
+.slash-cmd-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-cyan, #38CFFF);
+  min-width: 80px;
+}
+
+.slash-cmd-info {
+  font-size: 12px;
+  color: var(--text-secondary, #9BA8BD);
+  flex: 1;
+}
+
+/* ── 4. ACCESSIBILITY FOCUS RINGS ──────────────────────────────────────────── */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-cyan, #38CFFF) !important;
+  outline-offset: 2px !important;
+}
+
+/* ── 5. CLEAN TOAST NOTIFICATIONS ──────────────────────────────────────────── */
+#myraa-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.myraa-toast {
+  pointer-events: auto;
+  padding: 10px 18px;
+  border-radius: var(--radius-md, 10px);
+  font-size: 12.5px;
+  font-weight: 500;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 380px;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.myraa-toast.success {
+  background: rgba(14, 38, 28, 0.95);
+  border: 1px solid rgba(66, 211, 155, 0.4);
+  color: #a7f3d0;
+}
+
+.myraa-toast.error {
+  background: rgba(42, 14, 18, 0.95);
+  border: 1px solid rgba(255, 95, 109, 0.4);
+  color: #fecdd3;
+}
+
+.myraa-toast.warn {
+  background: rgba(38, 28, 12, 0.95);
+  border: 1px solid rgba(245, 185, 66, 0.4);
+  color: #fef08a;
+}
+
+.myraa-toast.info {
+  background: rgba(12, 24, 44, 0.95);
+  border: 1px solid rgba(56, 207, 255, 0.4);
+  color: #bae6fd;
+}

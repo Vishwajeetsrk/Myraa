@@ -1,0 +1,40 @@
+{
+  "id": "debugging_and_error_recovery",
+  "name": "Debugging And Error Recovery",
+  "title": "Debugging And Error Recovery",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Guides systematic root-cause debugging. Use when tests fail, builds break, behavior doesn't match expectations, or yo...",
+  "tags": [
+    "and",
+    "automation",
+    "coding",
+    "debugging",
+    "error",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

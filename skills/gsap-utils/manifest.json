@@ -1,0 +1,39 @@
+{
+  "id": "gsap_utils",
+  "name": "Gsap Utils",
+  "title": "Gsap Utils",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Official GSAP skill for gsap.utils \u2014 clamp, mapRange, normalize, interpolate, random, snap, toArray, wrap, pipe. Use ...",
+  "tags": [
+    "automation",
+    "creative",
+    "gsap",
+    "myraa-skill",
+    "utils"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

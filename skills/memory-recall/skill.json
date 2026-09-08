@@ -1,0 +1,39 @@
+{
+  "id": "memory_recall",
+  "name": "Memory Recall",
+  "title": "Memory Recall",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Search and recall relevant memories from past sessions via memsearch. Use when the user's question could benefit from...",
+  "tags": [
+    "ai",
+    "automation",
+    "memory",
+    "myraa-skill",
+    "recall"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

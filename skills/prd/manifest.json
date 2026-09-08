@@ -1,0 +1,38 @@
+{
+  "id": "prd",
+  "name": "Prd Intelligence",
+  "title": "Prd Intelligence",
+  "version": "2.5.0",
+  "category": "Business & Productivity",
+  "description": "Generate high-quality Product Requirements Documents (PRDs) for software systems and AI-powered features. Includes ex...",
+  "tags": [
+    "automation",
+    "business",
+    "myraa-skill",
+    "prd"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

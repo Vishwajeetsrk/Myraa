@@ -1,0 +1,36 @@
+[package]
+name = "myraa-ai-os"
+version = "7.5.0"
+description = "MYRAA AI OS — Native Desktop AI Companion"
+authors = ["Vishwajeet & Open Source Community"]
+edition = "2021"
+repository = "https://github.com/vishwajeetsrk/JARVIS-AI-OS"
+license = "MIT"
+
+[lib]
+name = "myraa_ai_os_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+trash = "3"
+sysinfo = { version = "0.32", features = [] }
+keyring = "3"
+rusqlite = { version = "0.32", features = ["bundled"] }
+chrono = "0.4"
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-shell = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-window-state = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-process = "2"

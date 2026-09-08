@@ -1,0 +1,40 @@
+{
+  "id": "crafting_effective_readmes",
+  "name": "Crafting Effective Readmes",
+  "title": "Crafting Effective Readmes",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "Use when writing or improving README files. Not all READMEs are the same \u2014 provides templates and guidance matched to...",
+  "tags": [
+    "automation",
+    "crafting",
+    "effective",
+    "file",
+    "myraa-skill",
+    "readmes"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

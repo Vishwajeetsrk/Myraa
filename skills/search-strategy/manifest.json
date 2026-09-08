@@ -1,0 +1,39 @@
+{
+  "id": "search_strategy",
+  "name": "Search Strategy",
+  "title": "Search Strategy",
+  "version": "2.5.0",
+  "category": "Business & Productivity",
+  "description": "Query decomposition and multi-source search orchestration. Breaks natural language questions into targeted searches p...",
+  "tags": [
+    "automation",
+    "business",
+    "myraa-skill",
+    "search",
+    "strategy"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

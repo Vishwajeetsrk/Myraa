@@ -1,0 +1,38 @@
+{
+  "id": "no_ai_slop",
+  "name": "No Ai Slop",
+  "title": "No Ai Slop",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Edit drafts into sharper, more human writing while preserving the writer's personal voice, or detect AI-slop patterns...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "slop"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

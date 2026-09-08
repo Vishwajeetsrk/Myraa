@@ -1,0 +1,39 @@
+{
+  "id": "seam_craft",
+  "name": "Seam Craft",
+  "title": "Seam Craft",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Render-correctness doctrine for scene-to-scene seams in HyperFrames launch videos \u2014 the prerequisites that make trans...",
+  "tags": [
+    "ai",
+    "automation",
+    "craft",
+    "myraa-skill",
+    "seam"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

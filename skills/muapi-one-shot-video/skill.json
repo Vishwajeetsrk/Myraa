@@ -1,0 +1,40 @@
+{
+  "id": "muapi_one_shot_video",
+  "name": "Muapi One Shot Video",
+  "title": "Muapi One Shot Video",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Generate a single continuous cinematic shot video \u2014 no cuts, one seamless flowing scene with dramatic lighting and mo...",
+  "tags": [
+    "automation",
+    "creative",
+    "muapi",
+    "myraa-skill",
+    "one",
+    "shot"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

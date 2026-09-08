@@ -1,0 +1,316 @@
+/* =============================================================================
+   MYRAA AI OS — FUTURISTIC CYBERPUNK HUD DESIGN SYSTEM & ANIMATIONS
+   Derived from AURELIA / AGON-AGENT ARCHITECTURE (MK-VII / APEX v5.2)
+   Strict Standard: 100% Non-Breaking, High-Precision HUD Geometry, Zero-Emoji
+   ============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --hud-font-display: 'Orbitron', -apple-system, sans-serif;
+  --hud-font-body: 'Rajdhani', -apple-system, sans-serif;
+  --hud-font-mono: 'Share Tech Mono', monospace;
+
+  --color-abyss: #020507;
+  --color-panel-bg: rgba(7, 19, 24, 0.88);
+  --color-panel-border: rgba(34, 211, 238, 0.22);
+  --color-cyan-neon: #22d3ee;
+  --color-cyan-glow: rgba(34, 211, 238, 0.4);
+  --color-gold: #e8c15a;
+  --color-gold-glow: rgba(232, 193, 90, 0.35);
+  --color-crimson: #ff2d4d;
+  --color-crimson-glow: rgba(255, 45, 77, 0.4);
+  --color-emerald: #34d399;
+}
+
+/* Master HUD Shell Layer */
+#myraa-hud-master {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  color: #d7f6ff;
+  font-family: var(--hud-font-body);
+  overflow: hidden;
+  user-select: none;
+}
+
+#myraa-hud-master * {
+  box-sizing: border-box;
+}
+
+/* Enable pointer events on interactive children */
+#myraa-hud-master button,
+#myraa-hud-master input,
+#myraa-hud-master a,
+#myraa-hud-master .interactive,
+#myraa-hud-master .hud-panel,
+#myraa-hud-master .hud-topbar,
+#myraa-hud-master .hud-col {
+  pointer-events: auto;
+}
+
+/* Typography Helpers */
+.font-hud-display { font-family: var(--hud-font-display) !important; }
+.font-hud-body { font-family: var(--hud-font-body) !important; }
+.font-hud-mono { font-family: var(--hud-font-mono) !important; }
+
+/* Text Glows */
+.text-glow-cyan { text-shadow: 0 0 12px rgba(34, 211, 238, 0.8), 0 0 32px rgba(34, 211, 238, 0.4); }
+.text-glow-red { text-shadow: 0 0 12px rgba(255, 45, 77, 0.8), 0 0 32px rgba(255, 45, 77, 0.4); }
+.text-glow-gold { text-shadow: 0 0 12px rgba(232, 193, 90, 0.7), 0 0 28px rgba(232, 193, 90, 0.35); }
+
+/* ------- HUD Panels ------- */
+.hud-panel {
+  position: relative;
+  background: linear-gradient(160deg, rgba(10, 26, 34, 0.90), rgba(4, 12, 17, 0.94));
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  box-shadow: inset 0 0 35px rgba(34, 211, 238, 0.06), 0 12px 30px rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hud-panel:hover {
+  border-color: rgba(34, 211, 238, 0.38);
+  box-shadow: inset 0 0 45px rgba(34, 211, 238, 0.09), 0 14px 34px rgba(0, 0, 0, 0.85);
+}
+
+.hud-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.6), transparent 30%, transparent 70%, rgba(34, 211, 238, 0.6));
+  height: 1px;
+  top: 0;
+  opacity: 0.7;
+}
+
+.hud-corner::after {
+  content: "";
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  right: 6px;
+  top: 6px;
+  border-top: 2px solid rgba(34, 211, 238, 0.75);
+  border-right: 2px solid rgba(34, 211, 238, 0.75);
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.hud-red {
+  border-color: rgba(255, 45, 77, 0.35) !important;
+}
+.hud-red::before {
+  background: linear-gradient(90deg, rgba(255, 45, 77, 0.7), transparent 35%, transparent 65%, rgba(255, 45, 77, 0.7)) !important;
+}
+.hud-red .hud-corner::after {
+  border-color: rgba(255, 45, 77, 0.8) !important;
+}
+
+.hud-gold {
+  border-color: rgba(232, 193, 90, 0.35) !important;
+}
+.hud-gold::before {
+  background: linear-gradient(90deg, rgba(232, 193, 90, 0.7), transparent 35%, transparent 65%, rgba(232, 193, 90, 0.7)) !important;
+}
+
+/* CRT Scanlines & Isometric Grid */
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.20) 2px 3px);
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.07) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(ellipse at center, black 35%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 75%);
+}
+
+/* ------- Holographic Chamber & Rings ------- */
+.holo-frame {
+  mask-image: linear-gradient(to bottom, black 84%, transparent 99%);
+  -webkit-mask-image: linear-gradient(to bottom, black 84%, transparent 99%);
+}
+
+.holo-tint {
+  filter: saturate(1.15) contrast(1.08) brightness(1.05);
+}
+
+.holo-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.25), rgba(180, 250, 255, 0.50), rgba(34, 211, 238, 0.25), transparent);
+  filter: blur(1px);
+  animation: scanY 4s linear infinite;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+@keyframes scanY {
+  0% { top: -15%; }
+  100% { top: 105%; }
+}
+
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+@keyframes spinRev { to { transform: rotate(-360deg); } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+@keyframes eqBar { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+@keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+.ring-spin { animation: spinSlow 24s linear infinite; }
+.ring-spin-rev { animation: spinRev 32s linear infinite; }
+.ring-spin-fast { animation: spinSlow 9s linear infinite; }
+.blink { animation: blink 1.4s ease-in-out infinite; }
+.float-y { animation: floatY 5s ease-in-out infinite; }
+
+/* Continuous Ticker Tape */
+@keyframes tickerX {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-track {
+  display: inline-flex;
+  gap: 2rem;
+  animation: tickerX 32s linear infinite;
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* HUD Buttons & Range Sliders */
+.btn-hud {
+  position: relative;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  background: rgba(34, 211, 238, 0.10);
+  color: #a5f3fc;
+  font-family: var(--hud-font-display);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.btn-hud:hover {
+  background: rgba(34, 211, 238, 0.25);
+  border-color: #22d3ee;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-hud:active {
+  transform: translateY(1px);
+}
+
+.btn-hud.active {
+  background: rgba(34, 211, 238, 0.35);
+  border-color: #22d3ee;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
+}
+
+.btn-hud-red {
+  border-color: rgba(255, 45, 77, 0.45);
+  background: rgba(255, 45, 77, 0.12);
+  color: #fecdd3;
+}
+.btn-hud-red:hover {
+  background: rgba(255, 45, 77, 0.28);
+  border-color: #ff2d4d;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(255, 45, 77, 0.5);
+}
+
+.btn-hud-gold {
+  border-color: rgba(232, 193, 90, 0.45);
+  background: rgba(232, 193, 90, 0.12);
+  color: #fef08a;
+}
+.btn-hud-gold:hover {
+  background: rgba(232, 193, 90, 0.28);
+  border-color: #e8c15a;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(232, 193, 90, 0.5);
+}
+
+.hex-clip {
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+
+input[type="range"].hud-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #22d3ee var(--fill, 50%), rgba(34, 211, 238, 0.18) var(--fill, 50%));
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"].hud-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 99px;
+  background: #a5f3fc;
+  border: 2px solid #22d3ee;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.9);
+  cursor: pointer;
+}
+
+/* Thin HUD Scrollbar */
+.thin-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: rgba(4, 12, 18, 0.6);
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.35);
+  border-radius: 99px;
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.7);
+}
+
+/* Collapsible Panel States */
+.hud-col {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hud-col.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Fullscreen Hologram Companion view when panels collapsed */
+.companion-fullscreen {
+  width: 100% !important;
+  max-width: 100% !important;
+}

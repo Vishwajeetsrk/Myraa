@@ -1,0 +1,39 @@
+{
+  "id": "secops_triage",
+  "name": "Secops Triage",
+  "title": "Secops Triage",
+  "version": "2.5.0",
+  "category": "Security",
+  "description": "Expert guidance for security alert triage. Use this when the user asks to \"triage\" an alert or case.",
+  "tags": [
+    "automation",
+    "myraa-skill",
+    "secops",
+    "security",
+    "triage"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "threat_analysis",
+    "vulnerability_detection",
+    "compliance_audit",
+    "safe_execution"
+  ],
+  "input_types": [
+    "code",
+    "config",
+    "endpoint"
+  ],
+  "output_types": [
+    "audit_report",
+    "security_score",
+    "remediation_plan"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

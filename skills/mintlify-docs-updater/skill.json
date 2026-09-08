@@ -1,0 +1,40 @@
+{
+  "id": "mintlify_docs_updater",
+  "name": "Mintlify Docs Updater",
+  "title": "Mintlify Docs Updater",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "Maintain this repository's Mintlify documentation from uploaded Markdown files. Use when asked to add, update, or org...",
+  "tags": [
+    "automation",
+    "docs",
+    "file",
+    "mintlify",
+    "myraa-skill",
+    "updater"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

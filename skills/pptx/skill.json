@@ -1,0 +1,38 @@
+{
+  "id": "pptx",
+  "name": "Pptx Intelligence",
+  "title": "Pptx Intelligence",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Use this skill any time a .pptx file is involved in any way \u2014 as input, output, or both. This includes: creating slid...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "pptx"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

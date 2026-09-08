@@ -1,0 +1,39 @@
+{
+  "id": "aso_audit",
+  "name": "Aso Audit",
+  "title": "Aso Audit",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "When the user wants a full ASO health audit, review their App Store listing quality, or diagnose why their app isn't ...",
+  "tags": [
+    "ai",
+    "aso",
+    "audit",
+    "automation",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "quality_verifier",
+  "name": "Quality Verifier",
+  "title": "Quality Verifier",
+  "version": "1.0.0",
+  "category": "Coding & Development",
+  "description": "Independently check outputs against requirements, tests, evidence, and acceptance criteria before completion.",
+  "tags": [
+    "automation",
+    "coding",
+    "myraa-skill",
+    "quality_verifier"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

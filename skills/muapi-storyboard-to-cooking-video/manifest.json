@@ -1,0 +1,40 @@
+{
+  "id": "muapi_storyboard_to_cooking_video",
+  "name": "Muapi Storyboard To Cooking Video",
+  "title": "Muapi Storyboard To Cooking Video",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Turn a single photo of a person into a 15-second cinematic pasta-making (or other cuisine) tutorial video. First buil...",
+  "tags": [
+    "automation",
+    "cooking",
+    "creative",
+    "muapi",
+    "myraa-skill",
+    "storyboard"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

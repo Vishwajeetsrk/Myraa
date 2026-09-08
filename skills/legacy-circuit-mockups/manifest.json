@@ -1,0 +1,40 @@
+{
+  "id": "legacy_circuit_mockups",
+  "name": "Legacy Circuit Mockups",
+  "title": "Legacy Circuit Mockups",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Generate breadboard circuit mockups and visual diagrams using HTML5 Canvas drawing techniques. Use when asked to crea...",
+  "tags": [
+    "automation",
+    "circuit",
+    "creative",
+    "legacy",
+    "mockups",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "hyperframes_registry",
+  "name": "Hyperframes Registry",
+  "title": "Hyperframes Registry",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Install, discover, and wire registry blocks and components into HyperFrames compositions. Use when running hyperframe...",
+  "tags": [
+    "automation",
+    "creative",
+    "hyperframes",
+    "myraa-skill",
+    "registry"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "chart_visualization",
+  "name": "Chart Visualization",
+  "title": "Chart Visualization",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "\u5c06\u6570\u636e\u53ef\u89c6\u5316\u4e3a\u56fe\u8868\u3002\u5f53\u7528\u6237\u9700\u8981\u751f\u6210\u67f1\u72b6\u56fe\u3001\u6298\u7ebf\u56fe\u3001\u997c\u56fe\u3001\u6563\u70b9\u56fe\u3001\u96f7\u8fbe\u56fe\u3001\u6851\u57fa\u56fe\u3001\u601d\u7ef4\u5bfc\u56fe\u3001\u6d41\u7a0b\u56fe\u7b49\u56fe\u8868\u65f6\u8c03\u7528\u6b64\u6280\u80fd\uff0c\u901a\u8fc7 curl \u5de5\u5177\u8c03\u7528 AntV API \u751f\u6210\u56fe\u8868\u56fe\u7247",
+  "tags": [
+    "automation",
+    "chart",
+    "file",
+    "myraa-skill",
+    "visualization"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

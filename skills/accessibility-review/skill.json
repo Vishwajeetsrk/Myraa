@@ -1,0 +1,39 @@
+{
+  "id": "accessibility_review",
+  "name": "Accessibility Review",
+  "title": "Accessibility Review",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Run a WCAG 2.1 AA accessibility audit on a design or page. Trigger with \"audit accessibility\", \"check a11y\", \"is this...",
+  "tags": [
+    "accessibility",
+    "automation",
+    "creative",
+    "myraa-skill",
+    "review"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

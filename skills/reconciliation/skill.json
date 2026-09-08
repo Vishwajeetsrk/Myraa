@@ -1,0 +1,38 @@
+{
+  "id": "reconciliation",
+  "name": "Reconciliation Intelligence",
+  "title": "Reconciliation Intelligence",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Reconcile accounts by comparing GL balances to subledgers, bank statements, or third-party data. Use when performing ...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "reconciliation"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

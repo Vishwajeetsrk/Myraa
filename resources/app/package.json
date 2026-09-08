@@ -1,0 +1,58 @@
+{
+  "name": "myraa",
+  "productName": "MYRAA AI OS",
+  "description": "MYRAA — a private 3D AI desktop companion powered by each user's own Gemini API key.",
+  "author": {
+    "name": "Vishwajeet & Open Source Community",
+    "email": "vishwajeetsrk@gmail.com",
+    "url": "https://github.com/vishwajeetsrk/JARVIS-AI-OS"
+  },
+  "private": true,
+  "version": "7.5.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "build:electron": "vite build && electron .",
+    "dist": "electron-builder --config electron-builder.v2.yml --publish never",
+    "dist:win": "electron-builder --win --config electron-builder.v2.yml --publish never",
+    "dist:mac": "electron-builder --mac --config electron-builder.v2.yml --publish never",
+    "dist:linux": "electron-builder --linux --config electron-builder.v2.yml --publish never",
+    "dist:all": "electron-builder -wml --config electron-builder.v2.yml --publish never",
+    "myraa:architecture-check": "node ../../scripts/myraa-architecture-check.cjs",
+    "version": "node ../../scripts/version.cjs",
+    "version:patch": "node ../../scripts/version.cjs patch",
+    "version:minor": "node ../../scripts/version.cjs minor",
+    "version:major": "node ../../scripts/version.cjs major",
+    "version:sync": "node ../../scripts/version.cjs sync",
+    "release:prepare": "node ../../scripts/release.cjs prepare"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
+    "@google/genai": "^2.4.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "@vitejs/plugin-react": "^5.0.4",
+    "dotenv": "^17.2.3",
+    "electron-updater": "^6.3.9",
+    "express": "^4.21.2",
+    "lucide-react": "^0.546.0",
+    "mmd-parser": "^1.0.4",
+    "motion": "^12.23.24",
+    "ollama": "^0.6.3",
+    "openai": "^7.10.0",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "three": "^0.180.0",
+    "vite": "^6.2.3",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^25.1.8"
+  }
+}

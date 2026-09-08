@@ -1,0 +1,40 @@
+{
+  "id": "iflytek_text_proofread",
+  "name": "Iflytek Text Proofread",
+  "title": "Iflytek Text Proofread",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "iFlytek Official Document Proofreading (\u516c\u6587\u6821\u5bf9) \u2014 detect and correct errors in Chinese text including typos, punctuatio...",
+  "tags": [
+    "automation",
+    "coding",
+    "iflytek",
+    "myraa-skill",
+    "proofread",
+    "text"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

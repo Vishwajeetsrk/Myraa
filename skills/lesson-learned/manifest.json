@@ -1,0 +1,39 @@
+{
+  "id": "lesson_learned",
+  "name": "Lesson Learned",
+  "title": "Lesson Learned",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Analyze recent code changes via git history and extract software engineering lessons. Use when the user asks 'what is...",
+  "tags": [
+    "automation",
+    "coding",
+    "learned",
+    "lesson",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

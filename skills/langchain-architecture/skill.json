@@ -1,0 +1,39 @@
+{
+  "id": "langchain_architecture",
+  "name": "Langchain Architecture",
+  "title": "Langchain Architecture",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Design LLM applications using LangChain 1.x and LangGraph for agents, memory, and tool integration. Use when building...",
+  "tags": [
+    "ai",
+    "architecture",
+    "automation",
+    "langchain",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

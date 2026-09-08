@@ -1,0 +1,38 @@
+{
+  "id": "seaborn",
+  "name": "Seaborn Intelligence",
+  "title": "Seaborn Intelligence",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Statistical visualization with pandas integration. Use for quick exploration of distributions, relationships, and cat...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "seaborn"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

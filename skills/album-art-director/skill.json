@@ -1,0 +1,40 @@
+{
+  "id": "album_art_director",
+  "name": "Album Art Director",
+  "title": "Album Art Director",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Creates visual concepts for album artwork and generates AI art prompts. Use during planning for concept discussion, o...",
+  "tags": [
+    "ai",
+    "album",
+    "art",
+    "automation",
+    "director",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

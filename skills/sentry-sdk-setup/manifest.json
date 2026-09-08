@@ -1,0 +1,40 @@
+{
+  "id": "sentry_sdk_setup",
+  "name": "Sentry Sdk Setup",
+  "title": "Sentry Sdk Setup",
+  "version": "2.5.0",
+  "category": "Cloud & Infrastructure",
+  "description": "Set up Sentry in any language or framework. Detects the user's platform and loads the right SDK skill. Use when asked...",
+  "tags": [
+    "automation",
+    "cloud",
+    "myraa-skill",
+    "sdk",
+    "sentry",
+    "setup"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "cloud_provisioning",
+    "infra_monitoring",
+    "container_orchestration",
+    "cost_tuning"
+  ],
+  "input_types": [
+    "cloud_config",
+    "iac_script",
+    "metrics_stream"
+  ],
+  "output_types": [
+    "deployment_manifest",
+    "infra_status",
+    "tuning_spec"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

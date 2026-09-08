@@ -1,0 +1,39 @@
+{
+  "id": "git_commit",
+  "name": "Git Commit",
+  "title": "Git Commit",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Execute git commit with conventional commit message analysis, intelligent staging, and message generation. Use when u...",
+  "tags": [
+    "automation",
+    "coding",
+    "commit",
+    "git",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

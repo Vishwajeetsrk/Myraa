@@ -1,0 +1,38 @@
+{
+  "id": "last30days",
+  "name": "Last30days Intelligence",
+  "title": "Last30days Intelligence",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Research what people have discussed in the last 30 days across high-signal public platforms. Use when the user asks f...",
+  "tags": [
+    "ai",
+    "automation",
+    "last30days",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

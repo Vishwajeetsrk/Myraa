@@ -1,0 +1,40 @@
+{
+  "id": "hybrid_search_implementation",
+  "name": "Hybrid Search Implementation",
+  "title": "Hybrid Search Implementation",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Combine vector and keyword search for improved retrieval. Use when implementing RAG systems, building search engines,...",
+  "tags": [
+    "ai",
+    "automation",
+    "hybrid",
+    "implementation",
+    "myraa-skill",
+    "search"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "system_health",
+  "name": "System Health",
+  "title": "System Health",
+  "version": "1.0.0",
+  "category": "Business & Productivity",
+  "description": "Monitor MYRAA services, provider connections, skills, queues, errors, and performance.",
+  "tags": [
+    "automation",
+    "business",
+    "myraa-skill",
+    "system_health"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

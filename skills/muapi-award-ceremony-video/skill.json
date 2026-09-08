@@ -1,0 +1,40 @@
+{
+  "id": "muapi_award_ceremony_video",
+  "name": "Muapi Award Ceremony Video",
+  "title": "Muapi Award Ceremony Video",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Generate a 15-second cinematic awards-ceremony video \u2014 a host announces a winner from the stage, a spotlight finds th...",
+  "tags": [
+    "automation",
+    "award",
+    "ceremony",
+    "creative",
+    "muapi",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

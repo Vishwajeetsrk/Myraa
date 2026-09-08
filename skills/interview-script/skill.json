@@ -1,0 +1,39 @@
+{
+  "id": "interview_script",
+  "name": "Interview Script",
+  "title": "Interview Script",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Create a structured customer interview script with JTBD probing questions, warm-up, core exploration, and wrap-up sec...",
+  "tags": [
+    "ai",
+    "automation",
+    "interview",
+    "myraa-skill",
+    "script"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

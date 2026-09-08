@@ -1,0 +1,40 @@
+{
+  "id": "grok_bot_avatar_react",
+  "name": "Grok Bot Avatar React",
+  "title": "Grok Bot Avatar React",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "This ready-to-run Vite project uses the exported grok-bot.avatar.json definition with",
+  "tags": [
+    "automation",
+    "avatar",
+    "bot",
+    "coding",
+    "grok",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

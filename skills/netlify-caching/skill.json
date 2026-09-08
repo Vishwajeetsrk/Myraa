@@ -1,0 +1,39 @@
+{
+  "id": "netlify_caching",
+  "name": "Netlify Caching",
+  "title": "Netlify Caching",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Cache dynamic and static responses on Netlify's CDN from Functions, Edge Functions, and proxies. Use when you add cac...",
+  "tags": [
+    "ai",
+    "automation",
+    "caching",
+    "myraa-skill",
+    "netlify"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

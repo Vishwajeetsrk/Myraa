@@ -1,0 +1,38 @@
+{
+  "id": "myraa_v2_office_ai",
+  "name": "Office Ai",
+  "title": "Office Ai",
+  "version": "1.0.0",
+  "category": "Business & Productivity",
+  "description": "MYRAA specialist for Office AI.",
+  "tags": [
+    "automation",
+    "business",
+    "myraa-skill",
+    "myraa_v2_office"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

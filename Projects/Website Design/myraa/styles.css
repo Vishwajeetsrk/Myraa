@@ -1,0 +1,36 @@
+/* Restoring missing dark label styles */
+:root {
+    --ground: #0A0C0E;
+    --secondary-ground: #101317;
+    --ink: #EDE7DC;
+    --secondary-ink: #9EA5A8;
+    --amber: #E8913C;
+    --teal: #2E6B72;
+    --hairline: rgba(237, 231, 220, 0.13);
+
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'Sora', sans-serif;
+}
+
+body {
+    background-color: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.nav-bar {
+    background: rgba(10, 12, 14, 0.86);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--hairline);
+}
+
+.display-title {
+    color: var(--ink);
+}
+
+.feature-item {
+    background: var(--secondary-ground);
+    color: var(--secondary-ink);
+}

@@ -1,0 +1,40 @@
+{
+  "id": "muapi_drone_style_video",
+  "name": "Muapi Drone Style Video",
+  "title": "Muapi Drone Style Video",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Generate aerial drone-perspective footage \u2014 sweeping bird's-eye views, orbit shots, and flyover sequences for landsca...",
+  "tags": [
+    "automation",
+    "creative",
+    "drone",
+    "muapi",
+    "myraa-skill",
+    "style"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

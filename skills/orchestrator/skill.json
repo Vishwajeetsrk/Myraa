@@ -1,0 +1,38 @@
+{
+  "id": "orchestrator",
+  "name": "Myraa Core Orchestrator",
+  "title": "Myraa Core Orchestrator",
+  "version": "1.0.0",
+  "category": "AI & Intelligence",
+  "description": "Break complex requests into plans, route tasks to skills/agents, track state, recover from failures, and synthesize f...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "orchestrator"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

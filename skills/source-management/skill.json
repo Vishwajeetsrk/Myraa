@@ -1,0 +1,39 @@
+{
+  "id": "source_management",
+  "name": "Source Management",
+  "title": "Source Management",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "Manages connected MCP sources for enterprise search. Detects available sources, guides users to connect new ones, han...",
+  "tags": [
+    "automation",
+    "file",
+    "management",
+    "myraa-skill",
+    "source"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

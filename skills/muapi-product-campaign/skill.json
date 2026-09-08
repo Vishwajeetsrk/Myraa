@@ -1,0 +1,40 @@
+{
+  "id": "muapi_product_campaign",
+  "name": "Muapi Product Campaign",
+  "title": "Muapi Product Campaign",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Generate a full multi-channel product campaign \u2014 hero visuals, social media assets, short ad video, and platform-spec...",
+  "tags": [
+    "automation",
+    "campaign",
+    "creative",
+    "muapi",
+    "myraa-skill",
+    "product"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

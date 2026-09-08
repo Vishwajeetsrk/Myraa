@@ -1,0 +1,39 @@
+{
+  "id": "gsap_timeline",
+  "name": "Gsap Timeline",
+  "title": "Gsap Timeline",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Official GSAP skill for timelines \u2014 gsap.timeline(), position parameter, nesting, playback. Use when sequencing anima...",
+  "tags": [
+    "automation",
+    "creative",
+    "gsap",
+    "myraa-skill",
+    "timeline"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

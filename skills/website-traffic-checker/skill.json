@@ -1,0 +1,40 @@
+{
+  "id": "website_traffic_checker",
+  "name": "Website Traffic Checker",
+  "title": "Website Traffic Checker",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Comprehensive website traffic analysis workflow. Use when the user asks to analyze a website's traffic, check competi...",
+  "tags": [
+    "automation",
+    "checker",
+    "coding",
+    "myraa-skill",
+    "traffic",
+    "website"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

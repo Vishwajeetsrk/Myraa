@@ -1,0 +1,38 @@
+{
+  "id": "tdd",
+  "name": "Tdd Intelligence",
+  "title": "Tdd Intelligence",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions \"red-green-refact...",
+  "tags": [
+    "automation",
+    "coding",
+    "myraa-skill",
+    "tdd"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

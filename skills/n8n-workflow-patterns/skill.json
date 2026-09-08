@@ -1,0 +1,40 @@
+{
+  "id": "n8n_workflow_patterns",
+  "name": "N8n Workflow Patterns",
+  "title": "N8n Workflow Patterns",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Proven workflow architectural patterns from real n8n workflows. Use when building new workflows, designing workflow s...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "n8n",
+    "patterns",
+    "workflow"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "meeting_follow_up_pipeline",
+  "name": "Meeting Follow Up Pipeline",
+  "title": "Meeting Follow Up Pipeline",
+  "version": "2.5.0",
+  "category": "Communication",
+  "description": "Turn a completed meeting into a debrief, decisions, action items, ready-to-send follow-up drafts, and proposed writeb...",
+  "tags": [
+    "automation",
+    "communication",
+    "follow",
+    "meeting",
+    "myraa-skill",
+    "pipeline"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "multilingual_chat",
+    "email_generation",
+    "voice_synthesis",
+    "outreach_pipeline"
+  ],
+  "input_types": [
+    "prompt",
+    "message",
+    "transcript"
+  ],
+  "output_types": [
+    "formatted_message",
+    "email_draft",
+    "audio_spec"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

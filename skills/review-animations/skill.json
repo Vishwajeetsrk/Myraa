@@ -1,0 +1,39 @@
+{
+  "id": "review_animations",
+  "name": "Review Animations",
+  "title": "Review Animations",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Reviews animation and motion code against a high craft bar derived from Emil Kowalski's design engineering philosophy...",
+  "tags": [
+    "animations",
+    "automation",
+    "coding",
+    "myraa-skill",
+    "review"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

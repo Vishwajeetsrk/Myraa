@@ -1,0 +1,40 @@
+{
+  "id": "journal_entry_prep",
+  "name": "Journal Entry Prep",
+  "title": "Journal Entry Prep",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Prepare journal entries with proper debits, credits, and supporting documentation for month-end close. Use when booki...",
+  "tags": [
+    "automation",
+    "coding",
+    "entry",
+    "journal",
+    "myraa-skill",
+    "prep"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

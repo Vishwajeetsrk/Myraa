@@ -1,0 +1,40 @@
+{
+  "id": "content_experimentation_best_practices",
+  "name": "Content Experimentation Best Practices",
+  "title": "Content Experimentation Best Practices",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Content experimentation and A/B testing guidance covering experiment design, hypotheses, metrics, sample size, statis...",
+  "tags": [
+    "automation",
+    "best",
+    "content",
+    "creative",
+    "experimentation",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

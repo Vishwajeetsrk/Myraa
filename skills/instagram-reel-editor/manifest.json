@@ -1,0 +1,40 @@
+{
+  "id": "instagram_reel_editor",
+  "name": "Instagram Reel Editor",
+  "title": "Instagram Reel Editor",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Edits raw travel footage into polished Instagram Reels (9:16, 1080\u00d71920) with cinematic color grading, beat-synced cu...",
+  "tags": [
+    "automation",
+    "creative",
+    "editor",
+    "instagram",
+    "myraa-skill",
+    "reel"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

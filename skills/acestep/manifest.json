@@ -1,0 +1,38 @@
+{
+  "id": "acestep",
+  "name": "Acestep Intelligence",
+  "title": "Acestep Intelligence",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "AI music generation with ACE-Step 1.5 \u2014 background music, vocal tracks, covers, stem extraction, audio repainting, an...",
+  "tags": [
+    "acestep",
+    "automation",
+    "creative",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

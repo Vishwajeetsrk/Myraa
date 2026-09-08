@@ -1,0 +1,39 @@
+{
+  "id": "copy_editing",
+  "name": "Copy Editing",
+  "title": "Copy Editing",
+  "version": "2.5.0",
+  "category": "Communication",
+  "description": "When the user wants to edit, review, or improve existing marketing copy, or refresh outdated content. Also use when t...",
+  "tags": [
+    "automation",
+    "communication",
+    "copy",
+    "editing",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "multilingual_chat",
+    "email_generation",
+    "voice_synthesis",
+    "outreach_pipeline"
+  ],
+  "input_types": [
+    "prompt",
+    "message",
+    "transcript"
+  ],
+  "output_types": [
+    "formatted_message",
+    "email_draft",
+    "audio_spec"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

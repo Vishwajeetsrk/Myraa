@@ -1,0 +1,40 @@
+{
+  "id": "test_driven_development",
+  "name": "Test Driven Development",
+  "title": "Test Driven Development",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Use when implementing any feature or bugfix, before writing implementation code",
+  "tags": [
+    "automation",
+    "coding",
+    "development",
+    "driven",
+    "myraa-skill",
+    "test"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

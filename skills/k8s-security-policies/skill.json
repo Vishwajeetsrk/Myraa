@@ -1,0 +1,39 @@
+{
+  "id": "k8s_security_policies",
+  "name": "K8s Security Policies",
+  "title": "K8s Security Policies",
+  "version": "2.5.0",
+  "category": "Security",
+  "description": "Implement Kubernetes security policies including NetworkPolicy, PodSecurityPolicy, and RBAC for production-grade secu...",
+  "tags": [
+    "automation",
+    "k8s",
+    "myraa-skill",
+    "policies",
+    "security"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "threat_analysis",
+    "vulnerability_detection",
+    "compliance_audit",
+    "safe_execution"
+  ],
+  "input_types": [
+    "code",
+    "config",
+    "endpoint"
+  ],
+  "output_types": [
+    "audit_report",
+    "security_score",
+    "remediation_plan"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

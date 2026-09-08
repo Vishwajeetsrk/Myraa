@@ -1,0 +1,40 @@
+{
+  "id": "email_best_practices",
+  "name": "Email Best Practices",
+  "title": "Email Best Practices",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Use when building email features, emails going to spam, high bounce rates, setting up SPF/DKIM/DMARC authentication, ...",
+  "tags": [
+    "automation",
+    "best",
+    "coding",
+    "email",
+    "myraa-skill",
+    "practices"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

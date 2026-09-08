@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "savedAt": "2026-09-03T17:59:25.567Z",
+  "situation": {
+    "state": "OBSERVING",
+    "currentActivity": "cognitive runtime online",
+    "activeApp": null,
+    "activeWindow": null,
+    "currentProject": "Team of Vishwajeet",
+    "conversationTopic": null,
+    "currentGoalId": null,
+    "currentTaskId": null,
+    "userActivity": "active",
+    "userSpeaking": false,
+    "myraaSpeaking": false,
+    "myraaWasInterrupted": false,
+    "silenceStartedAt": null,
+    "silenceSeconds": 0,
+    "openApplications": [],
+    "relevantFiles": [],
+    "recentImportantEvents": [
+      {
+        "id": "7c63c10f-cbf2-428f-9686-472893a3d0c8",
+        "type": "system.cognition_started",
+        "timestamp": "2026-09-03T17:59:23.558Z",
+        "importance": 0.52,
+        "source": "system"
+      }
+    ],
+    "recentFailures": [],
+    "recentSuccesses": [],
+    "pendingRisk": null,
+    "autonomyPaused": false,
+    "updatedAt": "2026-09-03T17:59:23.558Z"
+  },
+  "unfinishedGoals": []
+}

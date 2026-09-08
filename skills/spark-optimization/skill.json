@@ -1,0 +1,39 @@
+{
+  "id": "spark_optimization",
+  "name": "Spark Optimization",
+  "title": "Spark Optimization",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Optimize Apache Spark jobs with partitioning, caching, shuffle optimization, and memory tuning. Use when improving Sp...",
+  "tags": [
+    "automation",
+    "coding",
+    "myraa-skill",
+    "optimization",
+    "spark"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "cover_letter_generator",
+  "name": "Cover Letter Generator",
+  "title": "Cover Letter Generator",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Create personalized, compelling cover letters from resume and job description",
+  "tags": [
+    "ai",
+    "automation",
+    "cover",
+    "generator",
+    "letter",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

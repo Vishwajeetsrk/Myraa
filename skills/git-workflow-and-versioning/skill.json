@@ -1,0 +1,40 @@
+{
+  "id": "git_workflow_and_versioning",
+  "name": "Git Workflow And Versioning",
+  "title": "Git Workflow And Versioning",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflic...",
+  "tags": [
+    "ai",
+    "and",
+    "automation",
+    "git",
+    "myraa-skill",
+    "versioning"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

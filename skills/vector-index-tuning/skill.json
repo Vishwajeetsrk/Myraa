@@ -1,0 +1,40 @@
+{
+  "id": "vector_index_tuning",
+  "name": "Vector Index Tuning",
+  "title": "Vector Index Tuning",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Optimize vector index performance for latency, recall, and memory. Use when tuning HNSW parameters, selecting quantiz...",
+  "tags": [
+    "ai",
+    "automation",
+    "index",
+    "myraa-skill",
+    "tuning",
+    "vector"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

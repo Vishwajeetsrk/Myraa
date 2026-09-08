@@ -1,0 +1,38 @@
+{
+  "id": "spec",
+  "name": "Spec Intelligence",
+  "title": "Spec Intelligence",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Write a comprehensive product or engineering specification before implementation. Use when the user asks for `/spec`,...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "spec"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

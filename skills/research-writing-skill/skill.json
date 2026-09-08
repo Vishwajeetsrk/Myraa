@@ -1,0 +1,39 @@
+{
+  "id": "research_writing_skill",
+  "name": "Research Writing",
+  "title": "Research Writing",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Chinese-first research paper writing, revision, polishing, section drafting, rebuttal, peer-review response, thesis p...",
+  "tags": [
+    "ai",
+    "automation",
+    "myraa-skill",
+    "research",
+    "writing"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

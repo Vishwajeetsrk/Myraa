@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MYRAA — System Status & Feature Truth Matrix</title>
+<style>
+  :root {
+    --cyan: #00e5ff;
+    --cyan-glow: rgba(0, 229, 255, 0.35);
+    --cyan-dim: rgba(0, 229, 255, 0.08);
+    --bg-dark: #07090e;
+    --bg-card: rgba(14, 18, 28, 0.75);
+    --border-card: rgba(0, 229, 255, 0.16);
+    --border-dim: rgba(255, 255, 255, 0.07);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --emerald: #10b981;
+    --amber: #f59e0b;
+    --rose: #f43f5e;
+    --purple: #a855f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(circle at 50% 0%, #111a2e 0%, var(--bg-dark) 70%);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", monospace;
+    min-height: 100vh;
+    padding: 24px 32px 48px;
+    line-height: 1.5;
+  }
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-card);
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .brand-group { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, #00e5ff 0%, #0077ff 100%);
+    display: grid; place-items: center; font-weight: 900; color: #000;
+    box-shadow: 0 0 20px var(--cyan-glow);
+    font-size: 18px;
+  }
+  h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  h1 span { color: var(--cyan); }
+  .header-actions { display: flex; align-items: center; gap: 12px; }
+  button.btn-cyan {
+    background: var(--cyan-dim);
+    color: var(--cyan);
+    border: 1px solid var(--cyan);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
+  }
+  button.btn-cyan:hover {
+    background: var(--cyan);
+    color: #000;
+    box-shadow: 0 0 16px var(--cyan-glow);
+  }
+
+  /* Identity Bar */
+  .identity-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    backdrop-filter: blur(12px);
+  }
+  .identity-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-dim);
+    background: rgba(255,255,255,0.03);
+  }
+  .tag-cyan { border-color: rgba(0, 229, 255, 0.4); color: var(--cyan); background: var(--cyan-dim); }
+  .tag-purple { border-color: rgba(168, 85, 247, 0.4); color: var(--purple); background: rgba(168, 85, 247, 0.1); }
+  .rename-form { display: flex; align-items: center; gap: 10px; }
+  .rename-input {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .rename-input:focus { border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow); }
+  .dialogue-box {
+    width: 100%;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--cyan);
+    background: rgba(0, 229, 255, 0.05);
+    border-left: 3px solid var(--cyan);
+    padding: 8px 14px;
+    border-radius: 0 8px 8px 0;
+    display: none;
+  }
+
+  /* Grid Layouts */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-top: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
+
+  /* Panels */
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    backdrop-filter: blur(12px);
+  }
+  .panel-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; border-bottom: 1px solid var(--border-dim); padding-bottom: 10px;
+  }
+  .panel-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--cyan); font-weight: 700; }
+
+  /* Metrics */
+  .metric-box {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-dim);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .metric-label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; }
+  .metric-val { font-size: 20px; font-weight: 700; color: #fff; font-family: monospace; }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), #0077ff); transition: width 0.3s ease; }
+
+  /* Status Pills */
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 3px 10px; border-radius: 999px; border: 1px solid transparent;
+  }
+  .status-real { color: var(--emerald); border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1); }
+  .status-partial { color: var(--amber); border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.1); }
+  .status-mock { color: var(--rose); border-color: rgba(244, 63, 94, 0.3); background: rgba(244, 63, 94, 0.1); }
+  .status-healthy { color: var(--emerald); border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.1); }
+  .status-degraded { color: var(--amber); border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.1); }
+  .status-disconnected { color: var(--rose); border-color: rgba(244, 63, 94, 0.3); background: rgba(244, 63, 94, 0.1); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
+
+  /* Risk Badges */
+  .risk-read_only { color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); }
+  .risk-safe_write { color: #34d399; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.2); }
+  .risk-sensitive_write { color: #fbbf24; background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2); }
+  .risk-destructive { color: #f87171; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); }
+  .risk-critical_system { color: #e11d48; background: rgba(225, 29, 72, 0.15); border: 1px solid rgba(225, 29, 72, 0.4); }
+  .risk-external_action { color: #c084fc; background: rgba(192, 132, 252, 0.1); border: 1px solid rgba(192, 132, 252, 0.2); }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; max-height: 480px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; padding: 10px 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; border-bottom: 1px solid var(--border-dim); position: sticky; top: 0; background: #0c101c; }
+  td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+  tr:hover td { background: rgba(0, 229, 255, 0.02); }
+
+  /* Search & Filter Bar */
+  .filter-bar { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .search-input {
+    flex: 1; min-width: 180px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim);
+    border-radius: 8px; padding: 6px 12px; color: #fff; font-size: 12px; outline: none;
+  }
+  .filter-chip {
+    padding: 5px 12px; border-radius: 6px; font-size: 11px; text-transform: uppercase; font-weight: 600;
+    cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid var(--border-dim); color: var(--text-muted);
+  }
+  .filter-chip.active { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
+
+  /* Plugin Grid */
+  .plugin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .plugin-card {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border-dim); border-radius: 10px;
+    padding: 14px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .plugin-info h3 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .plugin-info p { font-size: 11px; color: var(--text-muted); }
+
+  /* Footer */
+  footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--border-dim); display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); flex-wrap: wrap; gap: 10px; }
+</style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-group">
+      <div class="logo-icon">M</div>
+      <div>
+        <h1><span>MYRAA</span> AI OS — System Status & Feature Truth</h1>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+          Autonomous Desktop Operating System · Strict Truth Verification
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span id="livePulse" class="status-pill status-healthy"><span class="dot"></span> LIVE POLLING</span>
+      <button class="btn-cyan" onclick="runDiagnostics()">Run Diagnostic</button>
+      <button class="btn-cyan" onclick="loadAll()">Refresh</button>
+    </div>
+  </header>
+
+  <!-- Identity Section -->
+  <div class="identity-card">
+    <div class="identity-meta">
+      <span class="tag tag-cyan">Canonical: <strong>MYRAA</strong></span>
+      <span class="tag tag-purple">Display Name: <strong id="displayNameVal">Myraa</strong></span>
+      <span class="tag">Wake Word: <strong id="wakeWordVal">Myraa</strong></span>
+      <span class="tag">Architecture: <strong>Tauri 2 + Rust Native</strong></span>
+    </div>
+    <form class="rename-form" onsubmit="handleRename(event)">
+      <input type="text" id="renameInput" class="rename-input" placeholder="Rename assistant (e.g. Nia)" required maxlength="32">
+      <button type="submit" class="btn-cyan">Update Name</button>
+    </form>
+    <div id="dialogueBox" class="dialogue-box"></div>
+  </div>
+
+  <!-- Telemetry 4-Col Grid -->
+  <div class="grid-4">
+    <div class="metric-box">
+      <div class="metric-label">CPU Load & Model</div>
+      <div class="metric-val" id="cpuModel">--</div>
+      <div style="font-size: 11px; color: var(--text-muted);" id="cpuCount">Cores: --</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-label">RAM Usage</div>
+      <div class="metric-val" id="ramPct">0%</div>
+      <div class="progress-bar"><div class="progress-fill" id="ramFill" style="width: 0%;"></div></div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="ramDetails">-- GB / -- GB</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-label">Memory Core (SQLite)</div>
+      <div class="metric-val" id="memoryEntries">--</div>
+      <div style="font-size: 11px; color: var(--emerald);">Active · Write-as-you-go</div>
+    </div>
+    <div class="metric-box">
+      <div class="metric-label">Host & Uptime</div>
+      <div class="metric-val" id="hostUptime">--</div>
+      <div style="font-size: 11px; color: var(--text-muted);" id="hostname">--</div>
+    </div>
+  </div>
+
+  <!-- Feature Truth Matrix & Plugin Status -->
+  <div class="grid-2">
+    <!-- Feature Truth Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Feature Truth Matrix</div>
+        <div style="font-size: 11px; color: var(--text-muted);" id="truthSummary">Verified: -- / --</div>
+      </div>
+      <div class="filter-bar">
+        <input type="text" id="truthSearch" class="search-input" placeholder="Search features..." oninput="renderTruth()">
+        <div class="filter-chip active" onclick="setTruthFilter('ALL', this)">All</div>
+        <div class="filter-chip" onclick="setTruthFilter('REAL', this)">Real</div>
+        <div class="filter-chip" onclick="setTruthFilter('PARTIAL', this)">Partial</div>
+        <div class="filter-chip" onclick="setTruthFilter('MOCK', this)">Mock</div>
+      </div>
+      <div class="table-wrap">
+        <table id="truthTable">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Category</th>
+              <th>Truth Status</th>
+              <th>Details & Verification Note</th>
+            </tr>
+          </thead>
+          <tbody id="truthBody">
+            <tr><td colspan="4" style="text-align:center; padding: 24px;">Loading feature truth matrix...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Active Plugins Grid (8 Tiles) -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Active Service Plugins (8 Tiles)</div>
+        <div style="font-size: 11px; color: var(--text-muted);">Standardized 3-State Health</div>
+      </div>
+      <div class="plugin-grid" id="pluginGrid">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Roadmap Box -->
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-dim);">
+        <div class="panel-title" style="margin-bottom: 12px;">Implementation Priorities</div>
+        <div style="display: grid; gap: 8px; font-size: 12px;">
+          <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: rgba(255,255,255,0.02); border-radius: 6px;">
+            <span><strong>NOW (P0/P1)</strong>: Dynamic Identity, NSIS Installer, Feature Truth Dashboard</span>
+            <span class="status-pill status-real">Active</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: rgba(255,255,255,0.02); border-radius: 6px;">
+            <span><strong>NEXT (P2/P3)</strong>: Step Review Modals, WhatsApp Architecture, Screen OCR</span>
+            <span class="status-pill status-partial">Queued</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 10px; background: rgba(255,255,255,0.02); border-radius: 6px;">
+            <span><strong>LATER (P4/P5)</strong>: Sandboxed Execution, Multi-Monitor Management</span>
+            <span class="status-pill status-mock">Planned</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full Capabilities Registry Panel (33+ entries) -->
+  <div class="panel" style="margin-top: 24px;">
+    <div class="panel-header">
+      <div class="panel-title">Full Capability Registry (33 System Capabilities)</div>
+      <div style="font-size: 11px; color: var(--text-muted);" id="capsCount">-- Capabilities Registered</div>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="capsSearch" class="search-input" placeholder="Search by ID, name, or description..." oninput="renderCaps()">
+      <div class="filter-chip active" onclick="setCapFilter('ALL', this)">All</div>
+      <div class="filter-chip" onclick="setCapFilter('System', this)">System</div>
+      <div class="filter-chip" onclick="setCapFilter('Security', this)">Security</div>
+      <div class="filter-chip" onclick="setCapFilter('Memory', this)">Memory</div>
+      <div class="filter-chip" onclick="setCapFilter('Voice', this)">Voice</div>
+      <div class="filter-chip" onclick="setCapFilter('Mobile', this)">Mobile</div>
+      <div class="filter-chip" onclick="setCapFilter('App Studio', this)">Studio</div>
+      <div class="filter-chip" onclick="setCapFilter('Plugins', this)">Plugins</div>
+    </div>
+    <div class="table-wrap">
+      <table id="capsTable">
+        <thead>
+          <tr>
+            <th>Capability ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Risk Level</th>
+            <th>Offline</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody id="capsBody">
+          <tr><td colspan="7" style="text-align:center; padding: 24px;">Loading capability registry...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MYRAA Memory & Knowledge (RAG) Panel -->
+  <div class="panel" style="margin-top: 24px;">
+    <div class="panel-header">
+      <div class="panel-title">MYRAA Memory &amp; Knowledge (RAG)</div>
+      <div style="font-size: 11px; color: var(--text-muted);" id="memStatsLine">Loading memory index...</div>
+    </div>
+    <div class="grid-2">
+      <div>
+        <input type="text" id="memRecallInput" class="search-input" placeholder="Ask what MYRAA remembers... e.g. my music taste" onkeydown="if(event.key==='Enter') memoryRecall(event)">
+        <button class="rename-btn" onclick="memoryRecall(event)" style="margin-top: 8px;">Recall</button>
+        <div class="table-wrap" style="margin-top: 10px; max-height: 220px; overflow:auto;">
+          <table id="memResultsTable">
+            <thead><tr><th>Category</th><th>Memory / Source</th><th>Score</th></tr></thead>
+            <tbody id="memResultsBody">
+              <tr><td colspan="3" style="text-align:center; padding: 16px; color: var(--text-muted);">Run a recall to see top semantic hits with citations.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="panel-title" style="font-size: 12px; margin-bottom: 8px;">Teach MYRAA (Remember)</div>
+        <input type="text" id="memNewText" class="search-input" placeholder="Fact to remember... e.g. I prefer dark theme UIs" style="margin-bottom: 8px;">
+        <div style="display:flex; gap:8px; margin-bottom: 8px;">
+          <input type="text" id="memNewKey" class="search-input" placeholder="key (optional)" style="flex:1;">
+          <select id="memNewCat" class="search-input" style="flex:1;">
+            <option value="preference">preference</option>
+            <option value="identity">identity</option>
+            <option value="episodic">episodic</option>
+            <option value="semantic">semantic</option>
+            <option value="knowledge">knowledge</option>
+            <option value="system_fact">system_fact</option>
+            <option value="location">location</option>
+          </select>
+        </div>
+        <button class="rename-btn" onclick="memoryRemember()">Remember</button>
+        <div id="memWriteStatus" style="font-size:11px; margin-top:8px; color: var(--text-muted);"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div>MYRAA AI OS · Strict Feature Truth · Version 1.0.2</div>
+    <div>Hardware-backed DPAPI Vault · SQLite Memory Engine · Tauri 2 Kernel</div>
+  </footer>
+
+<script>
+  const isTauri = !!(window.__TAURI__ && window.__TAURI__.core);
+  const invoke = isTauri ? window.__TAURI__.core.invoke : null;
+
+  async function apiCall(endpoint, invokeCmd, payload) {
+    if (invoke) {
+      try { return await invoke(invokeCmd, payload || {}); }
+      catch(e) { console.warn(`Invoke ${invokeCmd} failed:`, e); }
+    }
+    try {
+      const res = await fetch(endpoint, payload ? {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      } : undefined);
+      return await res.json();
+    } catch(err) {
+      console.warn(`Fetch ${endpoint} failed:`, err);
+      return null;
+    }
+  }
+
+  let allTruthFeatures = [];
+  let truthFilter = 'ALL';
+  let allCapabilities = [];
+  let capFilter = 'ALL';
+
+  async function loadIdentity() {
+    const data = await apiCall('/api/identity', 'identity_get');
+    const id = data?.identity || data || { display_name: 'Myraa', canonical_name: 'MYRAA' };
+    document.getElementById('displayNameVal').textContent = id.display_name || 'Myraa';
+    document.getElementById('wakeWordVal').textContent = id.display_name || 'Myraa';
+    document.title = (id.display_name || 'MYRAA') + ' — System Status & Feature Truth Matrix';
+  }
+
+  async function handleRename(e) {
+    e.preventDefault();
+    const newName = document.getElementById('renameInput').value.trim();
+    if (!newName) return;
+    const res = await apiCall('/api/identity/rename', 'identity_rename_flow', { newName, new_name: newName });
+    if (res && res.success) {
+      document.getElementById('displayNameVal').textContent = res.current;
+      document.getElementById('wakeWordVal').textContent = res.current;
+      const box = document.getElementById('dialogueBox');
+      box.style.display = 'block';
+      box.textContent = res.dialogue || `Identity updated. Now responding to ${res.current}.`;
+      document.getElementById('renameInput').value = '';
+      setTimeout(() => { box.style.display = 'none'; }, 8000);
+      loadIdentity();
+    }
+  }
+
+  async function loadTelemetry() {
+    const data = await apiCall('/api/system/capabilities', 'get_system_info');
+    const sys = data?.system || data || {};
+    if (sys.cpus) {
+      const parts = sys.cpus.split('x');
+      document.getElementById('cpuCount').textContent = `Cores: ${parts[0]?.trim() || '--'}`;
+      document.getElementById('cpuModel').textContent = (parts[1] || sys.cpus).trim().slice(0, 24);
+    }
+    const memTotal = parseFloat(sys.memory_total_gb) || 16;
+    const memFree = parseFloat(sys.memory_free_gb) || 8;
+    const memUsed = (memTotal - memFree).toFixed(1);
+    const pct = sys.memory_used_pct || Math.round((memUsed / memTotal) * 100);
+    document.getElementById('ramPct').textContent = `${pct}%`;
+    document.getElementById('ramFill').style.width = `${pct}%`;
+    document.getElementById('ramDetails').textContent = `${memUsed} GB / ${memTotal.toFixed(1)} GB`;
+    document.getElementById('hostUptime').textContent = sys.uptime_hours || '--';
+    document.getElementById('hostname').textContent = sys.hostname || 'MYRAA-HOST';
+
+    const diag = await apiCall('/api/diagnostic', 'diagnostic_run');
+    const d = diag?.diagnostic || diag || {};
+    if (d.memory) {
+      document.getElementById('memoryEntries').textContent = d.memory.entries ?? 0;
+    }
+  }
+
+  async function loadTruth() {
+    const data = await apiCall('/api/feature-truth', 'feature_truth_dashboard');
+    allTruthFeatures = data?.features || [];
+    const verified = allTruthFeatures.filter(f => f.verified).length;
+    document.getElementById('truthSummary').textContent = `Verified: ${verified} / ${allTruthFeatures.length}`;
+    renderTruth();
+  }
+
+  function setTruthFilter(f, btn) {
+    truthFilter = f;
+    document.querySelectorAll('.filter-bar .filter-chip').forEach(c => {
+      if (['All','Real','Partial','Mock'].includes(c.textContent.trim())) c.classList.remove('active');
+    });
+    btn.classList.add('active');
+    renderTruth();
+  }
+
+  function renderTruth() {
+    const q = (document.getElementById('truthSearch').value || '').toLowerCase();
+    const tbody = document.getElementById('truthBody');
+    const filtered = allTruthFeatures.filter(item => {
+      const matchQ = (item.feature || '').toLowerCase().includes(q) || (item.description || item.note || '').toLowerCase().includes(q) || (item.category || '').toLowerCase().includes(q);
+      const matchF = truthFilter === 'ALL' || item.status.toUpperCase() === truthFilter;
+      return matchQ && matchF;
+    });
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-muted);">No features match query</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(item => {
+      const pillClass = `status-${item.status.toLowerCase()}`;
+      return `
+        <tr>
+          <td><strong>${item.feature}</strong></td>
+          <td><span class="tag">${item.category || 'Core'}</span></td>
+          <td><span class="status-pill ${pillClass}"><span class="dot"></span> ${item.status}</span></td>
+          <td style="color: var(--text-muted);">${item.description || item.note || 'Operational'}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function loadPlugins() {
+    const data = await apiCall('/api/plugins', 'plugin_list_health');
+    const healthList = Array.isArray(data) ? data : (data?.health || data?.plugins || []);
+    const grid = document.getElementById('pluginGrid');
+    if (!healthList.length) {
+      grid.innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">No plugin telemetry available</div>';
+      return;
+    }
+    grid.innerHTML = healthList.map(p => {
+      const st = (p.status || 'unknown').toLowerCase();
+      const pillClass = `status-${st}`;
+      return `
+        <div class="plugin-card">
+          <div class="plugin-info">
+            <h3>${p.name || p.id}</h3>
+            <p>${p.last_success ? 'Last active: ' + new Date(p.last_success).toLocaleTimeString() : 'Status: ' + st}</p>
+          </div>
+          <span class="status-pill ${pillClass}"><span class="dot"></span> ${st}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function loadCapabilities() {
+    const data = await apiCall('/api/capabilities', 'capability_list');
+    allCapabilities = Array.isArray(data) ? data : (data?.capabilities || []);
+    document.getElementById('capsCount').textContent = `${allCapabilities.length} Capabilities Registered`;
+    renderCaps();
+  }
+
+  function setCapFilter(f, btn) {
+    capFilter = f;
+    btn.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    renderCaps();
+  }
+
+  function renderCaps() {
+    const q = (document.getElementById('capsSearch').value || '').toLowerCase();
+    const tbody = document.getElementById('capsBody');
+    const filtered = allCapabilities.filter(c => {
+      const matchQ = (c.id || '').toLowerCase().includes(q) || (c.name || '').toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q);
+      const matchF = capFilter === 'ALL' || (c.category || '').toLowerCase() === capFilter.toLowerCase();
+      return matchQ && matchF;
+    });
+
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-muted);">No capabilities match query</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(c => {
+      const riskClass = `risk-${(c.risk_level || 'read_only').toLowerCase()}`;
+      const statClass = `status-${(c.status || 'real').toLowerCase()}`;
+      return `
+        <tr>
+          <td><code style="color: var(--cyan); font-weight: 600;">${c.id}</code></td>
+          <td><strong>${c.name}</strong></td>
+          <td><span class="tag">${c.category}</span></td>
+          <td><span class="status-pill ${statClass}"><span class="dot"></span> ${c.status}</span></td>
+          <td><span class="tag ${riskClass}">${c.risk_level}</span></td>
+          <td>${c.offline_support ? '<span style="color: var(--emerald);">✓ Yes</span>' : '<span style="color: var(--rose);">✗ Online</span>'}</td>
+          <td style="color: var(--text-muted);">${c.description}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function runDiagnostics() {
+    const pulse = document.getElementById('livePulse');
+    pulse.textContent = 'DIAGNOSING...';
+    const diag = await apiCall('/api/diagnostic', 'diagnostic_run');
+    pulse.innerHTML = '<span class="dot"></span> LIVE POLLING';
+    loadAll();
+  }
+
+  function loadAll() {
+    loadIdentity();
+    loadTelemetry();
+    loadTruth();
+    loadPlugins();
+    loadCapabilities();
+    loadMemoryStats();
+  }
+
+  async function loadMemoryStats() {
+    const data = await apiCall('/api/memory/stats');
+    if (!data) return;
+    const counts = Object.entries(data.categories || {})
+      .map(([c, n]) => `${c}: ${n}`)
+      .join(' · ');
+    document.getElementById('memStatsLine').textContent =
+      `${data.total} memories · ${data.index_entries} index entries · ${data.backend} (${counts || 'empty'})`;
+  }
+
+  async function memoryRecall(e) {
+    e.preventDefault();
+    const q = document.getElementById('memRecallInput').value.trim();
+    if (!q) return;
+    const body = document.getElementById('memResultsBody');
+    body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:16px;">Recalling...</td></tr>';
+    const data = await apiCall('/api/memory/retrieve', null, { query: q });
+    if (!data || !data.ok) {
+      body.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--red);">Recall failed or no index.</td></tr>';
+      return;
+    }
+    if (!data.memories.length) {
+      body.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-muted);">No matches above threshold.</td></tr>';
+      return;
+    }
+    body.innerHTML = data.memories.map((m) => `
+      <tr>
+        <td>${m.category}</td>
+        <td><strong>[${m.key}]</strong> ${esc(m.text)}<div style="font-size:10px;color:var(--text-muted);">${esc(m.metadata?.sourceTitle || 'memory')}</div></td>
+        <td>${m.score ?? ''}</td>
+      </tr>`).join('');
+  }
+
+  async function memoryRemember() {
+    const text = document.getElementById('memNewText').value.trim();
+    if (!text) return;
+    const res = await apiCall('/api/memory/remember', null, {
+      text,
+      key: document.getElementById('memNewKey').value.trim() || undefined,
+      category: document.getElementById('memNewCat').value
+    });
+    const st = document.getElementById('memWriteStatus');
+    if (res && res.ok) {
+      st.textContent = `Stored (${res.key}) — recall it anytime.`;
+      document.getElementById('memNewText').value = '';
+      loadMemoryStats();
+    } else {
+      st.textContent = 'Write failed: ' + ((res && res.error) || 'unknown');
+    }
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // Initial load
+  loadAll();
+  // Live polling every 10 seconds
+  setInterval(loadTelemetry, 10000);
+</script>
+</body>
+</html>

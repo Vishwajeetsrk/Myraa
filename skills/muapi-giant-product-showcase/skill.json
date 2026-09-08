@@ -1,0 +1,40 @@
+{
+  "id": "muapi_giant_product_showcase",
+  "name": "Muapi Giant Product Showcase",
+  "title": "Muapi Giant Product Showcase",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Create a dramatic \"Giant Product\" visual where a regular item is showcased as a massive, building-sized object next t...",
+  "tags": [
+    "automation",
+    "creative",
+    "giant",
+    "muapi",
+    "myraa-skill",
+    "product"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

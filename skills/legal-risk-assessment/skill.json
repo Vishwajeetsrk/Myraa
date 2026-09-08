@@ -1,0 +1,40 @@
+{
+  "id": "legal_risk_assessment",
+  "name": "Legal Risk Assessment",
+  "title": "Legal Risk Assessment",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Assess and classify legal risks using a severity-by-likelihood framework with escalation criteria. Use when evaluatin...",
+  "tags": [
+    "ai",
+    "assessment",
+    "automation",
+    "legal",
+    "myraa-skill",
+    "risk"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

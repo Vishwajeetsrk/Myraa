@@ -1,0 +1,38 @@
+{
+  "id": "accessibility",
+  "name": "Accessibility Intelligence",
+  "title": "Accessibility Intelligence",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Audit and improve web accessibility following WCAG 2.2 guidelines. Use when asked to \"improve accessibility\", \"a11y a...",
+  "tags": [
+    "accessibility",
+    "ai",
+    "automation",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

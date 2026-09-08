@@ -1,0 +1,38 @@
+{
+  "id": "ci_cd_and_automation",
+  "name": "Ci Cd And Automation",
+  "title": "Ci Cd And Automation",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Automates CI/CD pipeline setup. Use when setting up or modifying build and deployment pipelines. Use when you need to...",
+  "tags": [
+    "and",
+    "automation",
+    "coding",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

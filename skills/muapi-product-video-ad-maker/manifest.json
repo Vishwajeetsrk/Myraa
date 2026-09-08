@@ -1,0 +1,40 @@
+{
+  "id": "muapi_product_video_ad_maker",
+  "name": "Muapi Product Video Ad Maker",
+  "title": "Muapi Product Video Ad Maker",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Create a high-end cinematic product video advertisement starting from a simple product photo.",
+  "tags": [
+    "automation",
+    "creative",
+    "maker",
+    "muapi",
+    "myraa-skill",
+    "product"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

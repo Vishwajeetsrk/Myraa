@@ -1,0 +1,40 @@
+{
+  "id": "muapi_cartoon_dance_animation",
+  "name": "Muapi Cartoon Dance Animation",
+  "title": "Muapi Cartoon Dance Animation",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Convert a photo of a person into a Pixar-style 3D cartoon character, then animate it using a reference dance or motio...",
+  "tags": [
+    "animation",
+    "automation",
+    "cartoon",
+    "creative",
+    "dance",
+    "muapi"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

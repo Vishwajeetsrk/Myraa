@@ -1,0 +1,39 @@
+{
+  "id": "backtesting_frameworks",
+  "name": "Backtesting Frameworks",
+  "title": "Backtesting Frameworks",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Build robust backtesting systems for trading strategies with proper handling of look-ahead bias, survivorship bias, a...",
+  "tags": [
+    "ai",
+    "automation",
+    "backtesting",
+    "frameworks",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

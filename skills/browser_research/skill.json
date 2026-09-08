@@ -1,0 +1,38 @@
+{
+  "id": "browser_research",
+  "name": "Browser Research",
+  "title": "Browser Research",
+  "version": "1.0.0",
+  "category": "AI & Intelligence",
+  "description": "Perform structured web research, collect sources, compare evidence, summarize findings, and retain citations.",
+  "tags": [
+    "ai",
+    "automation",
+    "browser_research",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

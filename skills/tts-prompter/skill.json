@@ -1,0 +1,39 @@
+{
+  "id": "tts_prompter",
+  "name": "Tts Prompter",
+  "title": "Tts Prompter",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "MUST read this skill BEFORE entering generate mode for text-to-speech (TTS) tasks. Covers prompt crafting framework, ...",
+  "tags": [
+    "automation",
+    "creative",
+    "myraa-skill",
+    "prompter",
+    "tts"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

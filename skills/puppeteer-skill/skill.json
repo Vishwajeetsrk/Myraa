@@ -1,0 +1,38 @@
+{
+  "id": "puppeteer_skill",
+  "name": "Puppeteer Intelligence",
+  "title": "Puppeteer Intelligence",
+  "version": "2.5.0",
+  "category": "Computer Automation",
+  "description": ">",
+  "tags": [
+    "automation",
+    "computer automation",
+    "myraa-skill",
+    "puppeteer"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "browser_automation",
+    "desktop_control",
+    "screen_ocr",
+    "task_execution"
+  ],
+  "input_types": [
+    "url",
+    "screen_state",
+    "instruction"
+  ],
+  "output_types": [
+    "action_log",
+    "screenshot",
+    "task_result"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

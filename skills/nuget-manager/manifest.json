@@ -1,0 +1,39 @@
+{
+  "id": "nuget_manager",
+  "name": "Nuget Manager",
+  "title": "Nuget Manager",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "Manage NuGet packages in .NET projects/solutions. Use this skill when adding, removing, or updating NuGet package ver...",
+  "tags": [
+    "automation",
+    "file",
+    "manager",
+    "myraa-skill",
+    "nuget"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

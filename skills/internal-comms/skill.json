@@ -1,0 +1,39 @@
+{
+  "id": "internal_comms",
+  "name": "Internal Comms",
+  "title": "Internal Comms",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "A set of resources to help me write all kinds of internal communications, using the formats that my company likes to ...",
+  "tags": [
+    "automation",
+    "comms",
+    "file",
+    "internal",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

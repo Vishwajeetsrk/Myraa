@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+dist/node_modules/
+
+# Build output
+release/
+*.blockmap
+*.yml
+builder-debug.yml
+
+# Executables / Installers
+*.exe
+*.msi
+*.app
+
+# Environment / secrets
+.env
+.env.*
+secrets.json
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cache
+.cache/
+*.tmp
+
+# Electron
+out/
+*.asar
+*.asar.unpacked
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Coverage
+coverage/
+.nyc_output/

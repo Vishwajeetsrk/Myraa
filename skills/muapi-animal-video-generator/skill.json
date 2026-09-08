@@ -1,0 +1,40 @@
+{
+  "id": "muapi_animal_video_generator",
+  "name": "Muapi Animal Video Generator",
+  "title": "Muapi Animal Video Generator",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Create a hilarious and ultra-realistic video of an anthropomorphic animal acting like a human vlogger in a real-world...",
+  "tags": [
+    "animal",
+    "automation",
+    "creative",
+    "generator",
+    "muapi",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

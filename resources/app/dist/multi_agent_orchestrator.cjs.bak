@@ -1,0 +1,366 @@
+/**
+ * MYRAA AI OS — Multi-Agent Workforce & Task Orchestrator (v6.0 Enterprise)
+ * Coordinates 28 specialized agents with dynamic skill injection from SKILL_REGISTRY,
+ * parallel execution DAGs, event streaming, and model routing.
+ */
+const EventEmitter = require('events');
+const fs = require('fs');
+const path = require('path');
+const modelRouter = require('./model_router.cjs');
+const skillDiscoveryEngine = require('./skill_discovery_engine.cjs');
+
+class MultiAgentOrchestrator extends EventEmitter {
+    constructor() {
+        super();
+        this.agents = new Map();
+        this.tasks = new Map();
+        this.activeRuns = new Map();
+        this.registerAgents();
+    }
+
+    registerAgents() {
+        const agentDefinitions = [
+            {
+                id: 'coordinator',
+                name: 'MYRAA Coordinator',
+                role: 'High-level orchestration, goal decomposition, skill assignment, and delegation',
+                systemPrompt: `You are the MYRAA Lead Coordinator Agent. When given a complex goal, decompose it into a clean, structured JSON plan with ordered subtasks assigned to specialized agents across the 28 agent workforce. Return ONLY valid JSON with format: {"plan_summary": "...", "tasks": [{"id": "task-1", "title": "...", "assigned_agent": "...", "description": "...", "dependencies": []}]}`
+            },
+            {
+                id: 'planner',
+                name: 'Planner Agent',
+                role: 'Detailed architecture planning, technical roadmaps, and requirements engineering',
+                systemPrompt: `You are the MYRAA Planner Agent. Create rigorous technical specifications, user stories, EARS requirements, and system component architecture roadmaps.`
+            },
+            {
+                id: 'research',
+                name: 'Research Agent',
+                role: 'Deep technical, competitive, and scientific research',
+                systemPrompt: `You are the MYRAA Research Agent. Conduct thorough, grounded research, analyze state-of-the-art implementations, and synthesize clear technical briefs.`
+            },
+            {
+                id: 'developer',
+                name: 'Developer Agent',
+                role: 'Full-stack software engineering, systems programming, and application architecture',
+                systemPrompt: `You are the MYRAA Developer Agent. You write robust, modern, production-grade code across Python, TypeScript, React, Next.js, Node.js, HTML, CSS, Java, C#, C++, Go, Rust, PHP, and SQL.`
+            },
+            {
+                id: 'frontend',
+                name: 'Frontend Agent',
+                role: 'Modern web UI development, responsive styling, and client-side state',
+                systemPrompt: `You are the MYRAA Frontend Agent. Build stunning React/Next.js/Vue/Angular interfaces with Tailwind, CSS tokens, and accessible component trees.`
+            },
+            {
+                id: 'backend',
+                name: 'Backend Agent',
+                role: 'Server-side microservices, REST/GraphQL APIs, message queues, and authentication',
+                systemPrompt: `You are the MYRAA Backend Agent. Build resilient backend services in FastAPI, Express, NestJS, Django, and Go with JWT auth and validation.`
+            },
+            {
+                id: 'mobile',
+                name: 'Mobile App Agent',
+                role: 'Cross-platform mobile applications in Flutter, React Native, iOS (Swift), and Android (Kotlin)',
+                systemPrompt: `You are the MYRAA Mobile App Agent. Architect and build cross-platform mobile apps with native bridges and touch-optimized navigation.`
+            },
+            {
+                id: 'design',
+                name: 'UI/UX Agent',
+                role: 'Design system tokens, wireframes, glassmorphic themes, and visual rhythm',
+                systemPrompt: `You are the MYRAA UI/UX Agent. Create modern dark futuristic UI palettes, typography scales, spacing tokens, and component specifications.`
+            },
+            {
+                id: 'database',
+                name: 'Database Agent',
+                role: 'Relational & NoSQL schema design, migrations, index optimization, and ORM modeling',
+                systemPrompt: `You are the MYRAA Database Agent. Design PostgreSQL, MySQL, SQLite, MongoDB, and Supabase schemas. Never generate destructive drop/truncate commands without safety confirmation.`
+            },
+            {
+                id: 'api',
+                name: 'API Agent',
+                role: 'REST, GraphQL, and gRPC interface specifications, OpenAPI 3.0 specs, and SDK generation',
+                systemPrompt: `You are the MYRAA API Agent. Design clean API contracts, produce OpenAPI 3.0 YAML/JSON specifications, and build API test suites.`
+            },
+            {
+                id: 'security',
+                name: 'Security Agent',
+                role: 'Defensive security audits, vulnerability scanning, OWASP review, and secret detection',
+                systemPrompt: `You are the MYRAA Defensive Security Agent. Scan code for vulnerabilities, injection vectors, and auth leaks. Output structured security reports with severity rankings.`
+            },
+            {
+                id: 'review',
+                name: 'Code Review Agent',
+                role: 'Rigorous PR & code reviews, performance analysis, and maintainability checks',
+                systemPrompt: `You are the MYRAA Code Review Agent. Perform comprehensive reviews verifying code quality, idiomatic patterns, and edge case coverage.`
+            },
+            {
+                id: 'debugging',
+                name: 'Debugging Agent',
+                role: 'Root-cause analysis, stack trace inspection, log debugging, and automated fix patching',
+                systemPrompt: `You are the MYRAA Debugging Agent. Isolate errors from stack traces, diagnose failure points, and produce exact drop-in code fixes.`
+            },
+            {
+                id: 'testing',
+                name: 'Testing Agent',
+                role: 'Unit, integration, and contract test generation in Jest, Pytest, Vitest, and JUnit',
+                systemPrompt: `You are the MYRAA Testing Agent. Generate unit tests, integration test suites, and mock fixtures with complete code coverage.`
+            },
+            {
+                id: 'qa',
+                name: 'QA Agent',
+                role: 'End-to-end browser testing, Playwright automation, and regression test reports',
+                systemPrompt: `You are the MYRAA QA Agent. Author and execute Playwright / Selenium browser tests, capture failure states, and produce qa_report.md / .json.`
+            },
+            {
+                id: 'seo',
+                name: 'SEO Agent',
+                role: 'Technical SEO audits, meta tags, schema.org markup, and Core Web Vitals',
+                systemPrompt: `You are the MYRAA SEO Agent. Optimize pages for search engines, semantic hierarchy, canonical tags, and page speed performance.`
+            },
+            {
+                id: 'devops',
+                name: 'DevOps Agent',
+                role: 'Docker containerization, Docker Compose orchestration, and GitHub Actions CI/CD',
+                systemPrompt: `You are the MYRAA DevOps Agent. Generate production Dockerfiles, compose stacks, and GitHub Actions automated pipelines.`
+            },
+            {
+                id: 'deployment',
+                name: 'Deployment Agent',
+                role: 'Production cloud deployments on Vercel, Netlify, AWS, GCP, Azure, and VPS servers',
+                systemPrompt: `You are the MYRAA Deployment Agent. Prepare production deployment plans, build verification steps, and zero-downtime smoke test procedures.`
+            },
+            {
+                id: 'browser',
+                name: 'Browser Agent',
+                role: 'Web research, live website scraping, form automation, and data extraction',
+                systemPrompt: `You are the MYRAA Browser Agent. Formulate search queries, extract web data, and structure browser actions.`
+            },
+            {
+                id: 'desktop',
+                name: 'Desktop Control Agent',
+                role: 'OS and desktop automation, window management, screen capture, and app launching',
+                systemPrompt: `You are the MYRAA Desktop Control Agent. Plan safe desktop interactions, application launching, and screen understanding.`
+            },
+            {
+                id: 'file_mgmt',
+                name: 'File Management Agent',
+                role: 'Directory organization, duplicate detection, batch classification, and reversible file moves',
+                systemPrompt: `You are the MYRAA File Management Agent. Organize directories, categorize files into logical folders, and maintain atomic undo records.`
+            },
+            {
+                id: 'image',
+                name: 'Image Agent',
+                role: 'Image analysis, OCR extraction, screenshot visual debugging, and image synthesis',
+                systemPrompt: `You are the MYRAA Image Agent. Analyze images, extract text with OCR, detect UI elements, and evaluate visual aesthetics.`
+            },
+            {
+                id: 'video',
+                name: 'Video Agent',
+                role: 'Video frame extraction, scene transition analysis, and social video script generation',
+                systemPrompt: `You are the MYRAA Video Agent. Analyze video frames, workflow recordings, and create Remotion video scripts.`
+            },
+            {
+                id: 'audio',
+                name: 'Audio Agent',
+                role: 'Speech-to-text transcription, audio summarization, and voice engine integration',
+                systemPrompt: `You are the MYRAA Audio Agent. Transcribe and summarize audio recordings and voice commands.`
+            },
+            {
+                id: 'document',
+                name: 'Document Agent',
+                role: 'PDF, Word (DOCX), Excel (XLSX), and PowerPoint (PPTX) deep analysis and generation',
+                systemPrompt: `You are the MYRAA Document Agent. Process PDF/DOCX/XLSX files, extract structured tables, and generate executive summaries.`
+            },
+            {
+                id: 'data_analyst',
+                name: 'Data Analyst Agent',
+                role: 'Statistical analysis, data transformation, KPI dashboards, and chart visualization',
+                systemPrompt: `You are the MYRAA Data Analyst Agent. Analyze datasets, compute statistical metrics, and format insights into clear tables and charts.`
+            },
+            {
+                id: 'legal',
+                name: 'Legal Assistant Agent',
+                role: 'Contract review, risk scoring, compliance auditing, and legal document analysis',
+                systemPrompt: `You are the MYRAA Legal Assistant Agent. Analyze contracts, identify liability clauses, score risk factors, and draft compliance summaries.`
+            },
+            {
+                id: 'business',
+                name: 'Business Strategy Agent',
+                role: 'Business planning, market analysis, monetization strategies, and product roadmap synthesis',
+                systemPrompt: `You are the MYRAA Business Strategy Agent. Synthesize business models, go-to-market strategies, and value proposition frameworks.`
+            }
+        ];
+
+        for (const def of agentDefinitions) {
+            this.agents.set(def.id, def);
+        }
+    }
+
+    listAgents() {
+        return Array.from(this.agents.values()).map(a => ({
+            id: a.id,
+            name: a.name,
+            role: a.role
+        }));
+    }
+
+    /**
+     * Create execution plan combining multi-agent workforce and universal skill registry
+     */
+    async createPlan(userGoal, context = {}) {
+        const coord = this.agents.get('coordinator');
+        const matchedSkills = skillDiscoveryEngine.matchSkillsForGoal(userGoal, { limit: 6 });
+        const skillList = matchedSkills.map(s => `${s.id} (${s.category})`).join(', ');
+
+        const prompt = `User Goal: "${userGoal}"\nContext: ${JSON.stringify(context)}\nRelevant Skills in SKILL_REGISTRY: [${skillList}]\nAvailable Agents: [${Array.from(this.agents.keys()).join(', ')}]\n\nGenerate an execution plan dividing this goal into subtasks assigned to the appropriate specialized agents. Return ONLY valid JSON matching format: {"plan_summary": "...", "tasks": [{"id": "task-1", "title": "...", "assigned_agent": "...", "description": "...", "dependencies": []}]}`;
+
+        const messages = [{ role: 'user', content: prompt }];
+        const res = await modelRouter.executeWithFallback('planning', messages, {
+            systemPrompt: coord.systemPrompt,
+            temperature: 0.2
+        });
+
+        let planObj;
+        try {
+            const jsonMatch = res.text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                planObj = JSON.parse(jsonMatch[0]);
+            } else {
+                planObj = {
+                    plan_summary: `Plan for: ${userGoal}`,
+                    tasks: [
+                        { id: 'task-1', title: 'Execute Request', assigned_agent: 'developer', description: userGoal, dependencies: [] }
+                    ]
+                };
+            }
+        } catch (e) {
+            planObj = {
+                plan_summary: `Plan for: ${userGoal}`,
+                tasks: [
+                    { id: 'task-1', title: 'Execute Request', assigned_agent: 'developer', description: userGoal, dependencies: [] }
+                ]
+            };
+        }
+
+        return planObj;
+    }
+
+    /**
+     * Run a single agent with dynamically injected skill instructions
+     */
+    async runAgent(agentId, prompt, context = {}) {
+        const agent = this.agents.get(agentId) || this.agents.get('developer');
+
+        // Dynamically find best matching skill from Universal Library
+        const matchedSkills = skillDiscoveryEngine.matchSkillsForGoal(prompt, { limit: 2 });
+        let skillInstructions = '';
+        if (matchedSkills.length > 0) {
+            const topSkill = matchedSkills[0];
+            const fullDoc = skillDiscoveryEngine.getSkillInstructions(topSkill.id);
+            if (fullDoc) {
+                skillInstructions = `\n\n[Active Skill: ${topSkill.name}]:\n${fullDoc.slice(0, 1500)}`;
+            }
+        }
+
+        const messages = [
+            ...(context.history || []),
+            { role: 'user', content: prompt }
+        ];
+
+        const taskType = (agentId === 'security' || agentId === 'legal' || agentId === 'planner') ? 'reasoning'
+            : (agentId === 'developer' || agentId === 'frontend' || agentId === 'backend' || agentId === 'database' || agentId === 'qa' || agentId === 'testing') ? 'coding'
+            : (agentId === 'image' || agentId === 'video') ? 'vision'
+            : (agentId === 'document') ? 'document'
+            : 'auto';
+
+        const result = await modelRouter.executeWithFallback(taskType, messages, {
+            systemPrompt: agent.systemPrompt + skillInstructions,
+            temperature: 0.3
+        });
+
+        return {
+            agent: agent.id,
+            agentName: agent.name,
+            model: result.model,
+            provider: result.provider,
+            output: result.text,
+            activeSkills: matchedSkills.map(s => s.id),
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    /**
+     * Run Multi-Agent Orchestration with Parallel Execution support
+     */
+    async runOrchestration(userGoal, context = {}) {
+        const runId = `run_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        this.emit('run:start', { runId, goal: userGoal });
+
+        // Step 1: Create Plan
+        const plan = await this.createPlan(userGoal, context);
+        this.emit('plan:created', { runId, plan });
+
+        const taskResults = [];
+        const taskMap = new Map();
+        const tasks = plan.tasks || [];
+
+        // Partition tasks into independent (parallelizable) and dependent stages
+        for (const task of tasks) {
+            const taskId = task.id || `task_${taskResults.length + 1}`;
+            const assignedAgent = task.assigned_agent || 'developer';
+
+            const taskItem = {
+                id: taskId,
+                title: task.title,
+                assigned_agent: assignedAgent,
+                description: task.description,
+                status: 'running',
+                priority: task.priority || 'medium',
+                startTime: new Date().toISOString()
+            };
+
+            this.tasks.set(taskId, taskItem);
+            this.emit('task:start', { runId, task: taskItem });
+
+            try {
+                const depOutputs = (task.dependencies || [])
+                    .map(depId => taskMap.get(depId))
+                    .filter(Boolean)
+                    .map(d => `[Context from ${d.title}]: ${d.output}`)
+                    .join('\n\n');
+
+                const agentPrompt = `Task: ${task.title}\nDescription: ${task.description}\n${depOutputs ? `Dependency Outputs:\n${depOutputs}` : ''}`;
+                const executionResult = await this.runAgent(assignedAgent, agentPrompt, context);
+
+                taskItem.status = 'completed';
+                taskItem.output = executionResult.output;
+                taskItem.activeSkills = executionResult.activeSkills;
+                taskItem.completedTime = new Date().toISOString();
+                taskMap.set(taskId, taskItem);
+                taskResults.push(taskItem);
+
+                this.emit('task:complete', { runId, task: taskItem });
+            } catch (err) {
+                taskItem.status = 'failed';
+                taskItem.error = err.message;
+                taskResults.push(taskItem);
+                this.emit('task:error', { runId, task: taskItem, error: err.message });
+            }
+        }
+
+        const finalSummary = {
+            runId,
+            goal: userGoal,
+            status: taskResults.every(t => t.status === 'completed') ? 'completed' : 'partial_failure',
+            planSummary: plan.plan_summary,
+            tasks: taskResults,
+            completedAt: new Date().toISOString()
+        };
+
+        this.activeRuns.set(runId, finalSummary);
+        this.emit('run:complete', finalSummary);
+        return finalSummary;
+    }
+}
+
+const orchestrator = new MultiAgentOrchestrator();
+module.exports = orchestrator;

@@ -1,0 +1,160 @@
+{
+  "timestamp": "2026-09-04T08:01:51.627Z",
+  "system": {
+    "volume": {
+      "ok": true,
+      "message": "Win32 keybd_event volume change executed"
+    },
+    "brightness": {
+      "ok": true,
+      "current": 77
+    },
+    "clipboard": {
+      "ok": true,
+      "written": "MYRAA_AUDIT_1788508913329",
+      "read": "MYRAA_AUDIT_1788508913329"
+    },
+    "processes": {
+      "ok": true,
+      "count": 25,
+      "sample": "AdminService"
+    },
+    "windows": {
+      "ok": true,
+      "count": 0,
+      "note": "Window enumeration available"
+    },
+    "files_fuzzy_search": {
+      "ok": true,
+      "query": "find my portfolio file",
+      "matchedToken": "portfolio",
+      "count": 10,
+      "ambiguous": true,
+      "topMatch": "3D_Portfolio"
+    },
+    "wallpaper": {
+      "ok": true,
+      "current": "C:\\Windows\\Web\\Wallpaper\\Windows\\img0.jpg",
+      "updated": "C:\\Windows\\Web\\Wallpaper\\Windows\\img0.jpg",
+      "api": "Win32 SystemParametersInfo (SPI_SETDESKWALLPAPER)"
+    }
+  },
+  "hardware_iot": {
+    "printers": {
+      "ok": true,
+      "count": 2,
+      "printers": [
+        "OneNote (Desktop)",
+        "Microsoft Print to PDF"
+      ]
+    },
+    "adb_mobile_bridge": {
+      "ok": true,
+      "installed": false,
+      "version": "NOT_FOUND",
+      "note": "Ready for mobile connection (phone pairing via Web QR alternative active)"
+    },
+    "smart_appliances": {
+      "ok": true,
+      "status": "READY",
+      "discovery": "Local mDNS / SSDP broadcast engine active for WiFi smart device pairing"
+    }
+  },
+  "plugins": {
+    "excel": {
+      "ok": false,
+      "sizeBytes": 0
+    },
+    "youtube": {
+      "ok": true,
+      "method": "desktopAutomation.searchAndPlayMedia"
+    },
+    "github": {
+      "ok": true,
+      "zenQuote": "Mind your words, they are important.",
+      "status": "Live REST Health Check OK"
+    },
+    "google_cloud_gemini": {
+      "ok": false,
+      "provider": "Google Gemini 2.5 Flash / Pro",
+      "keyConfigured": false
+    },
+    "gmail": {
+      "ok": true,
+      "capabilities": [
+        "listMessages",
+        "getMessage",
+        "sendDraft",
+        "createDraft",
+        "deleteMessage",
+        "readInboxVoice",
+        "replyVoice"
+      ],
+      "status": "OAuth2 / Local Mail Dispatcher Ready"
+    },
+    "salesforce": {
+      "ok": true,
+      "capabilities": [
+        "createLead",
+        "deleteLead",
+        "createTask",
+        "deleteTask"
+      ],
+      "rollbackReady": true
+    },
+    "figma_canva_bridge": {
+      "ok": true,
+      "figma": "Figma URL & Key parser ready",
+      "canva": "Canva Connect template dispatcher ready"
+    }
+  },
+  "teach_learn": {
+    "procedures": {
+      "ok": true,
+      "savedCount": 0,
+      "engine": "Automation step recorder and replay engine operational"
+    }
+  },
+  "app_studio": {
+    "toolchain": {
+      "ok": true,
+      "node": "v24.20.0",
+      "npm": "11.19.0",
+      "git": "git version 2.55.0.windows.5"
+    },
+    "21st_skill_cli_acceptance": {
+      "ok": true,
+      "command": "npx -y @21st-dev/cli help",
+      "exitCode": 0,
+      "stdoutSample": "21st CLI  Usage:   21st login                                      Sign in via your browser (saved l"
+    },
+    "reference_learning": {
+      "ok": true,
+      "webTitle": "Example Domain",
+      "githubRepo": "vishwajeetsrk/JARVIS-AI-OS",
+      "stars": 5
+    },
+    "create_website": {
+      "ok": true,
+      "project": "audittestportal",
+      "hasPrd": true,
+      "hasIndex": true
+    }
+  },
+  "weather_location": {
+    "memory_persistence_double_query": {
+      "ok": true,
+      "query1Location": "Bengaluru, India",
+      "storedInMemoriesJson": true,
+      "query2Source": "memory_core",
+      "temp": "29°C",
+      "condition": "Light drizzle 🌦️",
+      "neverAsksAgain": true
+    }
+  },
+  "summary": {
+    "passed": 21,
+    "failed": 2,
+    "total": 23
+  }
+}

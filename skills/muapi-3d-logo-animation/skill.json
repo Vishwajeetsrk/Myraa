@@ -1,0 +1,40 @@
+{
+  "id": "muapi_3d_logo_animation",
+  "name": "Muapi 3d Logo Animation",
+  "title": "Muapi 3d Logo Animation",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Transform a 2D logo into a premium 3D version and animate it with professional cinematic effects.",
+  "tags": [
+    "animation",
+    "automation",
+    "creative",
+    "logo",
+    "muapi",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

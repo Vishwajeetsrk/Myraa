@@ -1,0 +1,40 @@
+{
+  "id": "venice_api_overview",
+  "name": "Venice Api Overview",
+  "title": "Venice Api Overview",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "High-level map of the Venice.ai API - base URL, authentication modes, endpoint categories, response headers, pricing ...",
+  "tags": [
+    "api",
+    "automation",
+    "creative",
+    "myraa-skill",
+    "overview",
+    "venice"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

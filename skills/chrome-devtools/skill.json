@@ -1,0 +1,39 @@
+{
+  "id": "chrome_devtools",
+  "name": "Chrome Devtools",
+  "title": "Chrome Devtools",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Expert-level browser automation, debugging, and performance analysis using Chrome DevTools MCP. Use for interacting w...",
+  "tags": [
+    "ai",
+    "automation",
+    "chrome",
+    "devtools",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "appinsights_instrumentation",
+  "name": "Appinsights Instrumentation",
+  "title": "Appinsights Instrumentation",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Instrument a webapp to send useful telemetry data to Azure App Insights",
+  "tags": [
+    "appinsights",
+    "automation",
+    "coding",
+    "instrumentation",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

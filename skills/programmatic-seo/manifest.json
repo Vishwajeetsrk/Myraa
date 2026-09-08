@@ -1,0 +1,39 @@
+{
+  "id": "programmatic_seo",
+  "name": "Programmatic Seo",
+  "title": "Programmatic Seo",
+  "version": "2.5.0",
+  "category": "Business & Productivity",
+  "description": "When the user wants to create SEO-driven pages at scale using templates and data. Also use when the user mentions \"pr...",
+  "tags": [
+    "automation",
+    "business",
+    "myraa-skill",
+    "programmatic",
+    "seo"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "business_modeling",
+    "kpi_tracking",
+    "market_research",
+    "productivity_workflow"
+  ],
+  "input_types": [
+    "metrics",
+    "business_brief",
+    "strategy_doc"
+  ],
+  "output_types": [
+    "analytics_report",
+    "strategic_plan",
+    "dashboard"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

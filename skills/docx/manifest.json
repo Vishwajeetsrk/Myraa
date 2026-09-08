@@ -1,0 +1,38 @@
+{
+  "id": "docx",
+  "name": "Docx Intelligence",
+  "title": "Docx Intelligence",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers in...",
+  "tags": [
+    "automation",
+    "docx",
+    "file",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "remotion",
+  "name": "Remotion Intelligence",
+  "title": "Remotion Intelligence",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Create videos programmatically using React (Remotion) or generate mathematical/conceptual animations (Manim). Use whe...",
+  "tags": [
+    "automation",
+    "coding",
+    "myraa-skill",
+    "remotion"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

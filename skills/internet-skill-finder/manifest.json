@@ -1,0 +1,39 @@
+{
+  "id": "internet_skill_finder",
+  "name": "Internet Finder",
+  "title": "Internet Finder",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Search and recommend Agent Skills from verified GitHub repositories. Use when users ask to find, discover, search for...",
+  "tags": [
+    "automation",
+    "coding",
+    "finder",
+    "internet",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

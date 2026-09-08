@@ -1,0 +1,39 @@
+{
+  "id": "microsoft_docs",
+  "name": "Microsoft Docs",
+  "title": "Microsoft Docs",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Query official Microsoft documentation to find concepts, tutorials, and code examples across Azure, .NET, Agent Frame...",
+  "tags": [
+    "automation",
+    "coding",
+    "docs",
+    "microsoft",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

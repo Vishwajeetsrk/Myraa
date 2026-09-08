@@ -1,0 +1,39 @@
+{
+  "id": "claude_md_improver",
+  "name": "Claude Md Improver",
+  "title": "Claude Md Improver",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "Audit and improve CLAUDE.md files in repositories. Use when user asks to check, audit, update, improve, or fix CLAUDE...",
+  "tags": [
+    "ai",
+    "automation",
+    "claude",
+    "improver",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

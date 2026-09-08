@@ -1,0 +1,39 @@
+{
+  "id": "sn_da_excel_workflow",
+  "name": "Sn Da Excel Workflow",
+  "title": "Sn Da Excel Workflow",
+  "version": "2.5.0",
+  "category": "File & Document Management",
+  "description": "Excel \u6570\u636e\u5206\u6790\u591a\u6b65\u7f16\u6392\u5668\u3002\u8986\u76d6\uff1a(1) \u8bfb\u53d6\u591a Sheet Excel \u6587\u4ef6\u5e76\u7edf\u8ba1\u884c\u6570\uff0c(2) \u5927\u6587\u4ef6\u68c0\u6d4b\uff08\u226510k \u884c\u81ea\u52a8 Parquet \u4f18\u5316\uff09\uff0c(3) \u6570\u636e\u6e05\u6d17\uff08\u7f3a\u5931\u503c\u3001\u6587\u672c\u6807\u51c6\u5316\u3001\u65e0\u6548\u5b57\u7b26\uff09\uff0c(4) \u6761\u4ef6\u7b5b\u9009\u4e0e\u5206\u7c7b\u63d0\u53d6\uff0c...",
+  "tags": [
+    "automation",
+    "excel",
+    "file",
+    "myraa-skill",
+    "workflow"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "file_parsing",
+    "pdf_intelligence",
+    "archive_management",
+    "document_synthesis"
+  ],
+  "input_types": [
+    "file",
+    "document",
+    "archive"
+  ],
+  "output_types": [
+    "parsed_text",
+    "report",
+    "file_bundle"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

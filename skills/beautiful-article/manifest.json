@@ -1,0 +1,39 @@
+{
+  "id": "beautiful_article",
+  "name": "Beautiful Article",
+  "title": "Beautiful Article",
+  "version": "0.1.0",
+  "category": "Creative & Design",
+  "description": "Edit and design any source material (URL / PDF / DOCX / Markdown / plain text / screenshots / pasted notes) into a be...",
+  "tags": [
+    "article",
+    "automation",
+    "beautiful",
+    "creative",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

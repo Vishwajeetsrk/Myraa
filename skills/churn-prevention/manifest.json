@@ -1,0 +1,39 @@
+{
+  "id": "churn_prevention",
+  "name": "Churn Prevention",
+  "title": "Churn Prevention",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "When the user wants to reduce churn, build cancellation flows, set up save offers, recover failed payments, or implem...",
+  "tags": [
+    "automation",
+    "churn",
+    "creative",
+    "myraa-skill",
+    "prevention"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

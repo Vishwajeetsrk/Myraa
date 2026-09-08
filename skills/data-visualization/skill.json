@@ -1,0 +1,39 @@
+{
+  "id": "data_visualization",
+  "name": "Data Visualization",
+  "title": "Data Visualization",
+  "version": "2.5.0",
+  "category": "Creative & Design",
+  "description": "Create effective data visualizations with Python (matplotlib, seaborn, plotly). Use when building charts, choosing th...",
+  "tags": [
+    "automation",
+    "creative",
+    "data",
+    "myraa-skill",
+    "visualization"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "ui_prototyping",
+    "motion_graphics",
+    "visual_design",
+    "asset_generation"
+  ],
+  "input_types": [
+    "prompt",
+    "wireframe",
+    "style_guide"
+  ],
+  "output_types": [
+    "design_tokens",
+    "vector_graphics",
+    "ui_components"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

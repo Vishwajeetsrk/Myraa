@@ -1,0 +1,40 @@
+{
+  "id": "finishing_a_development_branch",
+  "name": "Finishing A Development Branch",
+  "title": "Finishing A Development Branch",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Use when implementation is complete, all tests pass, and you need to decide how to integrate the work",
+  "tags": [
+    "automation",
+    "branch",
+    "coding",
+    "development",
+    "finishing",
+    "myraa-skill"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

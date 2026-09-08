@@ -1,0 +1,40 @@
+{
+  "id": "seo_aeo_best_practices",
+  "name": "Seo Aeo Best Practices",
+  "title": "Seo Aeo Best Practices",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "SEO and AEO best practices for metadata, Open Graph, sitemaps, robots.txt, hreflang, JSON-LD structured data, EEAT, a...",
+  "tags": [
+    "aeo",
+    "ai",
+    "automation",
+    "best",
+    "myraa-skill",
+    "practices"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "professional_communication",
+  "name": "Professional Communication",
+  "title": "Professional Communication",
+  "version": "2.5.0",
+  "category": "Communication",
+  "description": "Guide technical communication for software developers. Covers email structure, team messaging etiquette, meeting agen...",
+  "tags": [
+    "automation",
+    "communication",
+    "myraa-skill",
+    "professional"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "multilingual_chat",
+    "email_generation",
+    "voice_synthesis",
+    "outreach_pipeline"
+  ],
+  "input_types": [
+    "prompt",
+    "message",
+    "transcript"
+  ],
+  "output_types": [
+    "formatted_message",
+    "email_draft",
+    "audio_spec"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

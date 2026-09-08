@@ -1,0 +1,38 @@
+{
+  "id": "ml_pipeline",
+  "name": "Ml Pipeline",
+  "title": "Ml Pipeline",
+  "version": "2.5.0",
+  "category": "Coding & Development",
+  "description": "Designs and implements production-grade ML pipeline infrastructure: configures experiment tracking with MLflow or Wei...",
+  "tags": [
+    "automation",
+    "coding",
+    "myraa-skill",
+    "pipeline"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "syntax_analysis",
+    "test_automation"
+  ],
+  "input_types": [
+    "code",
+    "issue",
+    "specification"
+  ],
+  "output_types": [
+    "code_patch",
+    "test_suite",
+    "full_source"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

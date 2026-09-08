@@ -1,0 +1,39 @@
+{
+  "id": "metadata_optimization",
+  "name": "Metadata Optimization",
+  "title": "Metadata Optimization",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "When the user wants to optimize App Store metadata \u2014 title, subtitle, keyword field, or description. Also use when th...",
+  "tags": [
+    "ai",
+    "automation",
+    "metadata",
+    "myraa-skill",
+    "optimization"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

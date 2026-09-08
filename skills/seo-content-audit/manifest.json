@@ -1,0 +1,40 @@
+{
+  "id": "seo_content_audit",
+  "name": "Seo Content Audit",
+  "title": "Seo Content Audit",
+  "version": "2.5.0",
+  "category": "AI & Intelligence",
+  "description": "E-E-A-T + CITE quality audit for an EXISTING piece of content. Scores Experience, Expertise, Authoritativeness, Trust...",
+  "tags": [
+    "ai",
+    "audit",
+    "automation",
+    "content",
+    "myraa-skill",
+    "seo"
+  ],
+  "icon": "icon.svg",
+  "image": "icon.svg",
+  "quality_score": 95,
+  "status": "ACTIVE",
+  "capabilities": [
+    "reasoning",
+    "deep_research",
+    "agentic_evaluation",
+    "context_retrieval"
+  ],
+  "input_types": [
+    "text",
+    "prompt",
+    "context"
+  ],
+  "output_types": [
+    "text",
+    "structured_json",
+    "analysis"
+  ],
+  "tools_required": [
+    "terminal",
+    "filesystem"
+  ]
+}

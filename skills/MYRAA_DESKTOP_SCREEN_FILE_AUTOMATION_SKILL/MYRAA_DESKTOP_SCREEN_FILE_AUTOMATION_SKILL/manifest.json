@@ -1,0 +1,25 @@
+{
+  "id": "myraa-desktop-screen-file-automation",
+  "name": "MYRAA Desktop, Screen & File Automation",
+  "version": "1.0.0",
+  "enabled": true,
+  "description": "Screen-aware computer automation, OCR, file downloads, saving, moving, ZIP extraction, and authorized messaging.",
+  "capabilities": [
+    "screen_capture",
+    "ocr_and_visual_reading",
+    "computer_use",
+    "browser_download_management",
+    "file_save_move_copy_rename_delete",
+    "zip_extract_create",
+    "document_and_image_organization",
+    "authorized_message_composition_and_sending"
+  ],
+  "permissions": {
+    "screen_read": "required",
+    "computer_control": "required",
+    "filesystem_read": "required",
+    "filesystem_write": "required",
+    "downloads": "required",
+    "external_messaging": "confirmation_required_by_default"
+  }
+}
