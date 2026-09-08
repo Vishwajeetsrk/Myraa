@@ -185,12 +185,15 @@ if (!signtool) {
 // 4. Checksums
 section('4. Checksums');
 
+const _verifyVersion = (() => { try { return JSON.parse(fs.readFileSync(PKG_PATH, 'utf8')).version; } catch (e) { return '8.3.1'; } })();
 const checksumsDir = path.join(RELEASE_DIR, 'checksums');
-if (fs.existsSync(checksumsDir)) {
-  const checksumFiles = fs.readdirSync(checksumsDir).filter(f => f.endsWith('.txt'));
+const pkgChecksumsDir = path.join(RELEASE_DIR, `MYRAA-${_verifyVersion}`, 'checksums');
+const effectiveChecksumsDir = fs.existsSync(checksumsDir) ? checksumsDir : (fs.existsSync(pkgChecksumsDir) ? pkgChecksumsDir : checksumsDir);
+if (fs.existsSync(effectiveChecksumsDir)) {
+  const checksumFiles = fs.readdirSync(effectiveChecksumsDir).filter(f => f.endsWith('.txt'));
   if (checksumFiles.length > 0) {
     pass(`Checksum file found: ${checksumFiles[0]}`);
-    const content = fs.readFileSync(path.join(checksumsDir, checksumFiles[0]), 'utf8');
+    const content = fs.readFileSync(path.join(effectiveChecksumsDir, checksumFiles[0]), 'utf8');
     const lines = content.trim().split('\n');
     info(`${lines.length} checksums recorded`);
   } else {
@@ -280,7 +283,10 @@ if (setupExes.length > 0) {
   info(`Full hash: ${hash}`);
 
   // Check if hash matches checksums
-  const checksumFile = path.join(checksumsDir, `MYRAA-${version}-sha256.txt`);
+  const _csDir1 = path.join(RELEASE_DIR, 'checksums');
+  const _csDir2 = path.join(RELEASE_DIR, `MYRAA-${version}`, 'checksums');
+  const _effectiveCsDir = fs.existsSync(_csDir1) ? _csDir1 : _csDir2;
+  const checksumFile = path.join(_effectiveCsDir, `MYRAA-${version}-sha256.txt`);
   if (fs.existsSync(checksumFile)) {
     const content = fs.readFileSync(checksumFile, 'utf8');
     if (content.includes(hash)) {

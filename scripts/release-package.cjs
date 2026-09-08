@@ -19,7 +19,7 @@ const crypto = require('crypto');
 
 const ROOT = path.join(__dirname, '..');
 const APP_DIR = path.join(ROOT, 'resources', 'app');
-const RELEASE_DIR = path.join(ROOT, 'release');
+const RELEASE_DIR = path.join(APP_DIR, 'release');
 const PKG_PATH = path.join(APP_DIR, 'package.json');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ function main() {
   const latest = {
     version,
     files: [
-      { url: `MYRAA-Setup-${version}.exe`, sha512: sha256(setupExes[0] || ''), size: setupExes[0] ? fs.statSync(setupExes[0]).size : 0 },
+      { url: `MYRAA-Setup-${version}.exe`, sha512: setupExes[0] ? sha256(setupExes[0]) : '', size: setupExes[0] ? fs.statSync(setupExes[0]).size : 0 },
     ],
     path: `MYRAA-Setup-${version}.exe`,
     sha512: setupExes[0] ? sha256(setupExes[0]) : '',

@@ -22,6 +22,113 @@ const router = express.Router();
 // ── MYRAA MEMORY & KNOWLEDGE (RAG) overlay ───────────────────────────────────
 try { router.use(require('./memory_kb.cjs').router); } catch (e) { console.warn('[v6] memory_kb:', e.message); }
 
+// ── MYRAA ABOUT & SYSTEM INFO (real version, install, verification) ─────────
+try {
+  const _aboutFs = require('fs');
+  const _aboutPath = require('path');
+  const _aboutOs = require('os');
+  const _aboutCrypto = require('crypto');
+
+  function _readVersion() {
+    try {
+      const vj = JSON.parse(_aboutFs.readFileSync(_aboutPath.join(__dirname, '..', 'version.json'), 'utf8'));
+      const pj = JSON.parse(_aboutFs.readFileSync(_aboutPath.join(__dirname, '..', 'package.json'), 'utf8'));
+      return { version: vj.version || pj.version || '8.3.1', productName: vj.productName || 'MYRAA AI', publisher: vj.publisher || 'MYRAA', productNameFull: vj.productNameFull || 'MYRAA AI Desktop Assistant', copyright: vj.copyright || '', publisherUrl: vj.publisherUrl || '' };
+    } catch (e) {
+      try { const pj = JSON.parse(_aboutFs.readFileSync(_aboutPath.join(__dirname, '..', 'package.json'), 'utf8')); return { version: pj.version || '8.3.1', productName: 'MYRAA AI', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; } catch (e2) { return { version: '8.3.1', productName: 'MYRAA AI', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; }
+    }
+  }
+
+  // Verify if the running executable is Authenticode-signed (only truthful result)
+  function _checkSigned() {
+    try {
+      const exePath = process.execPath || '';
+      if (!exePath || !_aboutFs.existsSync(exePath)) return { signed: false, verified: false, reason: 'executable not found' };
+      // Try signtool verification
+      const signtools = [
+        'C:\\Program Files (x86)\\Windows Kits\\10\\bin\\x64\\signtool.exe',
+        'C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.22621.0\\x64\\signtool.exe',
+        'C:\\Program Files\\Microsoft SDKs\\ClickOnce\\SignTool\\signtool.exe',
+      ];
+      let st = null;
+      for (const c of signtools) { if (_aboutFs.existsSync(c)) { st = c; break; } }
+      if (!st) return { signed: false, verified: false, reason: 'no signtool' };
+      const { execSync } = require('child_process');
+      try { execSync('"' + st + '" verify /pa "' + exePath + '"', { stdio: 'pipe', timeout: 5000 }); return { signed: true, verified: true, reason: 'Authenticode verified' }; } catch (e) { return { signed: false, verified: false, reason: 'not signed or untrusted' }; }
+    } catch (e) { return { signed: false, verified: false, reason: e.message }; }
+  }
+
+  function _getInstallPath() {
+    try { return _aboutPath.dirname(process.execPath || ''); } catch (e) { return ''; }
+  }
+
+  router.get('/api/system/about', (req, res) => {
+    const v = _readVersion();
+    const installPath = _getInstallPath();
+    const signed = _checkSigned();
+    const memUsage = process.memoryUsage();
+    res.json({
+      ok: true,
+      version: v.version,
+      productName: v.productName,
+      productNameFull: v.productNameFull,
+      publisher: v.publisher,
+      publisherUrl: v.publisherUrl,
+      copyright: v.copyright,
+      appId: 'com.myraa.desktop',
+      installPath: installPath,
+      dataPath: process.env.MYRAA_DATA_DIR || _aboutPath.join(_aboutOs.homedir(), 'AppData', 'Roaming', 'MYRAA AI'),
+      platform: _aboutOs.platform(),
+      arch: _aboutOs.arch(),
+      nodeVersion: process.version,
+      electronVersion: process.versions.electron || null,
+      uptime: Math.floor(process.uptime()),
+      memory: { rss: Math.round(memUsage.rss / 1024 / 1024), heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) },
+      isPackaged: !!process.resourcesPath,
+      isSigned: signed.signed,
+      isVerified: signed.verified,
+      signReason: signed.reason,
+      channel: 'stable',
+      buildDate: null,
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  router.get('/api/system/diagnostics', (req, res) => {
+    const v = _readVersion();
+    const signed = _checkSigned();
+    const info = {
+      version: v.version,
+      productName: v.productName,
+      publisher: v.publisher,
+      installPath: _getInstallPath(),
+      dataPath: process.env.MYRAA_DATA_DIR || '',
+      platform: _aboutOs.platform() + ' ' + _aboutOs.release() + ' ' + _aboutOs.arch(),
+      nodeVersion: process.version,
+      electronVersion: process.versions.electron || 'N/A',
+      signed: signed.signed,
+      verified: signed.verified,
+      signReason: signed.reason,
+      uptime: Math.floor(process.uptime()) + 's',
+      memory: Math.round(process.memoryUsage().rss / 1024 / 1024) + ' MB',
+      timestamp: new Date().toISOString(),
+    };
+    res.json({ ok: true, diagnostics: info, text: Object.entries(info).map(function(kv) { return kv[0] + ': ' + kv[1]; }).join('\n') });
+  });
+
+  router.post('/api/system/open-folder', (req, res) => {
+    try {
+      const folder = req.body && req.body.path ? String(req.body.path) : _getInstallPath();
+      const { exec } = require('child_process');
+      exec('explorer "' + folder.replace(/"/g, '') + '"');
+      res.json({ ok: true, opened: folder });
+    } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  });
+
+  console.log('[v6] system about/diagnostics routes mounted');
+} catch (e) { console.warn('[v6] system about:', e.message); }
+
 // ── FREE PUBLIC API REGISTRY (public-apis integration) ──────────────────────
 try {
   const freeApis = require('./free_api_registry.cjs');

@@ -1395,6 +1395,54 @@
               </div>
             </div>
           </div>
+
+          <div id="about-updates-card" style="border: 1px solid rgba(56,207,255,0.18); border-radius: 12px; padding: 18px 16px; background: linear-gradient(135deg, rgba(56,207,255,0.06) 0%, rgba(16,24,39,0.6) 100%);">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom: 14px;">
+              <div>
+                <h3 style="font-size: 15px; font-weight: 800; color: #fff; margin:0; letter-spacing: -0.01em;">MYRAA AI</h3>
+                <div id="about-version-line" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Version — loading…</div>
+              </div>
+              <div id="about-status-badge" style="font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 20px; background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3);">● System Healthy</div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 10px; margin-bottom: 14px;">
+              <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 10px 12px;">
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;">Publisher</div>
+                <div id="about-publisher" style="font-size: 12.5px; font-weight: 600; color: #fff; margin-top: 2px;">—</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 10px 12px;">
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;">Installation</div>
+                <div id="about-install-path" style="font-size: 11px; font-weight: 500; color: var(--text-muted); margin-top: 2px; word-break: break-all;">—</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 10px 12px;">
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;">Channel</div>
+                <select id="about-channel-select" style="margin-top: 4px; width: 100%; background: rgba(16,24,39,0.9); border: 1px solid var(--border-subtle); padding: 5px 8px; border-radius: 6px; color: #fff; font-size: 12px;">
+                  <option value="stable">Stable</option>
+                  <option value="beta">Beta</option>
+                  <option value="development">Development</option>
+                </select>
+              </div>
+            </div>
+            <div id="about-verify-badges" style="display:flex; flex-wrap:wrap; gap: 8px; margin-bottom: 14px;"></div>
+            <div id="about-update-status" style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 10px; min-height: 18px;"></div>
+            <div id="about-update-progress" style="display:none; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow:hidden; margin-bottom: 12px;">
+              <div id="about-update-progress-bar" style="height:100%; width:0%; background: linear-gradient(90deg, #38CFFF, #8b5cf6); border-radius: 3px; transition: width 0.3s;"></div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap: 8px;">
+              <button class="send-btn" id="btn-check-updates" style="width:auto; padding: 7px 14px; font-size: 12px; font-weight:600;">Check for Updates</button>
+              <button id="btn-download-update" style="display:none; padding: 7px 14px; font-size: 12px; font-weight:600; background: #38CFFF; color: #000; border:none; border-radius: 8px; cursor:pointer;">Download Update</button>
+              <button id="btn-install-update" style="display:none; padding: 7px 14px; font-size: 12px; font-weight:600; background: #22c55e; color: #fff; border:none; border-radius: 8px; cursor:pointer;">Install & Restart</button>
+              <button id="btn-view-releasenotes" style="padding: 7px 14px; font-size: 12px; font-weight:500; background: rgba(255,255,255,0.06); color: var(--text-primary); border:1px solid var(--border-subtle); border-radius: 8px; cursor:pointer;">View Release Notes</button>
+              <button id="btn-open-install-folder" style="padding: 7px 14px; font-size: 12px; font-weight:500; background: rgba(255,255,255,0.06); color: var(--text-primary); border:1px solid var(--border-subtle); border-radius: 8px; cursor:pointer;">Open Installation Folder</button>
+              <button id="btn-copy-diagnostics" style="padding: 7px 14px; font-size: 12px; font-weight:500; background: rgba(255,255,255,0.06); color: var(--text-primary); border:1px solid var(--border-subtle); border-radius: 8px; cursor:pointer;">Copy Diagnostics</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);">
+              <label style="display:flex; align-items:center; gap:8px; font-size: 12px; color: var(--text-primary); cursor:pointer;">
+                <input type="checkbox" id="about-auto-update" checked />
+                Automatic update checks
+              </label>
+              <span style="font-size: 11px; color: var(--text-muted);">Checks silently on startup (12s delay)</span>
+            </div>
+          </div>
         </div>
       `;
 
@@ -1432,6 +1480,130 @@
           toast(`Windows auto-start ${e.target.checked ? 'enabled' : 'disabled'}.`, 'success');
         } catch (err) { toast('Could not save auto-start: ' + err.message, 'error'); }
       });
+
+      // ── ABOUT & UPDATES wiring ──────────────────────────────────────────
+      (function setupAboutUpdates() {
+        var aboutData = null;
+        var updateUnsub = null;
+
+        function renderBadges(signed, verified, isLatest) {
+          var c = document.getElementById('about-verify-badges');
+          if (!c) return;
+          var badges = [];
+          if (verified) badges.push('<span style="font-size:11px; font-weight:600; padding:4px 9px; border-radius:20px; background:rgba(34,197,94,0.12); color:#22c55e; border:1px solid rgba(34,197,94,0.25);">\u2713 Application signed</span>');
+          else if (signed) badges.push('<span style="font-size:11px; font-weight:600; padding:4px 9px; border-radius:20px; background:rgba(234,179,8,0.12); color:#eab308; border:1px solid rgba(234,179,8,0.25);">\u26a0 Signed (unverified)</span>');
+          else badges.push('<span style="font-size:11px; font-weight:600; padding:4px 9px; border-radius:20px; background:rgba(100,116,139,0.15); color:var(--text-muted); border:1px solid rgba(100,116,139,0.2);">Unsigned build (dev)</span>');
+          if (isLatest) badges.push('<span style="font-size:11px; font-weight:600; padding:4px 9px; border-radius:20px; background:rgba(56,207,255,0.12); color:#38CFFF; border:1px solid rgba(56,207,255,0.25);">\u2713 Latest version</span>');
+          c.innerHTML = badges.join('');
+        }
+
+        function renderUpdateState(s) {
+          var statusEl = document.getElementById('about-update-status');
+          var barWrap = document.getElementById('about-update-progress');
+          var bar = document.getElementById('about-update-progress-bar');
+          var btnCheck = document.getElementById('btn-check-updates');
+          var btnDl = document.getElementById('btn-download-update');
+          var btnInstall = document.getElementById('btn-install-update');
+          if (!statusEl) return;
+          var state = (s && s.state) || 'idle';
+          if (state === 'idle') { statusEl.textContent = aboutData ? 'Up to date — no updates pending.' : ''; if (barWrap) barWrap.style.display = 'none'; if (btnDl) btnDl.style.display = 'none'; if (btnInstall) btnInstall.style.display = 'none'; if (btnCheck) btnCheck.disabled = false; }
+          else if (state === 'checking') { statusEl.textContent = 'Checking for updates…'; if (barWrap) barWrap.style.display = 'none'; if (btnCheck) btnCheck.disabled = true; }
+          else if (state === 'available') { statusEl.innerHTML = 'Update available: <b style="color:#fff;">' + esc(s.version || 'new version') + '</b> — click Download to fetch.'; if (barWrap) barWrap.style.display = 'none'; if (btnDl) btnDl.style.display = ''; if (btnCheck) btnCheck.disabled = false; }
+          else if (state === 'up-to-date' || state === 'upToDate') { statusEl.textContent = '\u2713 You are on the latest version.'; if (barWrap) barWrap.style.display = 'none'; if (btnDl) btnDl.style.display = 'none'; if (btnInstall) btnInstall.style.display = 'none'; if (btnCheck) btnCheck.disabled = false; renderBadges(aboutData && aboutData.isSigned, aboutData && aboutData.isVerified, true); }
+          else if (state === 'downloading') { var pct = s.percent != null ? Number(s.percent).toFixed(1) : '0'; statusEl.textContent = 'Downloading update… ' + pct + '%'; if (barWrap) { barWrap.style.display = ''; if (bar) bar.style.width = pct + '%'; } if (btnDl) btnDl.style.display = 'none'; }
+          else if (state === 'ready') { statusEl.innerHTML = '\u2713 Update <b style="color:#fff;">' + esc(s.version || '') + '</b> downloaded — click Install & Restart.'; if (barWrap) { barWrap.style.display = ''; if (bar) bar.style.width = '100%'; } if (btnInstall) btnInstall.style.display = ''; if (btnDl) btnDl.style.display = 'none'; }
+          else if (state === 'error') { statusEl.textContent = '\u2717 Update error: ' + esc(s.message || 'unknown'); statusEl.style.color = 'var(--error)'; if (barWrap) barWrap.style.display = 'none'; if (btnCheck) btnCheck.disabled = false; }
+          else if (state === 'disabled') { statusEl.textContent = 'Updates disabled on this build.'; }
+          else { statusEl.textContent = 'Update status: ' + esc(state); }
+        }
+
+        // Fetch about info
+        var aboutPromise = (window.myraa && window.myraa.getAbout) ? window.myraa.getAbout().catch(function() { return apiGet('/api/system/about').catch(function() { return null; }); }) : apiGet('/api/system/about').catch(function() { return null; });
+        aboutPromise.then(function(data) {
+          if (!data || !data.ok) return;
+          aboutData = data;
+          var vEl = document.getElementById('about-version-line');
+          var pEl = document.getElementById('about-publisher');
+          var iEl = document.getElementById('about-install-path');
+          if (vEl) vEl.textContent = 'Version ' + esc(data.version) + (data.isPackaged ? '' : ' (development)');
+          if (pEl) pEl.textContent = esc(data.publisher || 'MYRAA') + (data.copyright ? '  \u00b7  ' + esc(data.copyright) : '');
+          if (iEl) iEl.textContent = esc(data.installPath || '—');
+          renderBadges(!!data.isSigned, !!data.isVerified, false);
+          // Initial update state
+          if (window.myraaUpdate && window.myraaUpdate.state) {
+            window.myraaUpdate.state().then(renderUpdateState).catch(function(){});
+            if (updateUnsub) updateUnsub();
+            updateUnsub = window.myraaUpdate.subscribe(function(s) { renderUpdateState(s); });
+          }
+        }).catch(function(){});
+
+        // Check for Updates
+        var btnCheck = document.getElementById('btn-check-updates');
+        if (btnCheck) btnCheck.addEventListener('click', async function() {
+          var statusEl = document.getElementById('about-update-status');
+          if (statusEl) { statusEl.textContent = 'Checking for updates…'; statusEl.style.color = ''; }
+          btnCheck.disabled = true;
+          try {
+            if (window.myraaUpdate && window.myraaUpdate.check) {
+              var s = await window.myraaUpdate.check();
+              renderUpdateState(s);
+            } else {
+              var r = await apiGet('/api/update/check');
+              if (r.updateAvailable) toast('Update available: ' + (r.latestVersion || 'new version'), 'success');
+              else toast('You are on the latest version.', 'success');
+              if (statusEl) statusEl.textContent = r.updateAvailable ? 'Update available: ' + r.latestVersion : '\u2713 Up to date.';
+            }
+          } catch (err) { if (statusEl) { statusEl.textContent = 'Check failed: ' + err.message; statusEl.style.color = 'var(--error)'; } }
+          btnCheck.disabled = false;
+        });
+
+        var btnDl = document.getElementById('btn-download-update');
+        if (btnDl) btnDl.addEventListener('click', async function() {
+          btnDl.disabled = true;
+          try {
+            if (window.myraaUpdate && window.myraaUpdate.download) { var s = await window.myraaUpdate.download(); renderUpdateState(s); }
+          } catch (err) { toast('Download failed: ' + err.message, 'error'); }
+          btnDl.disabled = false;
+        });
+
+        var btnInstall = document.getElementById('btn-install-update');
+        if (btnInstall) btnInstall.addEventListener('click', async function() {
+          if (!confirm('Install the downloaded update and restart MYRAA?')) return;
+          try {
+            if (window.myraaUpdate && window.myraaUpdate.install) await window.myraaUpdate.install();
+          } catch (err) { toast('Install failed: ' + err.message, 'error'); }
+        });
+
+        var btnNotes = document.getElementById('btn-view-releasenotes');
+        if (btnNotes) btnNotes.addEventListener('click', async function() {
+          try {
+            var r = await apiGet('/api/update/check');
+            var notes = (r.changelog || []).join('\n\u2022 ');
+            if (notes) alert('Release Notes:\n\n\u2022 ' + notes);
+            else window.open('https://github.com/vishwajeetsrk/JARVIS-AI-OS/releases', '_blank');
+          } catch (e) { window.open('https://github.com/vishwajeetsrk/JARVIS-AI-OS/releases', '_blank'); }
+        });
+
+        var btnFolder = document.getElementById('btn-open-install-folder');
+        if (btnFolder) btnFolder.addEventListener('click', async function() {
+          try {
+            if (window.myraa && window.myraa.openFolder) { await window.myraa.openFolder(aboutData && aboutData.installPath); toast('Opened installation folder.', 'success'); }
+            else if (aboutData && aboutData.installPath) { await fetch('/api/system/open-folder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: aboutData.installPath }) }); }
+          } catch (err) { toast('Could not open folder: ' + err.message, 'error'); }
+        });
+
+        var btnDiag = document.getElementById('btn-copy-diagnostics');
+        if (btnDiag) btnDiag.addEventListener('click', async function() {
+          try {
+            var d = null;
+            if (window.myraa && window.myraa.getDiagnostics) d = await window.myraa.getDiagnostics();
+            else d = await apiGet('/api/system/diagnostics');
+            var text = (d && d.text) || JSON.stringify(d, null, 2);
+            if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); toast('Diagnostics copied to clipboard.', 'success'); }
+            else { prompt('Copy diagnostics:', text); }
+          } catch (err) { toast('Could not copy diagnostics: ' + err.message, 'error'); }
+        });
+      })();
     } catch (e) {
       cont.innerHTML = `<div style="font-size:12px;color:var(--error);">Settings unavailable: ${esc(e.message)}</div>`;
     }

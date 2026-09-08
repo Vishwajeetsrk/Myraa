@@ -41,8 +41,11 @@ contextBridge.exposeInMainWorld('myraa', {
   platform: process.platform,
   version: process.versions.electron,
   appVersion: process.env.MYRAA_APP_VERSION || null,
-  // Serializable source metadata only; MediaStreams cannot cross this bridge.
   getDesktopCaptureSources,
+  // About & diagnostics helpers (IPC-backed, no direct fs access from renderer)
+  getAbout: () => ipcRenderer.invoke('myraa:get-about'),
+  getDiagnostics: () => ipcRenderer.invoke('myraa:get-diagnostics'),
+  openFolder: (p) => ipcRenderer.invoke('myraa:open-folder', p),
 });
 
 contextBridge.exposeInMainWorld('myraaDesktop', desktopWindow);

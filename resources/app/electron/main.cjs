@@ -25,6 +25,44 @@ const fs = require('fs');
 // --- MYRAA updater (additive) — safe auto-check + manual check via IPC.
 const updater = require('./updater.cjs');
 
+// ── About & diagnostics IPC (real version, install, health) ───────────────
+function _readAboutSync() {
+  try {
+    const vj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'version.json'), 'utf8'));
+    const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+    return { version: vj.version || pj.version || '8.3.1', productName: vj.productName || 'MYRAA AI', publisher: vj.publisher || 'MYRAA', productNameFull: vj.productNameFull || 'MYRAA AI Desktop Assistant', copyright: vj.copyright || '', publisherUrl: vj.publisherUrl || '' };
+  } catch (e) {
+    try { const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')); return { version: pj.version || '8.3.1', productName: 'MYRAA AI', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; } catch (e2) { return { version: '8.3.1', productName: 'MYRAA AI', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; }
+  }
+}
+function _checkSignedSync() {
+  try {
+    const exePath = process.execPath || '';
+    if (!exePath || !fs.existsSync(exePath)) return { signed: false, verified: false, reason: 'executable not found' };
+    const signtools = ['C:\\Program Files (x86)\\Windows Kits\\10\\bin\\x64\\signtool.exe', 'C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.22621.0\\x64\\signtool.exe'];
+    let st = null; for (const c of signtools) { if (fs.existsSync(c)) { st = c; break; } }
+    if (!st) return { signed: false, verified: false, reason: 'no signtool' };
+    const { execSync } = require('child_process');
+    try { execSync('"' + st + '" verify /pa "' + exePath + '"', { stdio: 'pipe', timeout: 5000 }); return { signed: true, verified: true, reason: 'Authenticode verified' }; } catch (e) { return { signed: false, verified: false, reason: 'not signed or untrusted' }; }
+  } catch (e) { return { signed: false, verified: false, reason: e.message }; }
+}
+ipcMain.handle('myraa:get-about', async () => {
+  const v = _readAboutSync();
+  const installPath = path.dirname(process.execPath || '');
+  const signed = _checkSignedSync();
+  const mem = process.memoryUsage();
+  return { ok: true, version: v.version, productName: v.productName, productNameFull: v.productNameFull, publisher: v.publisher, publisherUrl: v.publisherUrl, copyright: v.copyright, appId: 'com.myraa.desktop', installPath, dataPath: app.getPath('userData'), platform: process.platform, arch: process.arch, nodeVersion: process.version, electronVersion: process.versions.electron || null, isPackaged: app.isPackaged, isSigned: signed.signed, isVerified: signed.verified, signReason: signed.reason, channel: 'stable', status: 'healthy', uptime: Math.floor(process.uptime()), memory: { rss: Math.round(mem.rss / 1024 / 1024), heapUsed: Math.round(mem.heapUsed / 1024 / 1024) }, timestamp: new Date().toISOString() };
+});
+ipcMain.handle('myraa:get-diagnostics', async () => {
+  const v = _readAboutSync();
+  const signed = _checkSignedSync();
+  const info = { version: v.version, productName: v.productName, publisher: v.publisher, installPath: path.dirname(process.execPath || ''), dataPath: app.getPath('userData'), platform: process.platform + ' ' + require('os').release() + ' ' + process.arch, nodeVersion: process.version, electronVersion: process.versions.electron || 'N/A', signed: signed.signed, verified: signed.verified, signReason: signed.reason, uptime: Math.floor(process.uptime()) + 's', memory: Math.round(process.memoryUsage().rss / 1024 / 1024) + ' MB', timestamp: new Date().toISOString() };
+  return { ok: true, diagnostics: info, text: Object.entries(info).map(function(kv) { return kv[0] + ': ' + kv[1]; }).join('\n') };
+});
+ipcMain.handle('myraa:open-folder', async (_ev, folderPath) => {
+  try { const folder = folderPath ? String(folderPath) : path.dirname(process.execPath || ''); shell.openPath(folder); return { ok: true, opened: folder }; } catch (e) { return { ok: false, error: e.message }; }
+});
+
 // Ensure native window application always has microphone, audio, and media streams enabled
 app.commandLine.appendSwitch('enable-features', 'AudioServiceOutOfProcess');
 app.commandLine.appendSwitch('use-fake-ui-for-media-stream');

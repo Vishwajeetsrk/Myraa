@@ -19,7 +19,7 @@ const crypto = require('crypto');
 
 const ROOT = path.join(__dirname, '..');
 const APP_DIR = path.join(ROOT, 'resources', 'app');
-const RELEASE_DIR = path.join(ROOT, 'release');
+const RELEASE_DIR = path.join(APP_DIR, 'release');
 const PKG_PATH = path.join(APP_DIR, 'package.json');
 const VERSION_JSON = path.join(APP_DIR, 'version.json');
 
