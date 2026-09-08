@@ -77,22 +77,54 @@ let APP_ROOT = app.isPackaged
   ? path.join(process.resourcesPath, 'app')
   : path.join(__dirname, '..');
 
-// Walk up directory tree to find server.cjs (handles NSIS double-nesting)
-let SERVER_ENTRY = path.join(APP_ROOT, 'dist', 'server.cjs');
-if (app.isPackaged && !fs.existsSync(SERVER_ENTRY)) {
-  dlog(`[FIX] server.cjs not found at ${SERVER_ENTRY}, searching up...`);
-  let searchDir = path.dirname(process.resourcesPath);
-  for (let i = 0; i < 5; i++) {
-    const candidate = path.join(searchDir, 'resources', 'app', 'dist', 'server.cjs');
-    dlog(`[FIX] trying: ${candidate}`);
-    if (fs.existsSync(candidate)) {
-      SERVER_ENTRY = candidate;
-      APP_ROOT = path.join(searchDir, 'resources', 'app');
-      dlog(`[FIX] FOUND server.cjs at: ${candidate}`);
+// ── Resolve SERVER_ENTRY (handles NSIS double-nesting + asar layout) ─────────
+//
+// When electron-builder unpacks dist/**, the real files live at:
+//   resources/app.asar.unpacked/dist/server.cjs
+// The asar still contains dist/server.cjs but fs.existsSync/spawn can't see
+// inside .asar archives.  We MUST use the unpacked path for spawn().
+//
+// NSIS may create a double-nested dir:
+//   C:\Program Files\MYRAA AI OS\MYRAA AI OS\resources\app
+// We walk up from process.resourcesPath to handle this.
+//
+let SERVER_ENTRY = null;
+
+if (app.isPackaged) {
+  // Candidate paths to check (most-specific first)
+  const baseDir = path.dirname(process.resourcesPath); // e.g. "MYRAA AI OS" or "MYRAA AI OS\MYRAA AI OS"
+  const candidates = [];
+
+  // 1) Standard path (single-nested, correct)
+  candidates.push(path.join(process.resourcesPath, 'app', 'dist', 'server.cjs'));
+  // 2) Unpacked asar path (dist/** is extracted here by electron-builder)
+  candidates.push(path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'server.cjs'));
+  // 3) Double-nested: go up one level from resourcesPath
+  candidates.push(path.join(baseDir, 'resources', 'app', 'dist', 'server.cjs'));
+  candidates.push(path.join(baseDir, 'resources', 'app.asar.unpacked', 'dist', 'server.cjs'));
+  // 4) Triple-nested (defensive)
+  const baseBase = path.dirname(baseDir);
+  candidates.push(path.join(baseBase, 'resources', 'app', 'dist', 'server.cjs'));
+  candidates.push(path.join(baseBase, 'resources', 'app.asar.unpacked', 'dist', 'server.cjs'));
+
+  for (const c of candidates) {
+    dlog(`[PATH] checking: ${c}`);
+    if (fs.existsSync(c)) {
+      SERVER_ENTRY = c;
+      // Set APP_ROOT to the parent of dist/
+      APP_ROOT = path.resolve(path.dirname(c), '..');
+      dlog(`[PATH] FOUND server.cjs at: ${c}`);
       break;
     }
-    searchDir = path.dirname(searchDir);
   }
+
+  if (!SERVER_ENTRY) {
+    // Last resort: use standard path and let spawn fail with a clear error
+    SERVER_ENTRY = path.join(process.resourcesPath, 'app', 'dist', 'server.cjs');
+    dlog(`[PATH] WARNING: no server.cjs found in any candidate. Using fallback: ${SERVER_ENTRY}`);
+  }
+} else {
+  SERVER_ENTRY = path.join(APP_ROOT, 'dist', 'server.cjs');
 }
 
 const APP_ICON = path.join(APP_ROOT, 'build', 'icon.ico');
@@ -173,15 +205,23 @@ async function startBackend() {
     ? path.join(process.resourcesPath, 'agent', 'myraa-agent.exe')
     : path.join(APP_ROOT, 'agent_dist', 'myraa-agent', 'myraa-agent.exe');
 
-  // Walk up to find agent if double-nested
-  let agentPath = agentExe;
-  if (app.isPackaged && !fs.existsSync(agentPath)) {
-    let searchDir = path.resolve(agentPath, '..', '..');
-    for (let i = 0; i < 5; i++) {
-      const candidate = path.join(searchDir, 'resources', 'agent', 'myraa-agent.exe');
-      if (fs.existsSync(candidate)) { agentPath = candidate; break; }
-      searchDir = path.dirname(searchDir);
+  // Resolve agent path (same double-nesting + unpacked search as server.cjs)
+  let agentPath = null;
+  if (app.isPackaged) {
+    const baseDir = path.dirname(process.resourcesPath);
+    const agentCandidates = [
+      path.join(process.resourcesPath, 'agent', 'myraa-agent.exe'),
+      path.join(process.resourcesPath, 'app.asar.unpacked', 'agent', 'myraa-agent.exe'),
+      path.join(baseDir, 'resources', 'agent', 'myraa-agent.exe'),
+      path.join(baseDir, 'resources', 'app.asar.unpacked', 'agent', 'myraa-agent.exe'),
+      path.join(path.dirname(baseDir), 'resources', 'agent', 'myraa-agent.exe'),
+    ];
+    for (const c of agentCandidates) {
+      if (fs.existsSync(c)) { agentPath = c; break; }
     }
+    if (!agentPath) agentPath = agentExe; // fallback
+  } else {
+    agentPath = agentExe;
   }
 
   const env = {

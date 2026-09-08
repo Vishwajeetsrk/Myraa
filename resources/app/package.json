@@ -8,7 +8,7 @@
     "url": "https://github.com/vishwajeetsrk/JARVIS-AI-OS"
   },
   "private": true,
-  "version": "8.2.1",
+  "version": "8.3.0",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
