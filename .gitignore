@@ -8,10 +8,14 @@ release/
 *.yml
 builder-debug.yml
 
-# Executables / Installers
+# Executables / Installers (use GitHub Releases for binaries — GitHub rejects >100 MB files)
 *.exe
 *.msi
 *.app
+*.zip
+Installers/**/*.exe
+Installers/**/*.zip
+release/
 
 # Environment / secrets
 .env
@@ -50,3 +54,6 @@ __pycache__/
 # Coverage
 coverage/
 .nyc_output/
+
+# Scratch / temp tests
+resources/app/dist/scratch/

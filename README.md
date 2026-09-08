@@ -1,155 +1,315 @@
-# MYRAA AI OS
+# MYRAA — Private AI Desktop OS
 
-**MYRAA** — a private 3D AI desktop companion powered by your own API keys.
+<p align="center">
+  <img src="resources/app/build/icon.png" alt="MYRAA" width="96" height="96" />
+</p>
 
-![Version](https://img.shields.io/badge/version-8.2.1-blue)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+<p align="center">
+  <strong>A private 3D AI desktop companion. Your API keys. Your data. Your machine.</strong>
+</p>
 
-## What is MYRAA?
+<p align="center">
+  <img src="https://img.shields.io/badge/version-8.3.1-38CFFF?style=for-the-badge&labelColor=0a0f1e" alt="version" />
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-1a2332?style=for-the-badge" alt="platform" />
+  <img src="https://img.shields.io/badge/tests-93%20passing-22c55e?style=for-the-badge&labelColor=0a0f1e" alt="tests" />
+  <img src="https://img.shields.io/badge/license-MIT-8b5cf6?style=for-the-badge&labelColor=0a0f1e" alt="license" />
+</p>
 
-MYRAA is a **Personal AI Operating System** — a desktop application that runs a unified AI brain (MYRAA Core) with memory, skills, plugins, and a 3D avatar companion (Evelyn PMX). Your data stays on your machine. Your API keys are your own.
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-features">Features</a> •
+  <a href="#-installation">Installation</a> •
+  <a href="#%EF%B8%8F-architecture">Architecture</a> •
+  <a href="#-project-structure">Structure</a> •
+  <a href="#-development">Development</a>
+</p>
 
-## Features
+---
 
-### Core AI Brain
-- **MYRAA Core** — unified intent classifier → model cascade (Gemini → Groq → OpenRouter → Ollama)
-- Reasoning before coding, 7 task types, automatic model selection
-- `MYRAA_CORE_DISABLE=1` escape for zero-regression
+> **MYRAA and JARVIS share the same powerful AI core — same memory, skills, and model cascade. Different interfaces for different workflows.**
+> MYRAA is the **desktop OS experience**: a full windowed shell with 3D avatar, glassmorphism, and native system integration.
+
+---
+
+## ✨ What is MYRAA?
+
+MYRAA is a **Personal AI Operating System** — a desktop application that runs a unified AI brain with:
+
+- 🧠 **MYRAA Core** — intent classifier + model cascade (Gemini → Groq → OpenRouter → Ollama)
+- 💾 **Memory & Knowledge (RAG)** — local embeddings, auto-chunking, source-cited retrieval
+- 🛠️ **515+ Skills** — discovery + dynamic skills, MCP tools, multi-skill composition
+- 🔌 **Plugin System** — hot-loadable plugins with tools, hooks, and settings
+- 🌐 **98 Free APIs** — no-auth public APIs across 24 categories
+- 🎭 **3D Avatar — Evelyn PMX** — idle / listening / thinking / speaking states
+- 📱 **Mobile Remote** — pair via one-time code, control from your phone
+- 🔒 **SecureVault** — AES-256-GCM + Windows Credential Manager, LAN guard
+
+All running **locally**. Your conversations stay on your machine. Your API keys are your own.
+
+---
+
+## 🎬 Screenshots
+
+| Desktop Shell | 3D Avatar | Settings & About |
+|---------------|-----------|------------------|
+| Glassmorphism top bar + 12-view sidebar | Evelyn PMX with GPU-accelerated Three.js | About & Updates with verification badges |
+
+> Screenshots are rendered from the live `myraa_v6_app.js` desktop shell (no mockups).
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# 1. Clone
+git clone https://github.com/Vishwajeetsrk/Myraa.git
+cd Myraa/resources/app
+
+# 2. Install
+npm install
+
+# 3. Add your Gemini API key
+#    Create resources/app/.env:
+#    GEMINI_API_KEY=your_key_here
+
+# 4. Run
+npm run dev          # Vite dev server
+npm run build        # Production build
+```
+
+Then launch the desktop app:
+
+```bash
+npx electron .
+# or package an installer
+npm run dist:win      # Windows (portable)
+npm run dist:mac      # macOS
+npm run dist:linux    # Linux
+```
+
+On first launch: **Settings → Gemini API Key → Save & Validate** → start chatting with Evelyn.
+
+---
+
+## 📦 Installation
+
+### Windows (Recommended)
+
+1. Download [`MYRAA-Portable-8.3.1.zip`](https://github.com/Vishwajeetsrk/Myraa/releases) from Releases
+2. Extract anywhere and run **`MYRAA AI.exe`** — no install needed
+3. Or run `MYRAA-Launcher.bat` if SmartScreen blocks the exe
+
+> `Installers/v8.3.1/` contains portable + zip. For a full NSIS installer, build on CI with Wine (see [Release Guide](RELEASE_GUIDE.md)).
+
+### macOS / Linux — Build from Source
+
+```bash
+cd resources/app
+npm install
+npm run dist:mac      # → release/MYRAA-8.3.1-mac.dmg
+npm run dist:linux    # → release/MYRAA-8.3.1-linux.AppImage
+```
+
+---
+
+## 🧩 Features
+
+### MYRAA Core — Unified AI Brain
+
+Single entry point for all chat: `dist/myraa_core.cjs` classifies intent (7 types) → picks the best model → cascades on failure → logs cost/health. Escape with `MYRAA_CORE_DISABLE=1` for zero-regression.
 
 ### Memory & Knowledge (RAG)
-- 256-dim local embeddings (no external API needed)
-- Optional Gemini `text-embedding-004` upgrade (`MYRAA_EMBED_REMOTE=1`)
-- Auto-chunking, cosine retrieval with sources + citations
-- Memory injected into every chat call
 
-### Agent & Skills
-- **515 discovery skills** + **483 dynamic skills** merged
-- Goal-based skill matching, multi-skill composition
-- MCP tools for memory, skills, permissions, free APIs
+256-dim local embeddings (no external call). Optional Gemini `text-embedding-004` upgrade (`MYRAA_EMBED_REMOTE=1`). Auto-chunking, cosine search, sources + citations injected into every chat.
 
-### Security
-- LAN guard (non-loopback requires paired-device token)
-- Rate limiter (600 req/min general, 60 req/min sensitive)
-- SecureVault (AES-256-GCM + Windows Credential Manager)
-- `.env` secrets scrubbed (36 values blanked)
+### Skills — 515 + 483
 
-### Free Public APIs
-- **98 free (no-auth, HTTPS)** APIs from [public-apis/public-apis](https://github.com/public-apis/public-apis)
-- 24 categories: Animals, Anime, Books, Crypto, Currency, Dev, Entertainment, Food, Science, Weather, and more
-- MCP tools: `free_api_list`, `free_api_call`
+Discovery skills + dynamic skills merged into a unified catalog. Goal-based matching, multi-skill composition. MCP tools expose memory, skills, permissions, and free APIs to models.
 
 ### Plugin System
-- Hot-loadable plugins in `resources/app/plugins/<name>/`
-- Plugin manifest (`plugin.json`) + entry (`index.cjs`)
-- Tools, hooks (onChat, onTool), settings
-- Sample plugin: `myraa-utils` (time, hash, encode/decode)
 
-### 3D Avatar
-- **Evelyn PMX** — animated 3D avatar with idle, listening, thinking, speaking states
-- Three.js renderer with GPU acceleration
-- Voice I/O with Whisper + ElevenLabs (optional)
+Hot-loadable plugins in `resources/app/plugins/<name>/`:
+
+```
+plugins/myraa-utils/
+├── plugin.json    # manifest (name, version, tools, hooks)
+└── index.cjs      # entry (register tools, onChat, onTool)
+```
+
+Sample `myraa-utils` ships with 3 tools (time, hash, encode/decode).
+
+### Free Public APIs
+
+98 free, no-auth HTTPS APIs from [`public-apis/public-apis`](https://github.com/public-apis/public-apis) — Animals, Crypto, Currency, Weather, Dev, Science, Food, … and more. MCP: `free_api_list`, `free_api_call`.
+
+### 3D Avatar — Evelyn
+
+Evelyn PMX (`resources/app/dist/assets/characters/evelyn/model.pmx`) with GPU-accelerated Three.js. States: idle, listening, thinking, speaking. Voice I/O optional (Whisper + ElevenLabs).
 
 ### Mobile Remote
-- Pair your phone via one-time code
-- Voice commands, text chat, device control from mobile
 
-## Installation
+Pair in Settings → one-time code (5-min expiry) → `server_security.cjs` LAN guard (`AUTH_REQUIRED_PREFIXES`, `BOOTSTRAP_PREFIXES`). Chat and control MYRAA from your phone.
 
-### Windows
-1. Download `Installers/v8.2.1/MYRAA-Setup-8.2.1.exe`
-2. Run the installer (unsigned — allow when prompted)
-3. MYRAA installs to `C:\Program Files\MYRAA AI OS\`
-4. Desktop and Start Menu shortcuts created
+---
 
-### macOS
-- Build from source: `npm run dist:mac`
+## 🏗️ Architecture
 
-### Linux
-- Build from source: `npm run dist:linux`
+```
+User Input
+    ↓
+MYRAA Core  ──→  Intent Classifier (7 types)
+    ↓                ↓
+Model Cascade    Memory RAG (256-dim + cosine)
+Gemini → Groq →         ↓
+OpenRouter →     Plugin Hooks
+Ollama              ↓
+    ↓           Free APIs (98)
+    ↓                ↓
+  3D Avatar  ←  MCP Tools  →  Mobile Remote
+  (Evelyn)                    SecureVault
+```
 
-## Quick Start
+| Layer | File | Role |
+|-------|------|------|
+| Shell | `electron/main.cjs` | Single instance, backend spawn, window + tray |
+| Server | `dist/server.cjs` | Express on :3000, mounts all routes |
+| Core | `dist/myraa_core.cjs` | Unified chat gate |
+| Memory | `dist/memory_kb.cjs` | RAG layer |
+| Skills | `dist/skills_mcp_engine.cjs` | MCP + skill catalog |
+| Security | `dist/server_security.cjs` | Headers, rate limit, LAN guard |
+| Plugins | `dist/plugin_manager.cjs` | Hot-load system |
+| APIs | `dist/free_api_registry.cjs` | 98 free APIs |
+| About | `dist/myraa_v6_real_routes.cjs` | `/api/system/about`, diagnostics |
+| Update | `electron/updater.cjs` | GitHub Releases via electron-updater |
 
-1. Launch MYRAA AI OS
-2. Go to Settings → add your **Gemini API key** (required)
-3. Optionally add Groq, OpenRouter, or Ollama keys
-4. Start chatting with Evelyn!
+---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 Myraa/
 ├── resources/app/
-│   ├── dist/                    # Backend modules
-│   │   ├── server.cjs           # Express server (main entry)
-│   │   ├── myraa_core.cjs       # Unified AI brain
-│   │   ├── memory_kb.cjs        # Memory & Knowledge RAG
+│   ├── dist/                     # Backend + frontend
+│   │   ├── server.cjs            # Express server (main entry)
+│   │   ├── myraa_core.cjs        # Unified AI brain
+│   │   ├── memory_kb.cjs         # Memory & Knowledge RAG
 │   │   ├── free_api_registry.cjs # 98 free public APIs
-│   │   ├── plugin_manager.cjs   # Hot-loadable plugin system
-│   │   ├── skills_mcp_engine.cjs # MCP tools & skills
-│   │   ├── server_security.cjs  # Headers, rate limit, LAN guard
-│   │   └── ...
-│   ├── electron/                # Electron main process
-│   │   ├── main.cjs             # App lifecycle, backend spawn
-│   │   ├── preload.cjs          # Context bridge
-│   │   └── updater.cjs          # Auto-update
-│   ├── plugins/                 # Hot-loadable plugins
-│   │   └── myraa-utils/         # Sample plugin (3 tools)
-│   ├── build/                   # Icons, NSIS scripts
+│   │   ├── plugin_manager.cjs    # Hot-loadable plugins
+│   │   ├── skills_mcp_engine.cjs # MCP tools & skill catalog
+│   │   ├── myraa_v6_app.js       # Desktop shell (vanilla JS SPA)
+│   │   ├── myraa_v6_real_routes.cjs # Real API routes
+│   │   └── assets/               # Bundled frontend + Evelyn avatar
+│   ├── electron/
+│   │   ├── main.cjs              # Lifecycle, backend spawn, IPC
+│   │   ├── preload.cjs           # Context bridge (myraa, myraaUpdate)
+│   │   └── updater.cjs           # Auto-update (GitHub Releases)
+│   ├── plugins/
+│   │   └── myraa-utils/          # Sample plugin (3 tools)
+│   ├── build/                    # Icon, NSIS config
+│   ├── version.json              # Single source of truth (8.3.1)
 │   └── package.json
-├── scripts/                     # Build & utility scripts
-├── docs/                        # Audit reports, changelog
-├── Installers/                  # Versioned installer builds
-│   ├── v7.5.0/
-│   ├── v8.1.0/
-│   ├── v8.2.0/                  # Latest
-│   └── old/
-└── skills/                      # 515 cognitive skills
+├── scripts/
+│   ├── version.cjs               # Sync version across 6 consumers
+│   ├── build.cjs                 # 8-step production pipeline
+│   ├── sign.cjs                  # Authenticode signing (SHA256)
+│   ├── verify.cjs                # 19-point pre-release check
+│   └── release-package.cjs       # Checksums, metadata, latest.json
+├── skills/                       # 400+ cognitive skills
+├── Installers/                   # Versioned builds (gitignored *.exe)
+└── docs/
+    ├── AUDIT_REPORT.md
+    └── CHANGELOG.md
 ```
 
-## Development
+---
+
+## 🛠️ Development
 
 ```bash
-# Install dependencies
 cd resources/app && npm install
 
-# Run in dev mode
-npm run dev
+# Version management (single source: resources/app/version.json)
+npm run version             # show current
+npm run version:patch       # 8.3.1 → 8.3.2
+npm run version:minor       # 8.3.1 → 8.4.0
+npm run version:major       # 8.3.1 → 9.0.0
+npm run version:sync        # re-sync all consumers
 
-# Build for production
-npm run build
+# Build
+npm run build               # vite build
+npm run build:electron      # vite + electron
 
-# Package installer
-npm run dist:win    # Windows
-npm run dist:mac    # macOS
-npm run dist:linux  # Linux
+# Package
+npm run dist:win            # Windows portable
+npm run dist:mac            # macOS DMG
+npm run dist:linux          # Linux AppImage
+
+# Production pipeline
+node ../../scripts/build.cjs --win              # clean → sync → build → package
+node ../../scripts/build.cjs --win --sign       # + code signing (needs CSC_LINK)
+node ../../scripts/verify.cjs                   # 19-point verification
+node ../../scripts/release-package.cjs          # checksums + latest.json
+
+# Tests
+node dist/scratch/test_memory_kb.cjs      # 35/35
+node dist/scratch/test_plugins.cjs        # 27/27
+npm run myraa:architecture-check
 ```
 
-## Architecture
+### Code Signing
 
-```
-User Input → MYRAA Core (intent classifier) → Model Cascade → Response
-                    ↓
-            Memory Context (RAG) ←→ Knowledge Base
-                    ↓
-            Plugin Hooks → Free APIs → MCP Tools
-                    ↓
-            3D Avatar (Evelyn) + Voice Output
+Set a Windows Code Signing Certificate for trusted distribution:
+
+```bash
+set CSC_LINK=C:\path\to\certificate.pfx
+set CSC_KEY_PASSWORD=your_password
+node ../../scripts/build.cjs --win --sign --verify
 ```
 
-## Test Results
+Or sign an existing build:
+
+```bash
+node ../../scripts/sign.cjs --cert C:\path\to\cert.pfx --password pw
+```
+
+---
+
+## 🧪 Test Results
 
 | Suite | Result |
 |-------|--------|
-| Memory KB | 35/35 PASS |
-| Pairing + LAN Guard | 11/11 PASS |
-| Free Public APIs | 20/20 PASS |
-| Plugins | 27/27 PASS |
-| Architecture Check | PASS |
+| Memory & Knowledge | **35/35** PASS |
+| Pairing + LAN Guard | **11/11** PASS |
+| Free Public APIs | **20/20** PASS |
+| Plugins | **27/27** PASS |
+| Full Smoke (API + frontend + Electron + versions) | **29/29** PASS |
+| Pre-release Verification | **19/19** PASS |
+| Architecture Check | **PASS** |
 
-## Changelog
+---
 
-See [docs/CHANGELOG.md](docs/CHANGELOG.md) for full version history.
+## 🔄 MYRAA vs JARVIS
 
-## License
+|  | MYRAA | JARVIS |
+|--|-------|--------|
+| **Interface** | Desktop OS shell — windowed, glassmorphism, 12-view sidebar, 3D avatar stage | *(Different UX — see [JARVIS-AI-OS](https://github.com/vishwajeetsrk/JARVIS-AI-OS))* |
+| **Core** | Same MYRAA Core, same 515+ skills, same memory/RAG, same model cascade | Same |
+| **Platform** | Electron (Windows/macOS/Linux) | Tauri + Electron variants |
+| **Use when** | You want a full desktop companion with visual presence | You prefer JARVIS's workflow |
 
-Copyright © 2026 MYRAA AI OS — Vishwajeet & Open Source Community
+Both share the same power. Pick the interface you prefer — or run both.
+
+---
+
+## 📄 License
+
+MIT — see [LICENSE](LICENSE).
+
+This project bundles Electron (`LICENSE.electron.txt`) and Chromium (`LICENSES.chromium.html`).
+
+---
+
+<p align="center">
+  Built with care by <strong>Vishwajeet</strong> & the Open Source Community<br/>
+  <sub>MYRAA AI — Private by design. Powerful by choice.</sub>
+</p>
