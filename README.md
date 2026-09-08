@@ -2,7 +2,7 @@
 
 **MYRAA** — a private 3D AI desktop companion powered by your own API keys.
 
-![Version](https://img.shields.io/badge/version-8.2.0-blue)
+![Version](https://img.shields.io/badge/version-8.2.1-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 
 ## What is MYRAA?
@@ -56,7 +56,7 @@ MYRAA is a **Personal AI Operating System** — a desktop application that runs 
 ## Installation
 
 ### Windows
-1. Download `Installers/v8.2.0/MYRAA-Setup-8.2.0.exe`
+1. Download `Installers/v8.2.1/MYRAA-Setup-8.2.1.exe`
 2. Run the installer (unsigned — allow when prompted)
 3. MYRAA installs to `C:\Program Files\MYRAA AI OS\`
 4. Desktop and Start Menu shortcuts created
