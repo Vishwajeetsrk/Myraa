@@ -36,9 +36,9 @@ function _readAboutSync() {
   try {
     const vj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'version.json'), 'utf8'));
     const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    return { version: vj.version || pj.version || '8.3.1', productName: vj.productName || 'MYRAA AI', publisher: vj.publisher || 'MYRAA', productNameFull: vj.productNameFull || 'MYRAA AI Desktop Assistant', copyright: vj.copyright || '', publisherUrl: vj.publisherUrl || '' };
+    return { version: vj.version || pj.version || '8.3.2', productName: vj.productName || 'MYRAA AI OS', publisher: vj.publisher || 'MYRAA', productNameFull: vj.productNameFull || 'MYRAA AI Desktop Assistant', copyright: vj.copyright || '', publisherUrl: vj.publisherUrl || '' };
   } catch (e) {
-    try { const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')); return { version: pj.version || '8.3.1', productName: 'MYRAA AI', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; } catch (e2) { return { version: '8.3.1', productName: 'MYRAA AI', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; }
+    try { const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')); return { version: pj.version || '8.3.2', productName: 'MYRAA AI OS', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; } catch (e2) { return { version: '8.3.2', productName: 'MYRAA AI OS', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; }
   }
 }
 function _checkSignedSync() {
@@ -139,9 +139,13 @@ if (app.isPackaged) {
   const baseDir = path.dirname(process.resourcesPath); // e.g. "MYRAA AI OS" or "MYRAA AI OS\MYRAA AI OS"
   const candidates = [];
 
-  // 1) Standard path (single-nested, correct)
+  // 1) Unpacked app directory (used by non-asar development distributions)
   candidates.push(path.join(process.resourcesPath, 'app', 'dist', 'server.cjs'));
-  // 2) Unpacked asar path (dist/** is extracted here by electron-builder)
+  // 2) The normal Electron Builder asar layout. Keeping server.cjs in the
+  // archive is essential: its Node dependencies resolve from app.asar's
+  // node_modules, whereas an unpacked dist directory cannot resolve express.
+  candidates.push(path.join(process.resourcesPath, 'app.asar', 'dist', 'server.cjs'));
+  // 3) Legacy unpacked layout retained for upgrades made by older builds.
   candidates.push(path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'server.cjs'));
   // 3) Double-nested: go up one level from resourcesPath
   candidates.push(path.join(baseDir, 'resources', 'app', 'dist', 'server.cjs'));
@@ -171,7 +175,25 @@ if (app.isPackaged) {
   SERVER_ENTRY = path.join(APP_ROOT, 'dist', 'server.cjs');
 }
 
-const APP_ICON = path.join(APP_ROOT, 'build', 'icon.ico');
+// App icon: resolved from real candidates (build/ is NOT guaranteed inside
+// the unpacked layout, and a missing icon path breaks window creation UX).
+const APP_ICON = (() => {
+  const candidates = [
+    path.join(APP_ROOT, 'build', 'icon.ico'),
+    path.join(APP_ROOT, 'build', 'icon.png'),
+    path.join(__dirname, '..', 'build', 'icon.ico'),
+    path.join(__dirname, '..', 'build', 'icon.png'),
+  ];
+  try {
+    if (process.resourcesPath) {
+      candidates.push(path.join(process.resourcesPath, 'app.asar.unpacked', 'build', 'icon.ico'));
+    }
+  } catch (e) {}
+  for (const c of candidates) {
+    try { if (c && fs.existsSync(c)) return c; } catch (e) {}
+  }
+  return undefined;
+})();
 
 /** @type {import('child_process').ChildProcess | null} */
 let serverProcess = null;
@@ -180,6 +202,31 @@ let mainWindow = null;
 /** @type {BrowserWindow | null} */
 let splashWindow = null;
 let isQuitting = false;
+
+// Splash progress is queued until the splash page finishes loading, so early
+// milestones (4%, 10%…) are never lost when bootstrap outruns the renderer.
+let _splashLoaded = false;
+let _splashQueue = [];
+function setSplashProgress(percent, status) {
+  const value = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
+  const payload = { percent: value, status: String(status || '') };
+  dlog(`[STARTUP ${value}%] ${payload.status}`);
+  if (!splashWindow || splashWindow.isDestroyed()) return;
+  if (!_splashLoaded) {
+    _splashQueue.push(payload);
+    if (_splashQueue.length > 12) _splashQueue = _splashQueue.slice(-12);
+    return;
+  }
+  try { splashWindow.webContents.send('myraa:splash-progress', payload); } catch (e) {}
+}
+function flushSplashQueue() {
+  _splashLoaded = true;
+  if (!splashWindow || splashWindow.isDestroyed()) { _splashQueue = []; return; }
+  for (const payload of _splashQueue) {
+    try { splashWindow.webContents.send('myraa:splash-progress', payload); } catch (e) {}
+  }
+  _splashQueue = [];
+}
 
 // ---------------------------------------------------------------------------
 // Single-instance guard — second launches focus the existing window instead of
@@ -424,7 +471,7 @@ function stopBackend() {
 }
 
 /** Poll the backend until it answers, or reject on timeout. */
-function waitForBackend(timeoutMs) {
+function waitForBackend(timeoutMs, onProgress) {
   const deadline = Date.now() + timeoutMs;
   return new Promise((resolve, reject) => {
     const tryOnce = () => {
@@ -433,10 +480,12 @@ function waitForBackend(timeoutMs) {
         resolve();
       });
       req.on('error', () => {
+        const elapsed = Math.max(0, timeoutMs - Math.max(0, deadline - Date.now()));
+        onProgress?.(Math.min(88, 40 + Math.floor((elapsed / timeoutMs) * 48)));
         if (Date.now() > deadline) {
           reject(new Error('Backend did not become ready in time.'));
         } else {
-          setTimeout(tryOnce, 250);
+          setTimeout(tryOnce, 150);
         }
       });
       req.setTimeout(2000, () => req.destroy());
@@ -461,10 +510,20 @@ function createSplashWindow() {
     skipTaskbar: true,
     backgroundColor: '#00000000',
     icon: APP_ICON,
-    webPreferences: { contextIsolation: true, nodeIntegration: false },
+    webPreferences: {
+      preload: path.join(__dirname, 'splash-preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
   });
+  _splashLoaded = false;
+  _splashQueue = [];
   splashWindow.loadFile(path.join(__dirname, 'splash.html'));
-  splashWindow.on('closed', () => (splashWindow = null));
+  splashWindow.webContents.once('did-finish-load', () => {
+    flushSplashQueue();
+    setSplashProgress(4, 'Preparing MYRAA…');
+  });
+  splashWindow.on('closed', () => { splashWindow = null; _splashLoaded = false; });
 }
 
 // ── MYRAA Recovery Window (replaces Windows "cannot find" dialog) ──────────
@@ -550,7 +609,7 @@ function createMainWindow() {
     height: 800,
     minWidth: 940,
     minHeight: 600,
-    show: true, // Show immediately!
+    show: false, // Revealed on ready-to-show — avoids white flash + feels faster
     backgroundColor: '#0a0a0f',
     autoHideMenuBar: true,
     title: 'MYRAA AI OS',
@@ -559,7 +618,7 @@ function createMainWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      spellcheck: true,
+      spellcheck: false, // dictionaries load lazily on demand; true added ~1s to first paint
       backgroundThrottling: false,
     },
   });
@@ -601,9 +660,7 @@ function createMainWindow() {
     return { action: 'allow' };
   });
 
-  mainWindow.show();
-  mainWindow.focus();
-
+  setSplashProgress(96, 'Opening your workspace…');
   mainWindow.once('ready-to-show', () => {
     if (splashWindow && !splashWindow.isDestroyed()) {
       try { splashWindow.close(); } catch {}
@@ -758,13 +815,16 @@ async function bootstrap() {
   app.setAppUserModelId('com.myraa.desktop');
   ensureRecoveryIpc();
   createSplashWindow();
+  setSplashProgress(10, 'Checking application files…');
 
   // ── 6-step launcher verification (central path + health) ──────────────────
   let launcherResult = null;
   if (launcherSteps && launcherSteps.runLauncherSteps) {
     try { launcherResult = await launcherSteps.runLauncherSteps(dlog); } catch (e) { dlog(`[LAUNCHER] ${e.message}`); }
-    // If launcher detected missing exe, show recovery immediately (don't try backend)
-    if (launcherResult && launcherResult.ok === false && launcherResult.reason === 'executable_not_found') {
+    // If launcher detected missing exe, show recovery immediately — but ONLY when
+    // packaged. In dev there is no packaged exe next to `node`, so a missing
+    // exe is expected and must NOT block backend startup.
+    if (launcherResult && launcherResult.ok === false && launcherResult.reason === 'executable_not_found' && app.isPackaged) {
       dlog(`[BOOTSTRAP] Launcher: executable not found — showing recovery`);
       if (splashWindow && !splashWindow.isDestroyed()) { try { splashWindow.close(); } catch (e) {} }
       showRecoveryWindow(
@@ -778,12 +838,16 @@ async function bootstrap() {
   }
 
   try {
+    setSplashProgress(25, 'Starting secure local services…');
     dlog(`Starting backend...`);
     await startBackend();
+    setSplashProgress(40, 'Connecting workspace…');
     dlog(`Waiting for backend on port 3000...`);
-    await waitForBackend(SERVER_READY_TIMEOUT_MS);
+    await waitForBackend(SERVER_READY_TIMEOUT_MS, (value) => setSplashProgress(value, 'Initializing MYRAA capabilities…'));
+    setSplashProgress(92, 'Loading your workspace…');
     dlog(`Backend ready! Creating main window...`);
     createMainWindow();
+    setSplashProgress(100, 'Ready');
     dlog(`Main window created.`);
     updater.scheduleStartupCheck();
   } catch (err) {

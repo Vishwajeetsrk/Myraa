@@ -35,10 +35,10 @@ if (appIdentity) {
   const id = appIdentity.loadIdentity();
   if (id.VERSION && /^\d+\.\d+\.\d+$/.test(id.VERSION)) ok(`Version: ${id.VERSION}`);
   else bad(`Version: ${id.VERSION}`);
-  if (id.EXECUTABLE_NAME === 'MYRAA.exe') ok(`Executable: ${id.EXECUTABLE_NAME}`);
-  else bad(`Executable: ${id.EXECUTABLE_NAME}`);
-  if (id.LEGACY_NAMES && id.LEGACY_NAMES.includes('MYRAA AI.exe')) ok(`Legacy names: ${id.LEGACY_NAMES.join(', ')}`);
-  else bad('Legacy names missing');
+  if (id.EXECUTABLE_NAME === 'MYRAA AI.exe') ok(`Executable: ${id.EXECUTABLE_NAME}`);
+  else bad(`Executable (expected MYRAA AI.exe): ${id.EXECUTABLE_NAME}`);
+  if (id.LEGACY_NAMES && id.LEGACY_NAMES.includes('MYRAA.exe')) ok(`Legacy names: ${id.LEGACY_NAMES.join(', ')}`);
+  else bad('Legacy names missing MYRAA.exe');
   if (id.PUBLISHER === 'MYRAA') ok(`Publisher: ${id.PUBLISHER}`);
   else bad(`Publisher: ${id.PUBLISHER}`);
 }

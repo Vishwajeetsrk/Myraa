@@ -39,14 +39,14 @@ function resolveExecutable(opts = {}) {
 
   // ── 2) Stored install registry ───────────────────────────────────────────
   try {
-    const pm = require('../paths/path_manager.cjs');
+    const pm = require('../core/paths/path_manager.cjs');
     const regPath = pm.getInstallRegistryPath();
     if (fs.existsSync(regPath)) {
       const reg = JSON.parse(fs.readFileSync(regPath, 'utf8'));
       if (reg.executable_path) push(reg.executable_path);
       if (reg.install_path) {
         // Try standard exe name in stored install_path
-        const { loadIdentity } = require('../config/app_identity.cjs');
+        const { loadIdentity } = require('../core/config/app_identity.cjs');
         const id = loadIdentity();
         push(path.join(reg.install_path, id.EXECUTABLE_NAME));
         for (const legacy of (id.LEGACY_NAMES || [])) push(path.join(reg.install_path, legacy));
@@ -118,18 +118,18 @@ function resolveExecutable(opts = {}) {
     ];
     for (const key of keys) {
       try {
-        const out = execSync(`reg query "${key}" /v InstallLocation 2>nul`, { encoding: 'utf8', timeout: 2000 });
+        const out = execSync(`reg query "${key}" /v InstallLocation 2>nul`, { encoding: 'utf8', timeout: 800 });
         const m = out.match(/InstallLocation\s+REG_SZ\s+(.+)/);
         if (m) {
           const loc = m[1].trim();
-          const { loadIdentity } = require('../config/app_identity.cjs');
+          const { loadIdentity } = require('../core/config/app_identity.cjs');
           const id = loadIdentity();
           push(path.join(loc, id.EXECUTABLE_NAME));
           for (const legacy of (id.LEGACY_NAMES || [])) push(path.join(loc, legacy));
         }
       } catch (e) {}
       try {
-        const out2 = execSync(`reg query "${key}" /v DisplayIcon 2>nul`, { encoding: 'utf8', timeout: 2000 });
+        const out2 = execSync(`reg query "${key}" /v DisplayIcon 2>nul`, { encoding: 'utf8', timeout: 800 });
         const m2 = out2.match(/DisplayIcon\s+REG_SZ\s+(.+)/);
         if (m2) push(m2[1].trim().replace(/"/g, '').split(',')[0].trim());
       } catch (e) {}

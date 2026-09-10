@@ -1,0 +1,3 @@
+f0951dd97209afafcaf23d3d5dd736c1ae99e8f3fd24a54ce0730165f78407be  MYRAA-Setup-8.3.4.exe
+538a0ae191dded5f013b68b7e8ff152b74218ea4daf438c297b9e3a58d4979d1  MYRAA-Portable-8.3.4.exe
+d86b4598b816cd035aeaed0c73509ed3b5b2a545fccbc858b27f3ca3a82382be  MYRAA-Portable-8.3.4.zip

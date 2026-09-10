@@ -7,44 +7,114 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 100%; height: 100%; background: transparent; overflow: hidden; }
       .card {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 22px;
-        border-radius: 20px;
-        background: radial-gradient(120% 120% at 50% 0%, #16161f 0%, #0a0a0f 70%);
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        width: 100%; height: 100%; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 16px;
+        border-radius: 20px; padding: 24px;
+        background: radial-gradient(120% 120% at 50% 0%, #101828 0%, #0a0a0f 60%, #070B14 100%);
+        border: 1px solid rgba(56, 207, 255, 0.12);
         box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         -webkit-app-region: drag;
       }
-      .logo {
-        width: 92px;
-        height: 92px;
-        object-fit: cover;
-        border-radius: 22px;
-        box-shadow: 0 0 32px rgba(239, 68, 68, 0.25);
+      .logo-wrap {
+        width: 92px; height: 92px; border-radius: 22px; overflow: hidden;
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, #0e1626 0%, #131c2e 100%);
+        border: 1px solid rgba(56, 207, 255, 0.18);
+        box-shadow: 0 0 32px rgba(56, 207, 255, 0.22);
+        animation: logoGlow 2.4s ease-in-out infinite;
+      }
+      .logo-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .logo-wrap svg { width: 56px; height: 56px; }
+      @keyframes logoGlow {
+        0%, 100% { box-shadow: 0 0 22px rgba(56, 207, 255, 0.16); }
+        50% { box-shadow: 0 0 36px rgba(56, 207, 255, 0.34); }
       }
       .ring {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
+        width: 46px; height: 46px; border-radius: 50%;
         border: 3px solid rgba(255, 255, 255, 0.10);
-        border-top-color: #7c5cff;
+        border-top-color: #38cfff;
         animation: spin 0.9s linear infinite;
       }
-      .status { font-size: 13px; color: rgba(255, 255, 255, 0.45); letter-spacing: 0.04em; }
+      .progress-wrap { width: 230px; display: flex; flex-direction: column; gap: 9px; }
+      .progress-meta { display: flex; justify-content: space-between; color: rgba(255,255,255,0.62); font-size: 12px; }
+      .progress-meta strong { color: #fff; font-variant-numeric: tabular-nums; }
+      .track { height: 7px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,0.1); }
+      .bar {
+        width: 0%; height: 100%; border-radius: inherit;
+        background: linear-gradient(90deg, #6d5cff, #38cfff);
+        box-shadow: 0 0 14px rgba(56,207,255,0.55);
+        transition: width 220ms ease-out;
+      }
+      .bar.indeterminate { animation: slide 1.2s ease-in-out infinite; }
+      @keyframes slide {
+        0% { margin-left: -40%; width: 40%; }
+        50% { margin-left: 30%; width: 40%; }
+        100% { margin-left: 100%; width: 40%; }
+      }
+      .status { min-height: 18px; font-size: 13px; color: rgba(255, 255, 255, 0.6); letter-spacing: 0.02em; text-align: center; }
       @keyframes spin { to { transform: rotate(360deg); } }
     </style>
   </head>
   <body>
     <div class="card">
-      <img class="logo" src="../build/icon.png" alt="MYRAA" />
-      <div class="ring"></div>
-      <div class="status">Starting up…</div>
+      <div class="logo-wrap" id="logoWrap">
+        <!-- Inline SVG fallback: always renders, even if PNG is missing -->
+        <svg id="logoFallback" viewBox="0 0 64 64" fill="none" aria-label="MYRAA">
+          <circle cx="32" cy="32" r="26" stroke="#38CFFF" stroke-width="4" opacity="0.9"/>
+          <circle cx="32" cy="32" r="15" stroke="#8b5cf6" stroke-width="4" opacity="0.9"/>
+          <circle cx="32" cy="32" r="5" fill="#38CFFF"/>
+        </svg>
+        <img id="logoImg" src="../build/icon.png" alt="MYRAA" style="display:none;" />
+      </div>
+      <div class="ring" id="ring"></div>
+      <div class="progress-wrap">
+        <div class="progress-meta"><span>MYRAA startup</span><strong id="percent">0%</strong></div>
+        <div class="track"><div class="bar indeterminate" id="bar"></div></div>
+      </div>
+      <div class="status" id="status">Preparing MYRAA…</div>
     </div>
+    <script>
+      (function () {
+        var bar = document.getElementById('bar');
+        var percent = document.getElementById('percent');
+        var status = document.getElementById('status');
+        var ring = document.getElementById('ring');
+        var logoImg = document.getElementById('logoImg');
+        var logoFallback = document.getElementById('logoFallback');
+
+        // PNG wins when it loads; SVG guarantees a logo no matter what.
+        logoImg.addEventListener('load', function () {
+          logoImg.style.display = 'block';
+          if (logoFallback) logoFallback.style.display = 'none';
+        });
+        logoImg.addEventListener('error', function () {
+          logoImg.style.display = 'none';
+          if (logoFallback) logoFallback.style.display = 'block';
+        });
+        // Trigger load explicitly (cached or slow — either path ends with a logo).
+        try { var src = logoImg.getAttribute('src'); logoImg.setAttribute('src', src); } catch (e) {}
+
+        function render(state) {
+          var value = Math.max(0, Math.min(100, Math.round(Number(state && state.percent) || 0)));
+          bar.classList.remove('indeterminate');
+          bar.style.width = value + '%';
+          percent.textContent = value + '%';
+          status.textContent = (state && state.status) || 'Starting MYRAA…';
+          if (value >= 100 && ring) ring.style.display = 'none';
+        }
+
+        function subscribe() {
+          if (window.myraaSplash && typeof window.myraaSplash.onProgress === 'function') {
+            window.myraaSplash.onProgress(render);
+          } else {
+            // Preload missing (old build): keep indeterminate motion so the
+            // screen never looks frozen, then retry once in case of reload.
+            setTimeout(subscribe, 1500);
+          }
+        }
+        subscribe();
+      })();
+    </script>
   </body>
 </html>

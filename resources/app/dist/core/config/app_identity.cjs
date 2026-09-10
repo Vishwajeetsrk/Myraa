@@ -15,8 +15,9 @@ let _identity = null;
 function loadIdentity() {
   if (_identity) return _identity;
   try {
-    const vjPath = path.join(__dirname, '..', '..', 'version.json');
-    const pjPath = path.join(__dirname, '..', '..', 'package.json');
+    // __dirname = resources/app/dist/core/config → version.json is 3 levels up
+    const vjPath = path.join(__dirname, '..', '..', '..', 'version.json');
+    const pjPath = path.join(__dirname, '..', '..', '..', 'package.json');
     const vj = fs.existsSync(vjPath) ? JSON.parse(fs.readFileSync(vjPath, 'utf8')) : {};
     const pj = fs.existsSync(pjPath) ? JSON.parse(fs.readFileSync(pjPath, 'utf8')) : {};
     _identity = {
@@ -29,11 +30,13 @@ function loadIdentity() {
       APP_ID: vj.appId || 'com.myraa.desktop',
       VERSION: vj.version || pj.version || '8.3.1',
       // ── Executable names (stable, never versioned) ────────────────────────
-      EXECUTABLE_NAME: 'MYRAA.exe',
+      // STEP 14: canonical exe is "MYRAA AI.exe" (matches electron-builder
+      // executableName + real output in win-unpacked/).
+      EXECUTABLE_NAME: 'MYRAA AI.exe',
       LAUNCHER_NAME: 'MYRAA-Launcher.exe',
       UNINSTALLER_NAME: 'Uninstall MYRAA.exe',
       // Legacy names (for migration / detection of old installs)
-      LEGACY_NAMES: ['MYRAA AI.exe', 'MYRAA AI OS.exe', 'MYRAA AI-runtime.exe'],
+      LEGACY_NAMES: ['MYRAA.exe', 'MYRAA AI OS.exe', 'MYRAA AI-runtime.exe'],
       // ── Installer names ───────────────────────────────────────────────────
       INSTALLER_PREFIX: 'MYRAA-Setup',
       PORTABLE_PREFIX: 'MYRAA-Portable',
@@ -45,9 +48,9 @@ function loadIdentity() {
     _identity = {
       APP_NAME: 'MYRAA', PRODUCT_NAME: 'MYRAA AI', PRODUCT_NAME_FULL: 'MYRAA AI Desktop Assistant',
       PUBLISHER: 'MYRAA', PUBLISHER_URL: 'https://github.com/vishwajeetsrk/Myraa',
-      COPYRIGHT: 'Copyright \u00A9 2026 MYRAA', APP_ID: 'com.myraa.desktop', VERSION: '8.3.1',
-      EXECUTABLE_NAME: 'MYRAA.exe', LAUNCHER_NAME: 'MYRAA-Launcher.exe', UNINSTALLER_NAME: 'Uninstall MYRAA.exe',
-      LEGACY_NAMES: ['MYRAA AI.exe', 'MYRAA AI OS.exe', 'MYRAA AI-runtime.exe'],
+      COPYRIGHT: 'Copyright \u00A9 2026 MYRAA', APP_ID: 'com.myraa.desktop', VERSION: '8.3.4',
+      EXECUTABLE_NAME: 'MYRAA AI.exe', LAUNCHER_NAME: 'MYRAA-Launcher.exe', UNINSTALLER_NAME: 'Uninstall MYRAA.exe',
+      LEGACY_NAMES: ['MYRAA.exe', 'MYRAA AI OS.exe', 'MYRAA AI-runtime.exe'],
       INSTALLER_PREFIX: 'MYRAA-Setup', PORTABLE_PREFIX: 'MYRAA-Portable',
       CHANNELS: ['stable', 'beta', 'development'], DEFAULT_CHANNEL: 'stable',
     };
