@@ -1,0 +1,125 @@
+# =============================================================================
+# MYRAA AI — Electron Builder Configuration
+# =============================================================================
+
+appId: com.myraa.desktop
+productName: MYRAA AI OS
+copyright: Copyright © 2026 MYRAA — Vishwajeet & Open Source Community
+artifactName: MYRAA-${version}-${os}-${arch}.${ext}
+
+# ── Directories ──────────────────────────────────────────────────────────────
+directories:
+  output: release
+  buildResources: build
+
+# ── Files to include in the app bundle ───────────────────────────────────────
+files:
+  - dist/**
+  - electron/**
+  # splash.html and recovery.html load this image at runtime; build resources
+  # are not included by Electron Builder unless explicitly listed.
+  - build/icon.png
+  - package.json
+  - version.json
+  - "!src/**"
+  - "!*.map"
+  - "!release/**"
+  - "!dist/scratch/**"
+
+# ── Windows ──────────────────────────────────────────────────────────────────
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+  artifactName: MYRAA-Setup-${version}.${ext}
+  # Do not set `sign: false`: electron-builder will use CSC_LINK / CSC_KEY_PASSWORD
+  # when a trusted Authenticode certificate is provided by the release environment.
+  executableName: MYRAA AI
+  legalTrademarks: MYRAA is a trademark of Vishwajeet & Open Source Community
+  signtoolOptions:
+    publisherName: MYRAA
+
+portable:
+  artifactName: MYRAA-Portable-${version}.${ext}
+
+# ── NSIS Installer ──────────────────────────────────────────────────────────
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: MYRAA AI OS
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+  deleteAppDataOnUninstall: false
+  menuCategory: MYRAA AI OS
+  # Keep installer logic in Electron Builder's tested NSIS template. The former
+  # custom include caused silent installs to exit with code 2 before copying
+  # files, and duplicated registry/uninstall behavior handled by the template.
+  guid: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+# ── macOS ────────────────────────────────────────────────────────────────────
+mac:
+  icon: build/icon.png
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+    - target: zip
+      arch: [x64, arm64]
+  artifactName: MYRAA-${version}-mac.${ext}
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+dmg:
+  title: MYRAA AI ${version}
+  icon: build/icon.png
+  window:
+    width: 540
+    height: 380
+
+# ── Linux ────────────────────────────────────────────────────────────────────
+linux:
+  icon: build/icon.png
+  category: Office
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+    - target: rpm
+      arch: [x64]
+  artifactName: MYRAA-${version}-linux.${ext}
+
+# ── Auto Update (GitHub Releases) ───────────────────────────────────────────
+publish:
+  provider: github
+  owner: vishwajeetsrk
+  repo: Myraa
+  private: false
+  releaseType: release
+
+# ── Asar ─────────────────────────────────────────────────────────────────────
+# dist/** MUST be unpacked: Electron child processes (spawn + fs.existsSync)
+# cannot see inside app.asar. The backend entry
+# resources/app.asar.unpacked/dist/server.cjs must exist as a real file,
+# otherwise startup fails with "Backend bundle not found".
+asar: true
+asarUnpack:
+  - dist/**
+  - version.json
+  - package.json
+  - node_modules/better-sqlite3/**
+  - node_modules/@esbuild/**
+  - node_modules/node-llama-cpp/**
+
+# ── Compression ──────────────────────────────────────────────────────────────
+compression: maximum
+removePackageScripts: true
