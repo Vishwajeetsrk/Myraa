@@ -203,6 +203,11 @@ let serverProcess = null;
 let serverSpawnError = null;
 /** First exit record { code, signal, stderrTail } — survives past waitForBackend. */
 let serverExitInfo = null;
+/** True only after waitForBackend resolves. Guards window creation so a second
+ * launch during a stuck bootstrap can never open a black, backend-less window. */
+let backendReady = false;
+/** Consecutive main-window load failures (for did-fail-load → recovery). */
+let loadFailCount = 0;
 /** @type {BrowserWindow | null} */
 let mainWindow = null;
 /** @type {BrowserWindow | null} */
@@ -243,15 +248,21 @@ dlog(`Single instance lock obtained: ${gotSingleInstanceLock}`);
 if (!gotSingleInstanceLock) {
   dlog(`Single instance lock failed. Quitting process ${process.pid}`);
   app.quit();
-} else {
+  } else {
   app.on('second-instance', () => {
     dlog(`Second instance event received.`);
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
       mainWindow.focus();
-    } else {
+    } else if (backendReady) {
       createMainWindow();
+    } else {
+      // Bootstrap is still working (or failed into recovery) — never open a
+      // backend-less window. Surface whatever state window exists instead.
+      dlog('[second-instance] backend not ready — not creating main window');
+      const win = recoveryWindow || splashWindow;
+      if (win && !win.isDestroyed()) { try { win.show(); win.focus(); } catch (e) {} }
     }
   });
   app.whenReady().then(() => {
@@ -277,10 +288,108 @@ function isPortInUse(port) {
   });
 }
 
+/** Who (if anyone) answers on the backend port? Never blindly attach to a
+ * foreign process: 'ours' | 'legacy-ours' | 'foreign' | 'none'. */
+function checkExistingBackend() {
+  return new Promise((resolve) => {
+    const req = http.get(`http://127.0.0.1:${SERVER_PORT}/api/system/about`, (res) => {
+      let body = '';
+      res.on('data', (d) => { body += d; });
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(body);
+          if (j && j.ok && j.version) { resolve({ status: 'ours', version: j.version }); return; }
+        } catch (e) {}
+        // About missing — maybe an older MYRAA without that route?
+        const req2 = http.get(`http://127.0.0.1:${SERVER_PORT}/api/plugins`, (res2) => {
+          res2.resume();
+          if (res2.statusCode === 200) resolve({ status: 'legacy-ours' });
+          else resolve({ status: 'foreign', code: res2.statusCode });
+        });
+        req2.on('error', () => resolve({ status: 'foreign', code: res.statusCode }));
+        req2.setTimeout(1500, () => { req2.destroy(); resolve({ status: 'foreign', code: res.statusCode }); });
+      });
+    });
+    req.on('error', () => resolve({ status: 'none' }));
+    req.setTimeout(1500, () => { req.destroy(); resolve({ status: 'none' }); });
+  });
+}
+
+/** Validate the runtime binary BEFORE spawn: exists, plausible size, MZ magic.
+ * A truncated/corrupt/partial install fails Windows process creation with
+ * ENOENT — this turns that into an exact, actionable message. */
+function validateRuntime(runtimeExe) {
+  try {
+    if (!fs.existsSync(runtimeExe)) {
+      return { ok: false, detail: `Runtime binary is missing: ${runtimeExe} — the install is incomplete. Reinstall MYRAA.` };
+    }
+    const stat = fs.statSync(runtimeExe);
+    if (!stat.isFile()) return { ok: false, detail: `Runtime path is not a file: ${runtimeExe}` };
+    if (stat.size < 50 * 1024 * 1024) {
+      return { ok: false, detail: `Runtime binary is only ${(stat.size / 1024).toFixed(0)} KB (expected >50 MB) — the install is truncated or corrupt. Reinstall MYRAA.` };
+    }
+    const fd = fs.openSync(runtimeExe, 'r');
+    const head = Buffer.alloc(2);
+    fs.readSync(fd, head, 0, 2, 0);
+    fs.closeSync(fd);
+    if (head.toString('ascii') !== 'MZ') {
+      return { ok: false, detail: `Runtime binary has an invalid executable header — the install is corrupt. Reinstall MYRAA.` };
+    }
+    return { ok: true, detail: `Runtime OK (${(stat.size / 1024 / 1024).toFixed(1)} MB, MZ header present)` };
+  } catch (e) {
+    return { ok: false, detail: `Runtime validation failed: ${e.message}` };
+  }
+}
+
+/** Probe the runtime: `<exe> --version` under ELECTRON_RUN_AS_NODE must exit 0.
+ * Catches corrupt binaries and OS-level blocks BEFORE the backend spawn, with
+ * the exact OS reason instead of a blind 90s wait. */
+function probeRuntime(runtimeExe) {
+  return new Promise((resolve) => {
+    let out = '';
+    let done = false;
+    const finish = (result) => { if (!done) { done = true; resolve(result); } };
+    let child;
+    try {
+      child = spawn(runtimeExe, ['--version'], {
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+        stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true,
+      });
+    } catch (e) {
+      finish({ ok: false, detail: `Runtime probe could not start: ${e.message}` });
+      return;
+    }
+    child.stdout?.on('data', (d) => { out += d.toString(); });
+    child.stderr?.on('data', (d) => { out += d.toString(); });
+    child.on('error', (err) => {
+      finish({ ok: false, detail: `Runtime probe blocked (${err.message}). Windows refused to execute ${runtimeExe} — check antivirus quarantine or Smart App Control history, then reinstall.` });
+    });
+    child.on('exit', (code) => {
+      if (code === 0) finish({ ok: true, detail: `Runtime probe OK (${out.trim().slice(0, 40)})` });
+      else finish({ ok: false, detail: `Runtime probe exited with code ${code}. The executable cannot start — reinstall MYRAA. Output: ${out.trim().slice(0, 200)}` });
+    });
+    setTimeout(() => {
+      try { child.kill(); } catch (e) {}
+      finish({ ok: false, detail: 'Runtime probe timed out after 12s — the executable hangs on launch. Reinstall MYRAA.' });
+    }, 12000);
+  });
+}
+
 async function startBackend() {
-  if (await isPortInUse(SERVER_PORT)) {
-    console.log('[Electron] Active MYRAA backend detected on port 3000. Re-using existing instance.');
+  const existing = await checkExistingBackend();
+  if (existing.status === 'ours') {
+    dlog(`[Electron] Active MYRAA backend v${existing.version} detected on port 3000. Re-using existing instance.`);
     return;
+  }
+  if (existing.status === 'legacy-ours') {
+    dlog('[Electron] Port 3000 answers like an older MYRAA backend. Re-using existing instance.');
+    return;
+  }
+  if (existing.status === 'foreign') {
+    throw new Error(
+      `Port ${SERVER_PORT} is already used by another application (HTTP ${existing.code || 'response'} that is not MYRAA). Close that program (or run: netstat -ano | findstr :3000, then taskkill /PID <pid> /F) and relaunch MYRAA.`,
+    );
   }
 
   if (!fs.existsSync(SERVER_ENTRY)) {
@@ -341,6 +450,20 @@ async function startBackend() {
   const runtimeExe = process.execPath;
   dlog(`Spawning backend with runtime: ${runtimeExe} -> ${SERVER_ENTRY}`);
   dlog(`[SPAWN] cwd=${APP_ROOT} dataDir=${dataDir}`);
+
+  // Pre-spawn validation: a truncated/corrupt/partial install fails Windows
+  // process creation with a bare ENOENT. Report the exact problem instead.
+  const runtimeCheck = validateRuntime(runtimeExe);
+  dlog(`[SPAWN] ${runtimeCheck.detail}`);
+  setSplashProgress(30, 'Verifying application runtime…');
+  if (!runtimeCheck.ok) throw new Error(runtimeCheck.detail);
+
+  // Runtime probe: proves the binary actually executes before we commit to a
+  // 90-second backend wait. Catches corruption and OS-level blocks early.
+  setSplashProgress(34, 'Testing application runtime…');
+  const probe = await probeRuntime(runtimeExe);
+  dlog(`[SPAWN] probe: ${probe.detail}`);
+  if (!probe.ok) throw new Error(probe.detail);
   serverProcess = spawn(runtimeExe, [SERVER_ENTRY], {
     cwd: APP_ROOT,
     env,
@@ -400,12 +523,24 @@ async function startBackend() {
         dlog('[Electron] Server process exited but port 3000 is actively responding. Keeping window open.');
         return;
       }
-      dlog(`[SERVER EXIT] Port 3000 is NOT responding. Showing error and quitting. Stderr: ${lastStderr.slice(-300)}`);
-      dialog.showErrorBox(
-        'MYRAA backend stopped',
-        `The MYRAA backend process exited unexpectedly (code ${code}, signal ${signal}).\n\n${lastStderr.slice(-300)}`,
-      );
-      app.quit();
+      dlog(`[SERVER EXIT] Port 3000 is NOT responding. Stderr: ${lastStderr.slice(-300)}`);
+      // Route through the MYRAA recovery screen (with real diagnostics) instead
+      // of a bare system dialog — unless the main window is already up, in
+      // which case keep the legacy alert so a running session is informed.
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        dialog.showErrorBox(
+          'MYRAA backend stopped',
+          `The MYRAA backend process exited unexpectedly (code ${code}, signal ${signal}).\n\n${lastStderr.slice(-300)}`,
+        );
+        app.quit();
+      } else {
+        showRecoveryWindow(
+          'MYRAA backend stopped',
+          `The backend exited (code ${code}, signal ${signal}) before the interface could load.`,
+          `Exit: code ${code}, signal ${signal}\nLast output:\n${lastStderr.slice(-600)}\nLog: ${debugLog}`,
+          []
+        );
+      }
     }
   });
 }
@@ -836,7 +971,19 @@ function createMainWindow() {
     });
   }
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    console.warn(`[Electron] Navigation failed (${errorCode}: ${errorDescription}). Retrying in 1s...`);
+    loadFailCount += 1;
+    dlog(`[LOAD] Navigation failed (${errorCode}: ${errorDescription}) attempt ${loadFailCount}`);
+    if (loadFailCount >= 10) {
+      dlog('[LOAD] Giving up on main window loads — showing recovery');
+      try { mainWindow.hide(); } catch (e) {}
+      showRecoveryWindow(
+        'MYRAA interface did not load',
+        `The window could not load the local interface after ${loadFailCount} attempts (${errorCode}: ${errorDescription}).`,
+        `URL: ${SERVER_ORIGIN}\nBackend ready: ${backendReady}\nLog: ${debugLog}`,
+        []
+      );
+      return;
+    }
     setTimeout(() => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.loadURL(SERVER_ORIGIN);
@@ -895,6 +1042,7 @@ async function bootstrap() {
     await waitForBackend(SERVER_READY_TIMEOUT_MS, (value) => setSplashProgress(value, 'Initializing MYRAA capabilities…'));
     setSplashProgress(92, 'Loading your workspace…');
     dlog(`Backend ready! Creating main window...`);
+    backendReady = true;
     createMainWindow();
     setSplashProgress(100, 'Ready');
     dlog(`Main window created.`);
@@ -933,7 +1081,7 @@ async function bootstrap() {
 // ---------------------------------------------------------------------------
 app.on('activate', () => {
   dlog(`app activate event`);
-  if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+  if (BrowserWindow.getAllWindows().length === 0 && backendReady) createMainWindow();
 });
 
 app.on('window-all-closed', () => {
