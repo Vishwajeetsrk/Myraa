@@ -1,12 +1,12 @@
 {
   "productName": "MYRAA AI OS",
   "version": "8.3.4",
-  "buildDate": "2026-09-10T12:21:59.446Z",
+  "buildDate": "2026-09-10T12:48:36.493Z",
   "executable": {
     "file": "MYRAA AI.exe",
     "path": "C:/Users/Vishwajeet/Music/Myraa/resources/app/release/win-unpacked/MYRAA AI.exe",
     "size": 181001216,
-    "sha256": "c13889488ac7c203086c63fb6340bcffe846d7e2d48d0ef1d38c8a5fb7dc6244",
+    "sha256": "35b616153b65dea16f41eb2ba81b8f3f14e1e7d561c75b4dbfff7cefc4ccfc35",
     "signature": {
       "Status": "NotSigned",
       "Subject": "",
@@ -17,8 +17,8 @@
     {
       "file": "MYRAA-Setup-8.3.4.exe",
       "exists": true,
-      "size": 125462031,
-      "sha256": "710d5ab094437b1230c2ae9e7c3c562ad3a0a81f005e68426801b8b90aba7634",
+      "size": 125462365,
+      "sha256": "9cfc525b6f13bda6d5fb2c239c95571ad3eaffc0a0c5e85bb02ebe3ea43471fa",
       "signature": {
         "Status": "NotSigned",
         "Subject": "",
@@ -28,8 +28,8 @@
     {
       "file": "MYRAA-Portable-8.3.4.exe",
       "exists": true,
-      "size": 108846610,
-      "sha256": "0691617f33d558bd3caeb1fa352c512b83438a2a94f6d1ca8a08966ff9329fe6",
+      "size": 108841953,
+      "sha256": "592f2bc8a1701bf406ff0b039c0e7616f2b5e0dd7fef18dad758279933eeeb7a",
       "signature": {
         "Status": "NotSigned",
         "Subject": "",
@@ -39,8 +39,8 @@
     {
       "file": "MYRAA-Portable-8.3.4.zip",
       "exists": true,
-      "size": 169486314,
-      "sha256": "6afe7f5f6e83443bc4b083ae0b208d42d9e45de453dfc68a91fb9d21c924fccf",
+      "size": 169488698,
+      "sha256": "f033429a68c1ec17b75a42b3333522cec314336d0f9c238c167fdaa73b1cc5b4",
       "signature": {
         "Status": "UnknownError",
         "Subject": "",

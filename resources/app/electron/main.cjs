@@ -430,6 +430,22 @@ async function startBackend() {
     agentPath = agentExe;
   }
 
+  // NODE_PATH into the asar's node_modules: the unpacked backend
+  // (app.asar.unpacked/dist/...) cannot see dependencies that live inside
+  // app.asar via normal directory walk-up. Verified: without this, the child
+  // dies with "Cannot find module 'express'"; with it, full boot + HTTP 200.
+  let nodePathExtra = null;
+  try {
+    const unpackedMarker = `${path.sep}app.asar.unpacked${path.sep}`;
+    const idx = SERVER_ENTRY.indexOf(unpackedMarker);
+    if (idx !== -1) {
+      const resourcesDir = path.dirname(SERVER_ENTRY.slice(0, idx));
+      const asarModules = path.join(resourcesDir, 'app.asar', 'node_modules');
+      nodePathExtra = asarModules;
+      dlog(`[SPAWN] NODE_PATH extra: ${nodePathExtra}`);
+    }
+  } catch (e) { dlog(`[SPAWN] NODE_PATH resolve failed: ${e.message}`); }
+
   const env = {
     ...process.env,
     NODE_ENV: 'production',
@@ -438,6 +454,11 @@ async function startBackend() {
     MYRAA_DATA_DIR: dataDir,
     MYRAA_APP_ROOT: APP_ROOT,
   };
+  if (nodePathExtra) {
+    env.NODE_PATH = process.env.NODE_PATH
+      ? `${nodePathExtra}${path.delimiter}${process.env.NODE_PATH}`
+      : nodePathExtra;
+  }
   if (app.isPackaged) {
     // The desktop agent uses this exact executable for the per-user Windows
     // auto-start entry. It must never point at source scripts or Python.
@@ -450,6 +471,12 @@ async function startBackend() {
   const runtimeExe = process.execPath;
   dlog(`Spawning backend with runtime: ${runtimeExe} -> ${SERVER_ENTRY}`);
   dlog(`[SPAWN] cwd=${APP_ROOT} dataDir=${dataDir}`);
+  // Spawn-time evidence: if CreateProcess reports ENOENT, this record proves
+  // exactly which component (binary vs working directory) was missing.
+  try {
+    const exeStat = fs.existsSync(runtimeExe) ? fs.statSync(runtimeExe) : null;
+    dlog(`[SPAWN] evidence exeExists=${!!exeStat} exeBytes=${exeStat ? exeStat.size : -1} cwdExists=${fs.existsSync(APP_ROOT)} entryExists=${fs.existsSync(SERVER_ENTRY)}`);
+  } catch (e) { dlog(`[SPAWN] evidence collection failed: ${e.message}`); }
 
   // Pre-spawn validation: a truncated/corrupt/partial install fails Windows
   // process creation with a bare ENOENT. Report the exact problem instead.
