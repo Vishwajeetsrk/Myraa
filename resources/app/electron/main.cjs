@@ -108,7 +108,22 @@ process.on('unhandledRejection', (reason) => {
   dlog(`[UNHANDLED REJECTION] ${reason ? (reason.stack || reason) : 'unknown'}`);
 });
 
+// BUILD_ID: proves EXACTLY which build is running (version alone cannot —
+// several fix commits share one version). Derived from this file's build-time
+// mtime inside the asar, so screenshots of recovery text identify the build.
+const BUILD_ID = (() => {
+  try {
+    const mtime = fs.statSync(__filename).mtime;
+    const p = (n) => String(n).padStart(2, '0');
+    const stamp = `${mtime.getFullYear()}${p(mtime.getMonth() + 1)}${p(mtime.getDate())}-${p(mtime.getHours())}${p(mtime.getMinutes())}`;
+    let ver = 'unknown';
+    try { ver = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'version.json'), 'utf8')).version || ver; } catch (e) {}
+    return `${ver}+${stamp}`;
+  } catch (e) { return 'unknown'; }
+})();
+
 dlog(`Electron process starting (PID: ${process.pid}, execPath: ${process.execPath}, argv: ${JSON.stringify(process.argv)})`);
+dlog(`MYRAA build: ${BUILD_ID}`);
 
 // --- Constants -------------------------------------------------------------
 const SERVER_PORT = 3000;
@@ -125,52 +140,91 @@ let APP_ROOT = app.isPackaged
 
 // ── Resolve SERVER_ENTRY (handles NSIS double-nesting + asar layout) ─────────
 //
-// When electron-builder unpacks dist/**, the real files live at:
-//   resources/app.asar.unpacked/dist/server.cjs
-// The asar still contains dist/server.cjs but fs.existsSync/spawn can't see
-// inside .asar archives.  We MUST use the unpacked path for spawn().
+// PROVEN (2026-09-10, inside the real binary): Electron's patched
+// fs.existsSync() returns TRUE for files inside app.asar, e.g.
+//   resources/app.asar/dist/server.cjs  →  HIT
+// If that path is selected, APP_ROOT becomes `.../resources/app.asar` — the
+// ARCHIVE FILE, not a directory — and Windows process creation for the
+// backend fails with ENOENT (cwd must be a real directory). The launcher
+// then misleadingly reports "backend found" while every spawn dies.
+//
+// THEREFORE, for the SPAWN entry, only REAL on-disk files are eligible:
+//   resources/app.asar.unpacked/dist/server.cjs  (+ nesting variants)
+// Asar-internal paths are NEVER spawn entries (unspawnable cwd + the plugin
+// system needs real fs). Node deps resolve via NODE_PATH (see startBackend).
 //
 // NSIS may create a double-nested dir:
-//   C:\Program Files\MYRAA AI OS\MYRAA AI OS\resources\app
+//   C:\Program Files\MYRAA AI OS\MYRAA AI\resources\...
 // We walk up from process.resourcesPath to handle this.
 //
 let SERVER_ENTRY = null;
 
+/** True for asar-INTERNAL paths (app.asar/...) but NOT unpacked ones.
+ * existsSync/statSync lie about these (emulated directory), so they must
+ * never become SERVER_ENTRY or APP_ROOT. */
+function isPackedAsarPath(p) {
+  if (!p || typeof p !== 'string') return false;
+  // Match: ...app.asar (bare file) OR ...app.asar\... (inside archive)
+  // Exclude: ...app.asar.unpacked... (real on-disk files)
+  const hasAsarFile = /app\.asar(\\|\/|$)/.test(p);
+  const hasUnpacked = /app\.asar\.unpacked/.test(p);
+  return hasAsarFile && !hasUnpacked;
+}
+
+/** True only if p is an existing real DIRECTORY on disk (not an asar archive
+ * file that Electron's fs fakes into looking like a directory). */
+function isRealDirectory(p) {
+  try { return fs.statSync(p).isDirectory(); } catch (e) { return false; }
+}
+
 if (app.isPackaged) {
-  // Candidate paths to check (most-specific first)
-  const baseDir = path.dirname(process.resourcesPath); // e.g. "MYRAA AI OS" or "MYRAA AI OS\MYRAA AI OS"
+  // Candidate paths: UNPACKED (real, spawnable) first at every nesting level.
+  const baseDir = path.dirname(process.resourcesPath); // e.g. "MYRAA AI" or "MYRAA AI OS\MYRAA AI"
   const candidates = [];
 
-  // 1) Unpacked app directory (used by non-asar development distributions)
-  candidates.push(path.join(process.resourcesPath, 'app', 'dist', 'server.cjs'));
-  // 2) The normal Electron Builder asar layout. Keeping server.cjs in the
-  // archive is essential: its Node dependencies resolve from app.asar's
-  // node_modules, whereas an unpacked dist directory cannot resolve express.
-  candidates.push(path.join(process.resourcesPath, 'app.asar', 'dist', 'server.cjs'));
-  // 3) Legacy unpacked layout retained for upgrades made by older builds.
+  // 1) Unpacked asar layout (primary — real files, spawnable cwd)
   candidates.push(path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'server.cjs'));
-  // 3) Double-nested: go up one level from resourcesPath
-  candidates.push(path.join(baseDir, 'resources', 'app', 'dist', 'server.cjs'));
+  // 2) Unpacked app directory (non-asar distributions)
+  candidates.push(path.join(process.resourcesPath, 'app', 'dist', 'server.cjs'));
+  // 3) Double-nested: go up one level from resourcesPath (unpacked first)
   candidates.push(path.join(baseDir, 'resources', 'app.asar.unpacked', 'dist', 'server.cjs'));
-  // 4) Triple-nested (defensive)
+  candidates.push(path.join(baseDir, 'resources', 'app', 'dist', 'server.cjs'));
+  // 4) Triple-nested (defensive, unpacked first)
   const baseBase = path.dirname(baseDir);
-  candidates.push(path.join(baseBase, 'resources', 'app', 'dist', 'server.cjs'));
   candidates.push(path.join(baseBase, 'resources', 'app.asar.unpacked', 'dist', 'server.cjs'));
+  candidates.push(path.join(baseBase, 'resources', 'app', 'dist', 'server.cjs'));
 
   for (const c of candidates) {
     dlog(`[PATH] checking: ${c}`);
+    if (isPackedAsarPath(c)) {
+      dlog(`[PATH] skip (asar-internal, unspawnable): ${c}`);
+      continue;
+    }
     if (fs.existsSync(c)) {
+      const root = path.resolve(path.dirname(c), '..');
+      // APP_ROOT must be a REAL directory — never the archive file itself.
+      if (isPackedAsarPath(root)) {
+        dlog(`[PATH] reject (APP_ROOT inside archive): ${c}`);
+        continue;
+      }
+      // Hard guard: stat the directory to prove it's real. Electron's
+      // patched fs.statSync lies about asar contents (returns isDirectory:true
+      // for the archive FILE itself). The real OS stat never lies.
+      if (!isRealDirectory(root)) {
+        dlog(`[PATH] reject (APP_ROOT not a real directory): ${root}`);
+        continue;
+      }
       SERVER_ENTRY = c;
-      // Set APP_ROOT to the parent of dist/
-      APP_ROOT = path.resolve(path.dirname(c), '..');
+      APP_ROOT = root;
       dlog(`[PATH] FOUND server.cjs at: ${c}`);
       break;
     }
   }
 
   if (!SERVER_ENTRY) {
-    // Last resort: use standard path and let spawn fail with a clear error
-    SERVER_ENTRY = path.join(process.resourcesPath, 'app', 'dist', 'server.cjs');
+    // Last resort: unpacked standard path (real location if it exists)
+    SERVER_ENTRY = path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'server.cjs');
+    APP_ROOT = path.join(process.resourcesPath, 'app.asar.unpacked');
     dlog(`[PATH] WARNING: no server.cjs found in any candidate. Using fallback: ${SERVER_ENTRY}`);
   }
 } else {
@@ -439,7 +493,9 @@ async function startBackend() {
     const unpackedMarker = `${path.sep}app.asar.unpacked${path.sep}`;
     const idx = SERVER_ENTRY.indexOf(unpackedMarker);
     if (idx !== -1) {
-      const resourcesDir = path.dirname(SERVER_ENTRY.slice(0, idx));
+      // SERVER_ENTRY.slice(0, idx) = '...\resources' (NOT its dirname!)
+      // path.dirname() would strip 'resources' and point at the app root.
+      const resourcesDir = SERVER_ENTRY.slice(0, idx);
       const asarModules = path.join(resourcesDir, 'app.asar', 'node_modules');
       nodePathExtra = asarModules;
       dlog(`[SPAWN] NODE_PATH extra: ${nodePathExtra}`);
@@ -471,12 +527,42 @@ async function startBackend() {
   const runtimeExe = process.execPath;
   dlog(`Spawning backend with runtime: ${runtimeExe} -> ${SERVER_ENTRY}`);
   dlog(`[SPAWN] cwd=${APP_ROOT} dataDir=${dataDir}`);
+
+  // ── CRITICAL: APP_ROOT must be a REAL directory on disk, not an asar archive.
+  // Windows CreateProcess rejects a file as cwd → bare ENOENT. This is the
+  // #1 cause of "Backend failed to spawn" on every packaged build.
+  if (!isRealDirectory(APP_ROOT)) {
+    dlog(`[SPAWN] FIXING APP_ROOT: current '${APP_ROOT}' is NOT a real directory`);
+    // Walk up the tree to find a real directory
+    let fixed = APP_ROOT;
+    while (fixed && !isRealDirectory(fixed)) {
+      fixed = path.dirname(fixed);
+    }
+    if (fixed && isRealDirectory(fixed)) {
+      dlog(`[SPAWN] FIXING APP_ROOT: resolved to '${fixed}'`);
+      APP_ROOT = fixed;
+    } else {
+      // Last resort: the unpacked directory is always real
+      const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked');
+      if (isRealDirectory(unpacked)) {
+        dlog(`[SPAWN] FIXING APP_ROOT: fallback to '${unpacked}'`);
+        APP_ROOT = unpacked;
+      }
+    }
+  }
+
   // Spawn-time evidence: if CreateProcess reports ENOENT, this record proves
   // exactly which component (binary vs working directory) was missing.
   try {
     const exeStat = fs.existsSync(runtimeExe) ? fs.statSync(runtimeExe) : null;
-    dlog(`[SPAWN] evidence exeExists=${!!exeStat} exeBytes=${exeStat ? exeStat.size : -1} cwdExists=${fs.existsSync(APP_ROOT)} entryExists=${fs.existsSync(SERVER_ENTRY)}`);
+    dlog(`[SPAWN] evidence exeExists=${!!exeStat} exeBytes=${exeStat ? exeStat.size : -1} cwdExists=${isRealDirectory(APP_ROOT)} entryExists=${fs.existsSync(SERVER_ENTRY)}`);
   } catch (e) { dlog(`[SPAWN] evidence collection failed: ${e.message}`); }
+
+  // Fail-fast: if APP_ROOT is still not a real directory, abort with a
+  // diagnostic instead of letting CreateProcess produce a confusing ENOENT.
+  if (!isRealDirectory(APP_ROOT)) {
+    throw new Error(`APP_ROOT is not a directory (cannot spawn backend). APP_ROOT='${APP_ROOT}' SERVER_ENTRY='${SERVER_ENTRY}' resourcesPath='${process.resourcesPath}'`);
+  }
 
   // Pre-spawn validation: a truncated/corrupt/partial install fails Windows
   // process creation with a bare ENOENT. Report the exact problem instead.

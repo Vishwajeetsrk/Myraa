@@ -13,13 +13,6 @@
 
 ; ── Custom Init ─────────────────────────────────────────────────────────────
 !macro customInit
-  ; Remove stale double-nested dirs from older installers (all known variants)
-  RMDir /r "$PROGRAMFILES64\MYRAA AI OS\MYRAA AI OS"
-  RMDir /r "$PROGRAMFILES64\MYRAA AI\MYRAA AI"
-  RMDir /r "$PROGRAMFILES64\MYRAA\MYRAA"
-  ; Also clean legacy portable-extracted-into-ProgramFiles case
-  RMDir /r "$PROGRAMFILES64\MYRAA-Portable*"
-
   ; Detect running MYRAA processes before install/upgrade (both current + legacy names)
   nsExec::ExecToStack 'tasklist /FI "IMAGENAME eq MYRAA.exe" /NH'
   Pop $0
@@ -68,27 +61,6 @@
   CreateDirectory "$APPDATA\MYRAA AI"
   CreateDirectory "$APPDATA\MYRAA AI\logs"
 
-  ; Register application in Windows App Paths
-  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\MYRAA AI.exe" "" "$INSTDIR\MYRAA AI.exe"
-  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\MYRAA AI.exe" "Path" "$INSTDIR"
-
-  ; Register in Add/Remove Programs
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "DisplayName" "MYRAA AI"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "DisplayIcon" "$INSTDIR\MYRAA AI.exe"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "Publisher" "MYRAA"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "DisplayVersion" "${VERSION}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "URLInfoAbout" "https://github.com/vishwajeetsrk/Myraa"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "HelpLink" "https://github.com/vishwajeetsrk/Myraa/issues"
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "NoModify" 1
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "NoRepair" 1
-
-  ; Estimate install size
-  ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
-  IntFmt $0 "0x%08X" $0
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI" "EstimatedSize" "$0"
-
   ; Launch app after install (optional)
   MessageBox MB_YESNO "Installation complete! Launch MYRAA AI now?" IDNO skip_launch
     Exec '"$INSTDIR\MYRAA AI.exe"'
@@ -107,9 +79,6 @@
 ; ── Custom Uninstall (after files removed) ──────────────────────────────────
 !macro customUnInstall
   ; Clean up registry
-  DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\MYRAA AI.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MYRAA AI"
-
   ; Remove version marker
   Delete "$INSTDIR\.myraa-version"
 
