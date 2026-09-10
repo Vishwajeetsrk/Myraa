@@ -113,7 +113,9 @@ dlog(`Electron process starting (PID: ${process.pid}, execPath: ${process.execPa
 // --- Constants -------------------------------------------------------------
 const SERVER_PORT = 3000;
 const SERVER_ORIGIN = `http://localhost:${SERVER_PORT}`;
-const SERVER_READY_TIMEOUT_MS = 40_000;
+// 90s: cold starts on HDD + Windows Defender first-launch scans of the
+// unpacked backend can exceed 40s. Progress bar keeps moving meanwhile.
+const SERVER_READY_TIMEOUT_MS = 90_000;
 
 // In development we run from the repo root; when packaged the app files live in
 // resources/app (asar-unpacked handling is added in the packaging phase).
@@ -197,6 +199,10 @@ const APP_ICON = (() => {
 
 /** @type {import('child_process').ChildProcess | null} */
 let serverProcess = null;
+/** Spawn-level failure (fires when the OS refuses to start the backend). */
+let serverSpawnError = null;
+/** First exit record { code, signal, stderrTail } — survives past waitForBackend. */
+let serverExitInfo = null;
 /** @type {BrowserWindow | null} */
 let mainWindow = null;
 /** @type {BrowserWindow | null} */
@@ -334,6 +340,7 @@ async function startBackend() {
 
   const runtimeExe = process.execPath;
   dlog(`Spawning backend with runtime: ${runtimeExe} -> ${SERVER_ENTRY}`);
+  dlog(`[SPAWN] cwd=${APP_ROOT} dataDir=${dataDir}`);
   serverProcess = spawn(runtimeExe, [SERVER_ENTRY], {
     cwd: APP_ROOT,
     env,
@@ -342,12 +349,28 @@ async function startBackend() {
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     windowsHide: true,
   });
+  serverSpawnError = null;
+  serverExitInfo = null;
 
   let lastStderr = '';
   serverProcess.stdout?.on('data', (d) => process.stdout.write(`[server] ${d}`));
   serverProcess.stderr?.on('data', (d) => {
     lastStderr += d.toString();
+    if (lastStderr.length > 8192) lastStderr = lastStderr.slice(-8192);
     process.stderr.write(`[server] ${d}`);
+  });
+  // A failed spawn (blocked binary, missing runtime, EACCES) emits 'error'.
+  // Without this handler the process crashes with an unhandled exception and
+  // the user only ever sees "did not become ready in time".
+  serverProcess.on('error', (err) => {
+    serverSpawnError = err instanceof Error ? err : new Error(String(err));
+    dlog(`[SERVER SPAWN ERROR] ${serverSpawnError.message}`);
+  });
+  serverProcess.on('exit', (code, signal) => {
+    if (serverExitInfo === null) {
+      serverExitInfo = { code, signal, stderrTail: lastStderr.slice(-2000) };
+    }
+    dlog(`[SERVER EXIT] code=${code} signal=${signal} stderrTail=${lastStderr.slice(-500)}`);
   });
   serverProcess.on('message', (message) => {
     if (!message || message.type !== 'screen-capture-request' || !message.id) return;
@@ -470,20 +493,46 @@ function stopBackend() {
   serverProcess = null;
 }
 
-/** Poll the backend until it answers, or reject on timeout. */
+/** Poll the backend until it answers, or reject on timeout.
+ * Fails FAST with the real reason if the backend process already died —
+ * polling a dead process for 40s and then saying "not ready" hides crashes.
+ */
 function waitForBackend(timeoutMs, onProgress) {
   const deadline = Date.now() + timeoutMs;
   return new Promise((resolve, reject) => {
+    const failFast = () => {
+      if (serverSpawnError) {
+        return `Backend failed to spawn (${serverSpawnError.message}).`;
+      }
+      if (serverExitInfo) {
+        const tail = (serverExitInfo.stderrTail || '').trim().slice(-600);
+        return `Backend exited (code ${serverExitInfo.code}, signal ${serverExitInfo.signal}).${tail ? ` Last output:\n${tail}` : ' No output was captured.'}`;
+      }
+      return null;
+    };
     const tryOnce = () => {
+      const early = failFast();
+      if (early) {
+        reject(new Error(early));
+        return;
+      }
       const req = http.get(`http://127.0.0.1:${SERVER_PORT}`, (res) => {
         res.resume();
         resolve();
       });
       req.on('error', () => {
+        const earlyRetry = failFast();
+        if (earlyRetry) {
+          reject(new Error(earlyRetry));
+          return;
+        }
         const elapsed = Math.max(0, timeoutMs - Math.max(0, deadline - Date.now()));
         onProgress?.(Math.min(88, 40 + Math.floor((elapsed / timeoutMs) * 48)));
         if (Date.now() > deadline) {
-          reject(new Error('Backend did not become ready in time.'));
+          const waitedSec = Math.round(timeoutMs / 1000);
+          reject(new Error(
+            `Backend did not answer within ${waitedSec}s. The process is still running but never opened port ${SERVER_PORT} — check antivirus/Defender scanning, disk speed, or a port conflict. Full log: ${debugLog}`,
+          ));
         } else {
           setTimeout(tryOnce, 150);
         }
@@ -856,16 +905,25 @@ async function bootstrap() {
     dlog(`Bootstrap error: ${msg}`);
     if (splashWindow && !splashWindow.isDestroyed()) { try { splashWindow.close(); } catch (e) {} }
 
+    const diagLines = [
+      `Runtime: ${process.execPath || '(unknown)'}`,
+      `Backend: ${SERVER_ENTRY || '(unresolved)'}`,
+      serverExitInfo ? `Exit: code ${serverExitInfo.code}, signal ${serverExitInfo.signal}` : null,
+      serverSpawnError ? `Spawn error: ${serverSpawnError.message}` : null,
+      `Log file: ${debugLog}`,
+    ].filter(Boolean);
+    const detail = `${msg}\n\n--- diagnostics ---\n${diagLines.join('\n')}`;
+
     if (isBundleMissing) {
       // Show MYRAA recovery instead of Windows system dialog
       showRecoveryWindow(
         'MYRAA needs repair',
         'The application files are incomplete or were moved.',
-        msg.slice(0, 400),
+        detail.slice(0, 900),
         launcherResult ? launcherResult.steps : []
       );
     } else {
-      showRecoveryWindow('MYRAA failed to start', msg.slice(0, 500), '', launcherResult ? launcherResult.steps : []);
+      showRecoveryWindow('MYRAA failed to start', msg.slice(0, 500), detail.slice(0, 900), launcherResult ? launcherResult.steps : []);
     }
   }
 }
