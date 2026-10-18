@@ -2,7 +2,7 @@
 
 All notable changes to MYRAA AI OS are documented here.
 
-## [Unreleased]
+## [9.5.0] - 2026-10-18
 
 ### Added
 - **MCP stdio transport (Phase 25):** the MCP registry is now real for stdio servers - `initialize` handshake, `tools/list` caching, and approval-gated `tools/call` via a minimal newline-delimited JSON-RPC client (`mcp_stdio_client.cjs`); process trees are killed on Windows with `taskkill /T /F`. New HTTP `POST /api/mcp/call` and `GET /api/mcp/servers/:name/tools`; new agi tools `mcp_probe` (MEDIUM) and `mcp_call` (HIGH, approval-gated); new voice intent "probe mcp `<name>`". The http transport stays honest with `NOT_IMPLEMENTED`.
@@ -11,6 +11,9 @@ All notable changes to MYRAA AI OS are documented here.
 
 ### Changed
 - `mcp_manager.cjs`: `probe` is now async with honest error codes (`TIMEOUT`, `SERVER_EXITED`, `SPAWN_ERROR`, `RPC_ERROR`, `DISABLED`, `NOT_IMPLEMENTED`); server views/status expose per-transport `implemented` flags and cached tool counts.
+
+### Installers
+- `MYRAA-Setup-9.5.0.exe` (308.9 MB, NSIS x64) and `MYRAA-Portable-9.5.0.exe` (303.0 MB) built, hash-verified, packed to `Installers\v9.5.0` + Desktop copy. Packaged bundle live-verified: real MCP probe of `server-everything` (13 tools) + real `tools/call` (`get-sum` -> "The sum of 20 and 22 is 42.").
 
 ## [9.4.0] - 2026-10-18
 
