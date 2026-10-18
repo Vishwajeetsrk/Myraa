@@ -1,20 +1,24 @@
 'use strict';
 /**
- * MYRAA MCP Manager (Phase 24) - SKELETON.
- * Registry + bookkeeping for MCP (Model Context Protocol) servers only.
- * Honest scope: transports are NOT started, tools are NOT fetched, probes
- * return NOT_IMPLEMENTED. This is the config surface later phases build on.
- * Store: JSON, env MYRAA_MCP_DB (default %APPDATA%\MYRAA\mcp\servers.json)
+ * MYRAA MCP Manager (Phase 25) - stdio transport live.
+ * Registry + real stdio transport: initialize handshake, tools/list, tools/call.
+ * Honest scope: the http transport still returns NOT_IMPLEMENTED. Tools are only
+ * executed when the user calls them (mcp_call is HIGH risk and approval-gated
+ * by the tool engine). Store: JSON, env MYRAA_MCP_DB (default %APPDATA%\MYRAA\mcp\servers.json)
  * Servers are never hard-deleted - use disable/enable.
  */
 
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { createStdioSession } = require('./mcp_stdio_client.cjs');
 
 const EVENTS_CAP = 200;
 const TRANSPORTS = ['stdio', 'http'];
 const NAME_RE = /^[a-z0-9_-]{1,40}$/i;
+const MAX_TOOLS = 200;
+const PROBE_TIMEOUT_MS = 15000;
+const CALL_TIMEOUT_MS = 20000;
 
 function dataDir() {
   const base = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
@@ -28,9 +32,49 @@ function defaultStorePath() {
 function nowIso() { return new Date().toISOString(); }
 function sliceText(v, n) { return String(v == null ? '' : v).slice(0, n); }
 
+function appVersion() {
+  try {
+    const p = path.join(__dirname, '..', 'version.json');
+    return JSON.parse(fs.readFileSync(p, 'utf8')).version || '0.0.0';
+  } catch (e) { return '0.0.0'; }
+}
+
+function mkErr(code, message) {
+  const e = new Error(String(message == null ? '' : message));
+  e.code = code;
+  return e;
+}
+
+function normalizeTools(list) {
+  if (!Array.isArray(list)) return [];
+  return list.slice(0, MAX_TOOLS).map((t) => {
+    const tt = t && typeof t === 'object' ? t : {};
+    const out = { name: sliceText(tt.name, 120), description: sliceText(tt.description, 400) };
+    try {
+      const s = JSON.stringify(tt.inputSchema || {});
+      out.inputSchema = s.length <= 4000 ? JSON.parse(s) : { type: 'object', note: 'schema omitted (too large)' };
+    } catch (e) {
+      out.inputSchema = { type: 'object', note: 'schema omitted (not serializable)' };
+    }
+    return out;
+  });
+}
+
+function normalizeContent(list) {
+  if (!Array.isArray(list)) return [];
+  return list.slice(0, 50).map((c) => {
+    if (!c || typeof c !== 'object') return { type: 'unknown' };
+    if (c.type === 'text') return { type: 'text', text: sliceText(c.text, 4000) };
+    return { type: sliceText(c.type, 40) || 'unknown' };
+  });
+}
+
 function createMcpManager(opts) {
   const o = opts || {};
   const file = o.storePath || defaultStorePath();
+  const probeTimeoutMs = Number(o.probeTimeoutMs) > 0 ? Number(o.probeTimeoutMs) : PROBE_TIMEOUT_MS;
+  const callTimeoutMs = Number(o.callTimeoutMs) > 0 ? Number(o.callTimeoutMs) : CALL_TIMEOUT_MS;
+  const clientInfo = { name: 'myraa-mcp-manager', version: appVersion() };
 
   let state = null;
 
@@ -79,8 +123,29 @@ function createMcpManager(opts) {
       url: s.transport === 'http' ? sliceText(s.url, 200) : null,
       registeredAt: s.registeredAt, updatedAt: s.updatedAt,
       lastProbe: s.lastProbe || null,
-      implemented: false,
+      serverInfo: s.serverInfo || null,
+      protocolVersion: s.protocolVersion || null,
+      toolsCount: Array.isArray(s.tools) ? s.tools.length : 0,
+      toolsCachedAt: s.toolsCachedAt || null,
+      implemented: s.transport === 'stdio',
     };
+  }
+
+  function bindSession(rec, timeoutMs) {
+    const session = createStdioSession({ command: rec.command, timeoutMs });
+    const started = session.start();
+    if (!started.ok) return { error: { code: started.code, message: started.error, stderr: '', session: null } };
+    return { session };
+  }
+
+  async function handshake(session, timeoutMs) {
+    const init = await session.request('initialize', {
+      protocolVersion: '2025-06-18',
+      capabilities: {},
+      clientInfo,
+    }, timeoutMs);
+    session.notify('notifications/initialized', {});
+    return init && typeof init === 'object' ? init : {};
   }
 
   function registerServer(input) {
@@ -100,6 +165,12 @@ function createMcpManager(opts) {
       rec.transport = transport;
       rec.command = command;
       rec.url = url;
+      rec.tools = [];
+      rec.serverInfo = null;
+      rec.protocolVersion = null;
+      rec.toolsCachedAt = null;
+      rec.lastProbe = null;
+      if (rec.status !== 'disabled') rec.status = 'registered';
       rec.updatedAt = nowIso();
       journal('updated', rec.name, transport);
     } else {
@@ -108,12 +179,19 @@ function createMcpManager(opts) {
         name, transport, command, url,
         status: 'registered',
         registeredAt: nowIso(), updatedAt: nowIso(), lastProbe: null,
+        tools: [], serverInfo: null, protocolVersion: null, toolsCachedAt: null,
       };
       state.servers.push(rec);
       journal('registered', name, transport);
     }
     if (!save()) return { ok: false, code: 'DB_ERROR', error: 'mcp store write failed' };
-    return { ok: true, server: view(rec), note: 'bookkeeping only - transports are not started in this phase' };
+    return {
+      ok: true,
+      server: view(rec),
+      note: transport === 'stdio'
+        ? 'registered - run probe to start it and fetch its tools'
+        : 'registered - http transport is not implemented yet (stdio only)',
+    };
   }
 
   function setStatus(input, status) {
@@ -136,27 +214,131 @@ function createMcpManager(opts) {
     return { ok: true, count: servers.length, servers };
   }
 
-  function probe(input) {
+  async function probeServer(input) {
     load();
     const rec = findServer(input && input.name);
     if (!rec) return { ok: false, code: 'NOT_FOUND', error: 'unknown server (name or id)' };
-    rec.lastProbe = { at: nowIso(), result: 'NOT_IMPLEMENTED' };
-    save();
+    if (rec.status === 'disabled') return { ok: false, code: 'DISABLED', error: 'server is disabled - enable it first', server: view(rec) };
+    if (rec.transport !== 'stdio') return { ok: false, code: 'NOT_IMPLEMENTED', error: 'http transport is not implemented yet (stdio only)', server: view(rec) };
+    const t0 = Date.now();
+    const perReq = Math.max(1000, Math.floor(probeTimeoutMs / 2));
+    const bound = bindSession(rec, perReq);
+    if (bound.error) {
+      rec.status = 'error';
+      rec.lastProbe = { at: nowIso(), result: 'ERROR', code: bound.error.code, error: sliceText(bound.error.message, 300), latencyMs: Date.now() - t0 };
+      journal('probe-error', rec.name, bound.error.code);
+      save();
+      return { ok: false, code: bound.error.code || 'SPAWN_ERROR', error: sliceText(bound.error.message, 500), stderr: '', server: view(rec) };
+    }
+    const session = bound.session;
+    try {
+      const init = await handshake(session, perReq);
+      const tl = await session.request('tools/list', {}, perReq);
+      if (!tl || !Array.isArray(tl.tools)) throw mkErr('PROTOCOL_ERROR', 'tools/list returned no tools array');
+      const tools = normalizeTools(tl.tools);
+      rec.tools = tools;
+      rec.toolsCachedAt = nowIso();
+      rec.serverInfo = init.serverInfo ? { name: sliceText(init.serverInfo.name, 80), version: sliceText(init.serverInfo.version, 40) } : null;
+      rec.protocolVersion = init.protocolVersion ? sliceText(init.protocolVersion, 40) : null;
+      rec.status = 'reachable';
+      rec.updatedAt = nowIso();
+      const latencyMs = Date.now() - t0;
+      rec.lastProbe = { at: nowIso(), result: 'OK', toolsCount: tools.length, latencyMs };
+      journal('probe-ok', rec.name, tools.length + ' tools, ' + latencyMs + 'ms');
+      save();
+      return {
+        ok: true,
+        server: view(rec),
+        serverInfo: rec.serverInfo,
+        protocolVersion: rec.protocolVersion,
+        tools: tools.map((t) => ({ name: t.name, description: t.description })),
+        latencyMs,
+      };
+    } catch (e) {
+      const code = (e && e.code) || 'PROTOCOL_ERROR';
+      rec.status = 'error';
+      rec.updatedAt = nowIso();
+      rec.lastProbe = { at: nowIso(), result: 'ERROR', code, error: sliceText(e && e.message, 300), latencyMs: Date.now() - t0 };
+      journal('probe-error', rec.name, code);
+      save();
+      return { ok: false, code, error: sliceText(e && e.message, 500), stderr: sliceText(session.getStderr(), 300), server: view(rec) };
+    } finally {
+      session.close();
+    }
+  }
+
+  function listTools(input) {
+    load();
+    const rec = findServer(input && input.name);
+    if (!rec) return { ok: false, code: 'NOT_FOUND', error: 'unknown server (name or id)' };
+    const tools = Array.isArray(rec.tools) ? rec.tools : [];
     return {
-      ok: false,
-      code: 'NOT_IMPLEMENTED',
-      error: 'MCP transport execution is not implemented yet (skeleton phase). Registration is bookkeeping only.',
+      ok: true,
       server: view(rec),
+      count: tools.length,
+      tools,
+      cachedAt: rec.toolsCachedAt || null,
+      note: tools.length ? null : 'no tools cached - run probe first',
     };
+  }
+
+  async function callTool(input) {
+    load();
+    const i = input || {};
+    const rec = findServer(i.name);
+    if (!rec) return { ok: false, code: 'NOT_FOUND', error: 'unknown server (name or id)' };
+    const tool = sliceText(i.tool, 120).trim();
+    if (!tool) return { ok: false, code: 'VALIDATION', error: 'tool name is required' };
+    if (rec.status === 'disabled') return { ok: false, code: 'DISABLED', error: 'server is disabled - enable it first', server: view(rec) };
+    if (rec.transport !== 'stdio') return { ok: false, code: 'NOT_IMPLEMENTED', error: 'http transport is not implemented yet (stdio only)', server: view(rec) };
+    if (Array.isArray(rec.tools) && rec.tools.length && !rec.tools.some((t) => t.name === tool)) {
+      return { ok: false, code: 'VALIDATION', error: 'unknown tool "' + tool + '" for server "' + rec.name + '" - run probe to refresh the tool list', server: view(rec) };
+    }
+    const perCall = Math.min(Number(i.timeoutMs) > 0 ? Number(i.timeoutMs) : callTimeoutMs, 120000);
+    const initTimeout = Math.min(8000, perCall);
+    const args = i.args && typeof i.args === 'object' ? i.args : {};
+    const t0 = Date.now();
+    const bound = bindSession(rec, initTimeout);
+    if (bound.error) {
+      journal('call-error', rec.name, bound.error.code);
+      save();
+      return { ok: false, code: bound.error.code || 'SPAWN_ERROR', error: sliceText(bound.error.message, 500), stderr: '', server: view(rec) };
+    }
+    const session = bound.session;
+    try {
+      await handshake(session, initTimeout);
+      const r = await session.request('tools/call', { name: tool, arguments: args }, perCall);
+      const isError = !!(r && r.isError);
+      const content = normalizeContent(r && r.content);
+      const latencyMs = Date.now() - t0;
+      journal(isError ? 'call-error' : 'call-ok', rec.name, tool + ', ' + latencyMs + 'ms');
+      save();
+      return {
+        ok: !isError,
+        code: isError ? 'TOOL_ERROR' : null,
+        isError,
+        server: view(rec),
+        tool,
+        content,
+        latencyMs,
+      };
+    } catch (e) {
+      const code = (e && e.code) || 'PROTOCOL_ERROR';
+      journal('call-error', rec.name, code);
+      save();
+      return { ok: false, code, error: sliceText(e && e.message, 500), stderr: sliceText(session.getStderr(), 300), server: view(rec) };
+    } finally {
+      session.close();
+    }
   }
 
   function status() {
     load();
     const byTransport = { stdio: 0, http: 0 };
-    const byStatus = { registered: 0, disabled: 0 };
+    const byStatus = { registered: 0, disabled: 0, reachable: 0, error: 0 };
     for (const s of state.servers) {
       if (byTransport[s.transport] != null) byTransport[s.transport]++;
-      if (byStatus[s.status] != null) byStatus[s.status]++;
+      byStatus[s.status] = (byStatus[s.status] || 0) + 1;
     }
     return {
       ok: true,
@@ -165,8 +347,9 @@ function createMcpManager(opts) {
       byTransport,
       byStatus,
       events: state.events.length,
-      implemented: false,
-      policy: 'skeleton: config registry only - no transports started, no tools fetched, servers are disabled not deleted',
+      implemented: { stdio: true, http: false },
+      clientInfo,
+      policy: 'stdio transport live (initialize + tools/list + tools/call); http pending; servers are disabled not deleted; probe before call; calls run through the HIGH-risk approval path',
       updatedAt: state.updatedAt,
     };
   }
@@ -176,10 +359,24 @@ function createMcpManager(opts) {
     try { express = require('express'); } catch (e) { express = null; }
     if (!express) return null;
     const router = express.Router();
+    function reply(res, r, okCode) {
+      const codes = { NOT_FOUND: 404, DISABLED: 409, VALIDATION: 400, NOT_IMPLEMENTED: 501 };
+      res.status(r.ok ? okCode : (codes[r.code] || 502)).json(r);
+    }
     router.get('/', (req, res) => { res.json(status()); });
     router.get('/servers', (req, res) => { res.json(listServers()); });
+    router.get('/servers/:name/tools', (req, res) => { reply(res, listTools({ name: req.params.name }), 200); });
     router.post('/register', (req, res) => { const r = registerServer(req.body || {}); res.status(r.ok ? 200 : 400).json(r); });
-    router.post('/probe', (req, res) => { const r = probe(req.body || {}); res.status(r.ok ? 200 : 501).json(r); });
+    router.post('/probe', (req, res) => {
+      probeServer(req.body || {})
+        .then((r) => reply(res, r, 200))
+        .catch((e) => res.status(500).json({ ok: false, code: 'INTERNAL', error: String((e && e.message) || e) }));
+    });
+    router.post('/call', (req, res) => {
+      callTool(req.body || {})
+        .then((r) => reply(res, r, 200))
+        .catch((e) => res.status(500).json({ ok: false, code: 'INTERNAL', error: String((e && e.message) || e) }));
+    });
     router.post('/disable', (req, res) => { const r = disableServer(req.body || {}); res.status(r.ok ? 200 : 400).json(r); });
     router.post('/enable', (req, res) => { const r = enableServer(req.body || {}); res.status(r.ok ? 200 : 400).json(r); });
     return router;
@@ -192,20 +389,34 @@ function createMcpManager(opts) {
       risk: 'LOW',
       category: 'mcp',
       timeout: 3000,
-      description: 'List registered MCP servers (skeleton registry; transports not started).',
+      description: 'List registered MCP servers with transport, status and cached tool count.',
     });
     engine.register('mcp_status', {
       fn: async () => status(),
       risk: 'LOW',
       category: 'mcp',
       timeout: 3000,
-      description: 'MCP manager status (counts, policy, implemented flag).',
+      description: 'MCP manager status (counts, transports implemented, policy).',
     });
-    return { ok: true, count: 2, names: ['mcp_servers', 'mcp_status'] };
+    engine.register('mcp_probe', {
+      fn: async (params) => probeServer(params || {}),
+      risk: 'MEDIUM',
+      category: 'mcp',
+      timeout: 30000,
+      description: 'Start a registered stdio MCP server, run the initialize handshake and cache its tool list. Use before mcp_call.',
+    });
+    engine.register('mcp_call', {
+      fn: async (params) => callTool(params || {}),
+      risk: 'HIGH',
+      category: 'mcp',
+      timeout: 40000,
+      description: 'Call a tool on a registered stdio MCP server ({name, tool, args?}). HIGH risk - runs the server command; approval required.',
+    });
+    return { ok: true, count: 4, names: ['mcp_servers', 'mcp_status', 'mcp_probe', 'mcp_call'] };
   }
 
   return {
-    registerServer, disableServer, enableServer, listServers, probe, status, createRouter, registerAgiTools,
+    registerServer, disableServer, enableServer, listServers, probeServer, probe: probeServer, listTools, callTool, status, createRouter, registerAgiTools,
     storePath: () => file,
     _reset: () => { state = null; },
   };
@@ -219,7 +430,10 @@ module.exports = {
   disableServer: singleton.disableServer,
   enableServer: singleton.enableServer,
   listServers: singleton.listServers,
-  probe: singleton.probe,
+  probeServer: singleton.probeServer,
+  probe: singleton.probeServer,
+  listTools: singleton.listTools,
+  callTool: singleton.callTool,
   status: singleton.status,
   createRouter: singleton.createRouter,
   registerAgiTools: singleton.registerAgiTools,

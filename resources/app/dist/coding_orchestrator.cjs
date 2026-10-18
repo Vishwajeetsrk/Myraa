@@ -50,6 +50,7 @@ const CODING_INTENTS = {
       permissions_status: /\b(?:tool|agent)\s+permissions?\b|\bpermissions?\s+(?:status|list|show|report)\b|\bwho\s+can\s+use\s+what\b/i, // Phase 24
       permissions_grant: /\b(?:allow|grant)\s+(?:agent\s+)?[a-z0-9_-]+\s+(?:to\s+(?:use|access)|use|access|tool)\s+[a-z0-9_*.-]+/i, // Phase 24
       permissions_revoke: /\b(?:revoke|deny|block)\s+(?:agent\s+)?[a-z0-9_-]+\s+(?:from\s+)?(?:tool\s+|access\s+to\s+|use\s+of\s+)?[a-z0-9_*.-]+/i, // Phase 24
+      mcp_probe: /\bmcp(?:\s+server)?\s+probe\s+[a-z0-9_-]+\b|\bprobe\s+(?:the\s+)?mcp(?:\s+server)?\s+[a-z0-9_-]+\b/i, // Phase 25
       mcp_status: /\bmcp\b|\bmodel\s+context\s+protocol\b/i, // Phase 24
   test_project: /(?:test|run test|check|verify|validate)\s+(?:the\s+)?(?:project|app|code|tests?|build|website|files?)\b|\brun\s+tests?\b|^test$|^check$/i,
   lint_project: /(?:lint|check code|style check|format check)\s*(?:the\s+)?(?:project|code|files?)?/i,
@@ -233,6 +234,7 @@ async function executeCodingTask(userMessage, opts = {}) {
         case 'permissions_grant': result.output = _permissionChange(userMessage, result); break; // Phase 24
         case 'permissions_revoke': result.output = _permissionChange(userMessage, result); break; // Phase 24
         case 'mcp_status': result.output = _mcpStatus(result); break; // Phase 24
+        case 'mcp_probe': result.output = await _mcpProbe(userMessage, result); break; // Phase 25
       case 'routine_list': result.output = _routineList(result); break;
       case 'routine_control': result.output = await _routineControl(userMessage, result); break;
       case 'approvals_check': result.output = _approvalsCheck(result); break;
@@ -1308,10 +1310,24 @@ function _activityStatus(userMessage, result) {
     if (!mcp) return 'the mcp manager module is not available right now.';
     const st = mcp.status();
     const ls = mcp.listServers();
-    const lines = ['MCP manager (skeleton): ' + st.count + ' servers (' + st.byTransport.stdio + ' stdio, ' + st.byTransport.http + ' http). Transports are not implemented yet.'];
-    for (const s of ls.servers.slice(0, 8)) lines.push('- ' + s.name + ' [' + s.transport + ', ' + s.status + ']');
-    if (!ls.servers.length) lines.push('- no servers registered; POST /api/mcp/register adds bookkeeping entries.');
+    const lines = ['MCP manager: ' + st.count + ' servers (' + st.byTransport.stdio + ' stdio, ' + st.byTransport.http + ' http). stdio transport is live (initialize + tools/list + tools/call); http transport is not implemented yet.'];
+    for (const s of ls.servers.slice(0, 8)) lines.push('- ' + s.name + ' [' + s.transport + ', ' + s.status + (s.toolsCount ? ', ' + s.toolsCount + ' tools' : '') + ']');
+    if (!ls.servers.length) lines.push('- no servers registered; POST /api/mcp/register adds them.');
     return lines.join('\n');
+  }
+  async function _mcpProbe(userMessage, result) {
+    const mcp = _requireModule('mcp_manager.cjs');
+    if (!mcp) return 'the mcp manager module is not available right now.';
+    const m = userMessage.match(/\bmcp(?:\s+server)?\s+probe\s+([a-z0-9_-]+)/i) || userMessage.match(/\bprobe\s+(?:the\s+)?mcp(?:\s+server)?\s+([a-z0-9_-]+)/i);
+    if (!m) return 'usage: "probe mcp <server-name>" (registered stdio servers only).';
+    const name = m[1];
+    const out = await mcp.probe({ name });
+    result.actions.push({ step: 'mcp_probe', detail: name + ' -> ' + (out.ok ? 'reachable' : (out.code || 'error')) });
+    if (out.ok) {
+      const info = out.serverInfo ? ' (' + out.serverInfo.name + ' ' + out.serverInfo.version + ')' : '';
+      return 'MCP server "' + name + '" is reachable: ' + (out.tools ? out.tools.length : 0) + ' tools' + info + '.';
+    }
+    return 'MCP probe of "' + name + '" failed: ' + (out.error || out.code || 'unknown') + '.';
   }
   function _extractPath(msg) {
   const match = msg.match(/(?:at|in|to|from)\s+([A-Z]:\\[^\s]+)/i) || msg.match(/([A-Z]:\\[^\s]+)/i);

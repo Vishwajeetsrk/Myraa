@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Phase 24 tests: per-agent tool permissions + MCP manager skeleton.
+ * Phase 24/25 tests: per-agent tool permissions + MCP manager (registry side; transport covered in test_mcp_transport.cjs).
  * Pure factory instances with temp stores; no env needed.
  * Run: NODE_PATH="<repo>\resources\app\node_modules" node tests\test_permissions_mcp.cjs
  */
@@ -72,7 +72,7 @@ function check(name, cond, extra) {
   const mcp = mcpMod.createMcpManager({ storePath: mcpPath });
 
   const m1 = mcp.registerServer({ name: 'files', transport: 'stdio', command: 'npx -y @modelcontextprotocol/server-filesystem C:\\tmp' });
-  check('register stdio ok', m1.ok === true && m1.server.status === 'registered' && m1.server.implemented === false);
+  check('register stdio ok', m1.ok === true && m1.server.status === 'registered' && m1.server.implemented === true);
   const m2 = mcp.registerServer({ name: 'bridge', transport: 'http', url: 'http://127.0.0.1:8777/mcp' });
   check('register http ok', m2.ok === true);
   check('bad transport rejected', mcp.registerServer({ name: 'x', transport: 'carrier-pigeon' }).ok === false);
@@ -88,17 +88,17 @@ function check(name, cond, extra) {
   const en = mcp.enableServer({ name: 'bridge' });
   check('enable ok', en.ok === true && en.server.status === 'registered');
 
-  const pr = mcp.probe({ name: 'files' });
-  check('probe honest NOT_IMPLEMENTED', pr.ok === false && pr.code === 'NOT_IMPLEMENTED');
+  const pr = await mcp.probe({ name: 'bridge' });
+  check('http probe honest NOT_IMPLEMENTED', pr.ok === false && pr.code === 'NOT_IMPLEMENTED');
   const stm = mcp.status();
-  check('mcp status shape + implemented false', stm.ok === true && stm.count === 2 && stm.byTransport.stdio === 1 && stm.byTransport.http === 1 && stm.implemented === false);
+  check('mcp status shape + implemented map', stm.ok === true && stm.count === 2 && stm.byTransport.stdio === 1 && stm.byTransport.http === 1 && stm.implemented.stdio === true && stm.implemented.http === false);
 
   const mcp2 = mcpMod.createMcpManager({ storePath: mcpPath });
   check('mcp persists across instances', mcp2.listServers().count === 2);
 
   const mEngine = { registered: {}, register(name, spec) { this.registered[name] = spec; } };
   const mreg = mcpMod.createMcpManager({ storePath: path.join(tmp, 'm2.json') }).registerAgiTools(mEngine);
-  check('mcp agi tools registered', mreg.ok === true && mreg.count === 2 && !!mEngine.registered.mcp_servers && !!mEngine.registered.mcp_status);
+  check('mcp agi tools registered', mreg.ok === true && mreg.count === 4 && !!mEngine.registered.mcp_servers && !!mEngine.registered.mcp_status && !!mEngine.registered.mcp_probe && !!mEngine.registered.mcp_call);
   const mOut = await mEngine.registered.mcp_servers.fn({});
   check('mcp_servers fn returns list', mOut.ok === true && Array.isArray(mOut.servers));
   const mRouter = mcp.createRouter();

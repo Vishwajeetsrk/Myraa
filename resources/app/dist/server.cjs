@@ -5207,7 +5207,7 @@ async function startServer() {
     const mountedMcp = mcpManager.registerAgiTools(phase24Engine);
     app.use("/api/permissions", toolPermissions.createRouter());
     app.use("/api/mcp", mcpManager.createRouter());
-    console.log("[Server] Permissions + MCP skeleton mounted " + (mountedPerm.count + mountedMcp.count) + " agi tools (Phase 24)");
+    console.log("[Server] Permissions + MCP mounted " + (mountedPerm.count + mountedMcp.count) + " agi tools (Phase 24/25)");
   } catch(e) {
     console.warn("[Server] Could not mount permissions/mcp:", e.message);
   }

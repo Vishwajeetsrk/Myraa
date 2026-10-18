@@ -4,6 +4,8 @@ Built: 2026-10-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
 
 > Rebuilt 2026-10-18 19:55 with the Course Studio SQLite bridge fix (commit `19d9e07`).
 > GitHub Release `v9.4.0` assets were replaced with this build; hashes below match it.
+> Note: MCP stdio transport (Phase 25) landed on `main` after this build -- it is not
+> in these installers and will ship with the next release batch.
 
 ## 1. Deep Testing & Verification Summary
 
@@ -62,7 +64,7 @@ Batched copies (SMB differs from cache, not integrity). The packer re-hashes eve
 ### [B] What is Missing / Limitations:
 1. **EV Code Signing Certificate:** installers are unsigned; Windows SmartScreen shows an unknown publisher warning on first launch until accepted once.
 2. **GitHub Release upload:** published for `v9.4.0` — binaries exceed GitHub's 100 MB per-file limit, so Releases (not repo commits) is the distribution channel.
-3. **MCP transports:** registry is bookkeeping only in v9.4.0; real stdio/http transport execution lands in the next cycle (permission enforcement hooks in with it).
+3. **MCP transports:** registry is bookkeeping only in these v9.4.0 installers; real stdio transport landed on `main` (Phase 25, unreleased) and ships with the next build; the http transport is still pending.
 
 ### [C] How It Works:
 - **NSIS Setup (`MYRAA-Setup-9.4.0.exe`):**
@@ -77,7 +79,7 @@ Batched copies (SMB differs from cache, not integrity). The packer re-hashes eve
 ### [D] Next Plan:
 1. **[DONE]** GitHub Release `v9.4.0` published with Setup + Portable + `latest.yml` + blockmap (auto-updater feed ready); assets re-uploaded after the bridge-fix rebuild.
 2. **[DONE]** Course-create 500 fixed: SQLite bridge dispatch folded into a single chain (one JSON line per command; previously 5 disjoint chains emitted a trailing `Unknown command`). Verified live: `POST /api/course-studio/courses` -> 200.
-3. MCP transport execution (stdio + http) with per-agent permission enforcement wired into the tool engine.
+3. **[DONE on main, unreleased]** MCP stdio transport: real `initialize` handshake, `tools/list` caching, approval-gated `tools/call`, voice "probe mcp `<name>`", hermetic transport suite (`tests/test_mcp_transport.cjs`, 35 checks). Pending: http transport + rebuild/re-release with this code.
 4. Observability pass: timeline/event surfaces into the UI; security agent phase.
 
 ---
