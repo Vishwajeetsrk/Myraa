@@ -5,7 +5,8 @@ Built: 2026-10-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
 > v9.5.0 includes the full MCP stack: real stdio transport (initialize / tools/list / tools/call),
 > curated official-server presets, the Course Studio SQLite bridge fix, and the real-only MCP policy
 > (no fake server fixtures; real-server verification is env-gated via `MYRAA_MCP_LIVE=1`).
-> GitHub Release for v9.5.0 is not published yet (local packs below are final).
+> GitHub Release v9.5.0 is published (4 assets uploaded, verified) and the Setup was silently installed on this machine:
+> `%LOCALAPPDATA%\Programs\MYRAA` with shortcuts + uninstaller, backend smoke-tested from the installed runtime.
 
 ## 1. Deep Testing & Verification Summary
 
@@ -15,6 +16,7 @@ Built: 2026-10-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
 | **Test Suites** | **[OK] Verified** | 317 live checks across the 10 documented suites, all green (evidence 29, investigation 37, workspace 43, connector market 26, model gateway 34, safety broker 31, event bus 25, timeline 27, permissions + MCP 34, MCP transport 31) plus all 14 auxiliary suites (pointer x6, compute x2, course x2, tutor x2, gesture, paths) exit=0 |
 | **MCP Real-Server Verification** | **[OK] Verified** | `MYRAA_MCP_LIVE=1` run against the official `npx -y @modelcontextprotocol/server-everything`: probe OK, 13 real tools listed, `tools/call echo` and `get-sum` returned real results ("The sum of 40 and 2 is 42.") |
 | **Packaged App Bundle** | **[OK] Verified** | `app.asar.unpacked\dist` contains `mcp_stdio_client.cjs`, `mcp_manager.cjs` (presets), fixed single-dispatch `sqlite_memory_bridge.py` (1 chain start + 34 elif), `version.json` = 9.5.0. Packaged server smoke test on port 3005: health 9.5.0, 7 presets, real probe (13 tools), real `get-sum` call |
+| **Real Windows Install** | **[OK] Verified** | `MYRAA-Setup-9.5.0.exe /S` silent install (exit 0) to `%LOCALAPPDATA%\Programs\MYRAA`; Desktop + Start Menu shortcuts created; Add/Remove registration "MYRAA AI OS 9.5.0". Installed-runtime smoke (via `ELECTRON_RUN_AS_NODE=1 MYRAA.exe server.cjs`, port 3006): health 9.5.0, 7 presets, preset add OK, real MCP probe (13 tools), real `get-sum` call ("The sum of 20 and 22 is 42."). Real app window launched from installed EXE with backend on port 3000 |
 | **Electron Main Process** | **[OK] Verified** | Electron 31.7.7, single instance lock, clean window creation |
 | **Voice / Audio Engine** | **[OK] Verified** | Gemini Live streaming audio restore intact; all voice intents classified correctly (18/18 probe checks) + new `mcp_probe` intent ("probe mcp `<name>`") verified via orchestrator |
 | **Hash Integrity** | **[OK] Verified** | Source == pack SHA256 re-verified after copy by the release packer |
@@ -42,6 +44,10 @@ The production installer packages for **v9.5.0** are generated, verified, and pl
    `C:\Users\Vishwajeet\Music\Myraa\resources\app\dist-release\`
    - `MYRAA-Setup-9.5.0.exe`, `MYRAA-Portable-9.5.0.exe`, `win-unpacked\`, `latest.yml`
 
+4. **GitHub Release (published):**
+   `https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.5.0`
+   - `MYRAA-Setup-9.5.0.exe` (308.9 MB), `MYRAA-Portable-9.5.0.exe` (303.0 MB), `latest.yml`, `MYRAA-Setup-9.5.0.exe.blockmap` (all state=uploaded, release id 416603210)
+
 ---
 
 ## 3. SHA256 Integrity Verification
@@ -65,7 +71,7 @@ The packer re-hashes every file after copy (source == pack).
 
 ### [B] What is Missing / Limitations:
 1. **EV Code Signing Certificate:** installers are unsigned; Windows SmartScreen shows an unknown publisher warning on first launch until accepted once.
-2. **GitHub Release:** `v9.4.0` remains the published release; the `v9.5.0` assets are packed locally and await a publish decision (uploads go to Releases, not repo commits - binaries exceed GitHub's 100 MB per-file limit).
+2. **GitHub Release:** `v9.5.0` is published (4 assets, id 416603210); `v9.4.0` remains the previous release (uploads go to Releases, not repo commits - binaries exceed GitHub's 100 MB per-file limit).
 3. **MCP http transport:** still pending; stdio-only for now (honest `NOT_IMPLEMENTED`).
 4. **Observability dashboard:** timeline/event UI surfaces not wired into the front end yet.
 
@@ -83,8 +89,9 @@ The packer re-hashes every file after copy (source == pack).
 1. **[DONE]** v9.5.0 built, packed, hash-verified; packaged bundle live-verified with a real MCP server (probe + tool call).
 2. **[DONE]** Course-create 500 fixed (SQLite bridge single dispatch); live check `POST /api/course-studio/courses` -> 200.
 3. **[DONE]** MCP stdio transport + presets + voice intent + real-only test policy.
-4. **[PENDING]** Publish GitHub Release `v9.5.0` (Setup + Portable + latest.yml + blockmap) on your go-ahead.
-5. **[PENDING]** MCP http transport; observability pass (timeline/event surfaces into the UI).
+4. **[DONE]** GitHub Release `v9.5.0` published: Setup + Portable + latest.yml + blockmap uploaded (release id 416603210, `https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.5.0`); tag `v9.5.0` -> `cd7d51b`.
+5. **[DONE]** Real Windows install verified: silent setup install, shortcuts, uninstaller, installed-runtime MCP smoke (real probe + real tool call), app window launched.
+6. **[PENDING]** MCP http transport; observability pass (timeline/event surfaces into the UI).
 
 ---
 

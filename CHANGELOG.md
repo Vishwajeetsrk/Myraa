@@ -14,6 +14,8 @@ All notable changes to MYRAA AI OS are documented here.
 
 ### Installers
 - `MYRAA-Setup-9.5.0.exe` (308.9 MB, NSIS x64) and `MYRAA-Portable-9.5.0.exe` (303.0 MB) built, hash-verified, packed to `Installers\v9.5.0` + Desktop copy. Packaged bundle live-verified: real MCP probe of `server-everything` (13 tools) + real `tools/call` (`get-sum` -> "The sum of 20 and 22 is 42.").
+- Real Windows install verified: silent setup install to `%LOCALAPPDATA%\Programs\MYRAA` (shortcuts + uninstaller registered), installed-runtime smoke passed (health 9.5.0, 7 presets, real probe + real `get-sum` via the installed Electron binary), app window launched from the installed EXE.
+- GitHub Release `v9.5.0` published with 4 assets: Setup, Portable, `latest.yml`, Setup blockmap (`https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.5.0`).
 
 ## [9.4.0] - 2026-10-18
 
