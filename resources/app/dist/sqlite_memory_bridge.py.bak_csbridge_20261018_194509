@@ -1,0 +1,687 @@
+import sys, json, sqlite3, os
+from datetime import datetime
+
+base_dir = os.environ.get("MYRAA_DATA_DIR")
+if base_dir:
+    db_path = os.path.join(base_dir, "memory", "myraa_memory.db")
+else:
+    db_path = os.path.expandvars(r"%APPDATA%\MYRAA\memory\myraa_memory.db")
+os.makedirs(os.path.dirname(db_path), exist_ok=True)
+
+conn = sqlite3.connect(db_path, timeout=5.0)
+conn.execute("PRAGMA journal_mode=WAL;")
+conn.execute("PRAGMA synchronous=NORMAL;")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS memories (
+    id TEXT PRIMARY KEY,
+    category TEXT NOT NULL,
+    text TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+""")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    project_id TEXT,
+    status_json TEXT,
+    updated_at TEXT
+);
+""")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS app_knowledge (
+    app_name TEXT PRIMARY KEY,
+    control_map_json TEXT,
+    learned_actions_json TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+""")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS project_index (
+    name TEXT PRIMARY KEY,
+    description TEXT,
+    project_dir TEXT NOT NULL,
+    toolchain TEXT,
+    registered_at TEXT NOT NULL
+);
+""")
+
+# ── COURSE STUDIO TABLES (Phase 2 vertical slice; Supabase-portable) ──────────
+conn.execute("""
+CREATE TABLE IF NOT EXISTS cs_courses (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    objective TEXT NOT NULL DEFAULT '',
+    audience TEXT NOT NULL DEFAULT '',
+    source_kind TEXT NOT NULL DEFAULT 'topic',
+    source_ref TEXT NOT NULL DEFAULT '',
+    source_text TEXT NOT NULL DEFAULT '',
+    compute TEXT NOT NULL DEFAULT 'AUTO',
+    status TEXT NOT NULL DEFAULT 'draft',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+""")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS cs_lessons (
+    id TEXT PRIMARY KEY,
+    course_id TEXT NOT NULL,
+    idx INTEGER NOT NULL DEFAULT 0,
+    title TEXT NOT NULL,
+    objective TEXT NOT NULL DEFAULT '',
+    module_title TEXT NOT NULL DEFAULT '',
+    scenes_json TEXT NOT NULL DEFAULT '[]',
+    narration_json TEXT NOT NULL DEFAULT '[]',
+    quiz_json TEXT NOT NULL DEFAULT '[]',
+    summary TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'outline',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+""")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS cs_jobs (
+    id TEXT PRIMARY KEY,
+    kind TEXT NOT NULL DEFAULT 'generic',
+    ref_id TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'queued',
+    steps_json TEXT NOT NULL DEFAULT '[]',
+    progress REAL NOT NULL DEFAULT 0,
+    error TEXT NOT NULL DEFAULT '',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    meta_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+""")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS cs_progress (
+    course_id TEXT PRIMARY KEY,
+    lesson_id TEXT NOT NULL DEFAULT '',
+    mastery_json TEXT NOT NULL DEFAULT '{}',
+    updated_at TEXT NOT NULL
+);
+""")
+
+conn.execute("CREATE INDEX IF NOT EXISTS idx_cs_lessons_course ON cs_lessons(course_id);")
+
+# ── COURSE STUDIO LEARNER TABLES (Phase 6; Supabase-portable) ─────────────────
+conn.execute("""
+CREATE TABLE IF NOT EXISTS cs_concepts (
+    course_id TEXT NOT NULL,
+    concept TEXT NOT NULL,
+    lesson_id TEXT NOT NULL DEFAULT '',
+    exposure INTEGER NOT NULL DEFAULT 0,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    correct INTEGER NOT NULL DEFAULT 0,
+    hints INTEGER NOT NULL DEFAULT 0,
+    streak INTEGER NOT NULL DEFAULT 0,
+    mastery REAL NOT NULL DEFAULT 0,
+    next_review TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (course_id, concept)
+);
+""")
+
+conn.execute("CREATE INDEX IF NOT EXISTS idx_cs_concepts_course ON cs_concepts(course_id);")
+
+# ── COMPUTE TABLES (Phase 7; Supabase-portable) ──────────────────────────────
+conn.execute("""
+CREATE TABLE IF NOT EXISTS cp_jobs (
+    id TEXT PRIMARY KEY,
+    job_type TEXT NOT NULL DEFAULT '',
+    route TEXT NOT NULL DEFAULT 'AUTO',
+    provider TEXT NOT NULL DEFAULT '',
+    worker_id TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'CREATED',
+    progress TEXT NOT NULL DEFAULT 'UNKNOWN',
+    spec_json TEXT NOT NULL DEFAULT '{}',
+    estimate_json TEXT NOT NULL DEFAULT '{}',
+    error_json TEXT NOT NULL DEFAULT '{}',
+    artifacts_json TEXT NOT NULL DEFAULT '[]',
+    metrics_json TEXT NOT NULL DEFAULT '{}',
+    transport TEXT NOT NULL DEFAULT 'file',
+    kernel_ref TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+""")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS cp_workers (
+    id TEXT PRIMARY KEY,
+    provider TEXT NOT NULL DEFAULT 'kaggle',
+    status TEXT NOT NULL DEFAULT 'offline',
+    caps_json TEXT NOT NULL DEFAULT '{}',
+    redactions INTEGER NOT NULL DEFAULT 0,
+    last_seen TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL
+);
+""")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS cp_events (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id TEXT NOT NULL DEFAULT '',
+    type TEXT NOT NULL DEFAULT '',
+    detail TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+);
+""")
+
+conn.execute("CREATE INDEX IF NOT EXISTS idx_cp_events_job ON cp_events(job_id);")
+
+# ── POINTER TABLES (Phase 11) ─────────────────────────────────────────────
+conn.execute("""
+CREATE TABLE IF NOT EXISTS pp_sessions (
+    id TEXT PRIMARY KEY,
+    mode TEXT NOT NULL DEFAULT 'follow',
+    guardrails INTEGER NOT NULL DEFAULT 1,
+    started_at TEXT NOT NULL,
+    ended_at TEXT
+);
+""")
+
+conn.execute("""
+CREATE TABLE IF NOT EXISTS pp_actions (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    target TEXT NOT NULL DEFAULT '{}',
+    confirmed INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+""")
+
+conn.execute("CREATE INDEX IF NOT EXISTS idx_pp_actions_session ON pp_actions(session_id);")
+
+conn.execute("CREATE INDEX IF NOT EXISTS idx_mem_category ON memories(category);")
+conn.execute("CREATE INDEX IF NOT EXISTS idx_proj_name ON project_index(name);")
+
+cmd = sys.argv[1] if len(sys.argv) > 1 else "list"
+
+try:
+    if cmd == "list":
+        cat = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] != "all" else None
+        if cat:
+            cur = conn.execute("SELECT id, category, text, created_at, updated_at FROM memories WHERE category=? ORDER BY updated_at DESC", (cat,))
+        else:
+            cur = conn.execute("SELECT id, category, text, created_at, updated_at FROM memories ORDER BY updated_at DESC")
+        rows = [{"id": r[0], "category": r[1], "text": r[2], "createdAt": r[3], "updatedAt": r[4]} for r in cur.fetchall()]
+        print(json.dumps(rows))
+
+    elif cmd == "save":
+        payload = json.loads(sys.argv[2])
+        m_id = payload.get("id") or f"mem_{int(payload.get('time', 0)) or os.getpid()}"
+        cat = payload.get("category", "preference")
+        txt = payload.get("text", "")
+        now = payload.get("updatedAt") or payload.get("createdAt") or datetime.utcnow().isoformat()
+        conn.execute(
+            "INSERT INTO memories (id, category, text, created_at, updated_at) VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET category=excluded.category, text=excluded.text, updated_at=excluded.updated_at",
+            (m_id, cat, txt, now, now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "id": m_id}))
+
+    elif cmd == "delete":
+        m_id = sys.argv[2]
+        conn.execute("DELETE FROM memories WHERE id=?", (m_id,))
+        conn.commit()
+        print(json.dumps({"ok": True, "deleted": m_id}))
+
+    # ── APP KNOWLEDGE EXTENSIONS ───────────────────────────────────────────────
+    elif cmd == "app_knowledge_get":
+        app_name = sys.argv[2] if len(sys.argv) > 2 else ""
+        cur = conn.execute("SELECT app_name, control_map_json, learned_actions_json, created_at, updated_at FROM app_knowledge WHERE LOWER(app_name)=LOWER(?)", (app_name,))
+        row = cur.fetchone()
+        if row:
+            res = {
+                "appName": row[0],
+                "controlMap": json.loads(row[1]) if row[1] else [],
+                "learnedActions": json.loads(row[2]) if row[2] else [],
+                "createdAt": row[3],
+                "updatedAt": row[4]
+            }
+            print(json.dumps({"ok": True, "data": res}))
+        else:
+            print(json.dumps({"ok": False, "error": "Not found"}))
+
+    elif cmd == "app_knowledge_save":
+        payload = json.loads(sys.argv[2])
+        app_name = payload.get("appName") or payload.get("app_name") or "unknown_app"
+        controls_json = json.dumps(payload.get("controlMap") or payload.get("controls") or [])
+        actions_json = json.dumps(payload.get("learnedActions") or payload.get("actions") or [])
+        now = datetime.utcnow().isoformat()
+        conn.execute(
+            "INSERT INTO app_knowledge (app_name, control_map_json, learned_actions_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(app_name) DO UPDATE SET control_map_json=excluded.control_map_json, learned_actions_json=excluded.learned_actions_json, updated_at=excluded.updated_at",
+            (app_name, controls_json, actions_json, now, now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "appName": app_name}))
+
+    elif cmd == "app_knowledge_list":
+        cur = conn.execute("SELECT app_name, created_at, updated_at FROM app_knowledge ORDER BY updated_at DESC")
+        rows = [{"appName": r[0], "createdAt": r[1], "updatedAt": r[2]} for r in cur.fetchall()]
+        print(json.dumps({"ok": True, "apps": rows}))
+
+    # ── PROJECT INDEX EXTENSIONS ──────────────────────────────────────────────
+    elif cmd == "project_index_get":
+        name = sys.argv[2] if len(sys.argv) > 2 else ""
+        cur = conn.execute("SELECT name, description, project_dir, toolchain, registered_at FROM project_index WHERE LOWER(name)=LOWER(?)", (name,))
+        row = cur.fetchone()
+        if row:
+            print(json.dumps({
+                "ok": True,
+                "project": {
+                    "name": row[0],
+                    "description": row[1],
+                    "projectDir": row[2],
+                    "toolchain": row[3],
+                    "registeredAt": row[4]
+                }
+            }))
+        else:
+            print(json.dumps({"ok": False, "error": "Not found"}))
+
+    elif cmd == "project_index_save":
+        payload = json.loads(sys.argv[2])
+        name = payload.get("name")
+        desc = payload.get("description", "")
+        pdir = payload.get("projectDir") or payload.get("project_dir", "")
+        tool = payload.get("toolchain", "unknown")
+        now = payload.get("registeredAt") or datetime.utcnow().isoformat()
+        conn.execute(
+            "INSERT INTO project_index (name, description, project_dir, toolchain, registered_at) VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(name) DO UPDATE SET description=excluded.description, project_dir=excluded.project_dir, toolchain=excluded.toolchain, registered_at=excluded.registered_at",
+            (name, desc, pdir, tool, now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "name": name}))
+
+    elif cmd == "project_index_list":
+        cur = conn.execute("SELECT name, description, project_dir, toolchain, registered_at FROM project_index ORDER BY registered_at DESC")
+        rows = [{
+            "name": r[0],
+            "description": r[1],
+            "projectDir": r[2],
+            "toolchain": r[3],
+            "registeredAt": r[4]
+        } for r in cur.fetchall()]
+        print(json.dumps({"ok": True, "projects": rows}))
+
+    # ── COURSE STUDIO COMMANDS (Phase 2 vertical slice) ──────────────────────────
+    def _cs_arg_id(pos, key):
+        # Accept {"id": "..."} JSON (routes style) or a bare string id.
+        try:
+            raw = sys.argv[pos] if len(sys.argv) > pos else ""
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                return str(parsed.get(key, ""))
+            return str(parsed)
+        except Exception:
+            try:
+                return str(sys.argv[pos]) if len(sys.argv) > pos else ""
+            except Exception:
+                return ""
+    def _cs_course_row(r):
+        return {"id": r[0], "title": r[1], "objective": r[2], "audience": r[3],
+                "sourceKind": r[4], "sourceRef": r[5], "sourceText": r[6],
+                "compute": r[7] or "AUTO",
+                "status": r[8], "createdAt": r[9], "updatedAt": r[10]}
+
+    def _cs_lesson_row(r):
+        def _j(v, d):
+            try:
+                return json.loads(v) if v else d
+            except Exception:
+                return d
+        return {"id": r[0], "courseId": r[1], "idx": r[2], "title": r[3],
+                "objective": r[4], "moduleTitle": r[5], "scenes": _j(r[6], []),
+                "narration": _j(r[7], []), "quiz": _j(r[8], []), "summary": r[9],
+                "status": r[10], "createdAt": r[11], "updatedAt": r[12]}
+
+    def _cs_job_row(r):
+        def _j(v, d):
+            try:
+                return json.loads(v) if v else d
+            except Exception:
+                return d
+        return {"id": r[0], "kind": r[1], "refId": r[2], "status": r[3],
+                "steps": _j(r[4], []), "progress": r[5], "error": r[6],
+                "attempts": r[7], "meta": _j(r[8], {}), "createdAt": r[9], "updatedAt": r[10]}
+
+    if cmd == "cs_course_save":
+        p = json.loads(sys.argv[2])
+        now = p.get("updatedAt") or datetime.utcnow().isoformat()
+        created = p.get("createdAt") or now
+        conn.execute(
+            "INSERT INTO cs_courses (id, title, objective, audience, source_kind, source_ref, source_text, compute, status, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET title=excluded.title, objective=excluded.objective, audience=excluded.audience, "
+            "source_kind=excluded.source_kind, source_ref=excluded.source_ref, source_text=excluded.source_text, "
+            "compute=excluded.compute, status=excluded.status, updated_at=excluded.updated_at",
+            (p.get("id"), p.get("title", ""), p.get("objective", ""), p.get("audience", ""),
+             p.get("sourceKind", "topic"), p.get("sourceRef", ""), p.get("sourceText", ""),
+             p.get("compute", "AUTO"), p.get("status", "draft"), created, now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "id": p.get("id")}))
+
+    elif cmd == "cs_course_get":
+        c_id = _cs_arg_id(2, "id")
+        cur = conn.execute("SELECT id, title, objective, audience, source_kind, source_ref, source_text, compute, status, created_at, updated_at FROM cs_courses WHERE id=?", (c_id,))
+        row = cur.fetchone()
+        if row:
+            print(json.dumps({"ok": True, "course": _cs_course_row(row)}))
+        else:
+            print(json.dumps({"ok": False, "error": "Not found"}))
+
+    elif cmd == "cs_course_list":
+        cur = conn.execute("SELECT id, title, objective, audience, source_kind, source_ref, source_text, compute, status, created_at, updated_at FROM cs_courses ORDER BY updated_at DESC")
+        print(json.dumps({"ok": True, "courses": [_cs_course_row(r) for r in cur.fetchall()]}))
+
+    elif cmd == "cs_lesson_save":
+        p = json.loads(sys.argv[2])
+        now = p.get("updatedAt") or datetime.utcnow().isoformat()
+        created = p.get("createdAt") or now
+        conn.execute(
+            "INSERT INTO cs_lessons (id, course_id, idx, title, objective, module_title, scenes_json, narration_json, quiz_json, summary, status, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET course_id=excluded.course_id, idx=excluded.idx, title=excluded.title, "
+            "objective=excluded.objective, module_title=excluded.module_title, scenes_json=excluded.scenes_json, "
+            "narration_json=excluded.narration_json, quiz_json=excluded.quiz_json, summary=excluded.summary, "
+            "status=excluded.status, updated_at=excluded.updated_at",
+            (p.get("id"), p.get("courseId", ""), int(p.get("idx", 0)), p.get("title", ""),
+             p.get("objective", ""), p.get("moduleTitle", ""),
+             json.dumps(p.get("scenes") or []), json.dumps(p.get("narration") or []), json.dumps(p.get("quiz") or []),
+             p.get("summary", ""), p.get("status", "outline"), created, now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "id": p.get("id")}))
+
+    elif cmd == "cs_lesson_get":
+        l_id = _cs_arg_id(2, "id")
+        cur = conn.execute("SELECT id, course_id, idx, title, objective, module_title, scenes_json, narration_json, quiz_json, summary, status, created_at, updated_at FROM cs_lessons WHERE id=?", (l_id,))
+        row = cur.fetchone()
+        if row:
+            print(json.dumps({"ok": True, "lesson": _cs_lesson_row(row)}))
+        else:
+            print(json.dumps({"ok": False, "error": "Not found"}))
+
+    elif cmd == "cs_lesson_list_by_course":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        c_id = p.get("courseId", "")
+        cur = conn.execute("SELECT id, course_id, idx, title, objective, module_title, scenes_json, narration_json, quiz_json, summary, status, created_at, updated_at FROM cs_lessons WHERE course_id=? ORDER BY idx ASC", (c_id,))
+        print(json.dumps({"ok": True, "lessons": [_cs_lesson_row(r) for r in cur.fetchall()]}))
+
+    elif cmd == "cs_job_save":
+        p = json.loads(sys.argv[2])
+        now = p.get("updatedAt") or datetime.utcnow().isoformat()
+        created = p.get("createdAt") or now
+        conn.execute(
+            "INSERT INTO cs_jobs (id, kind, ref_id, status, steps_json, progress, error, attempts, meta_json, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET kind=excluded.kind, ref_id=excluded.ref_id, status=excluded.status, "
+            "steps_json=excluded.steps_json, progress=excluded.progress, error=excluded.error, attempts=excluded.attempts, "
+            "meta_json=excluded.meta_json, updated_at=excluded.updated_at",
+            (p.get("id"), p.get("kind", "generic"), p.get("refId", ""), p.get("status", "queued"),
+             json.dumps(p.get("steps") or []), float(p.get("progress", 0)), p.get("error") or "",
+             int(p.get("attempts", 0)), json.dumps(p.get("meta") or {}), created, now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "id": p.get("id")}))
+
+    elif cmd == "cs_job_get":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        j_id = p.get("id", "")
+        cur = conn.execute("SELECT id, kind, ref_id, status, steps_json, progress, error, attempts, meta_json, created_at, updated_at FROM cs_jobs WHERE id=?", (j_id,))
+        row = cur.fetchone()
+        if row:
+            print(json.dumps({"ok": True, "job": _cs_job_row(row)}))
+        else:
+            print(json.dumps({"ok": False, "error": "Not found"}))
+
+    elif cmd == "cs_progress_save":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        now = datetime.utcnow().isoformat()
+        conn.execute(
+            "INSERT INTO cs_progress (course_id, lesson_id, mastery_json, updated_at) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(course_id) DO UPDATE SET lesson_id=excluded.lesson_id, mastery_json=excluded.mastery_json, updated_at=excluded.updated_at",
+            (p.get("courseId", ""), p.get("lessonId", ""),
+             json.dumps(p.get("mastery") if isinstance(p.get("mastery"), (dict, list)) else {}), now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "courseId": p.get("courseId", "")}))
+
+    elif cmd == "cs_progress_get":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        c_id = p.get("courseId", "")
+        cur = conn.execute("SELECT course_id, lesson_id, mastery_json, updated_at FROM cs_progress WHERE course_id=?", (c_id,))
+        row = cur.fetchone()
+        if row:
+            try:
+                mastery = json.loads(row[2]) if row[2] else {}
+            except Exception:
+                mastery = {}
+            print(json.dumps({"ok": True, "progress": {"courseId": row[0], "lessonId": row[1], "mastery": mastery, "updatedAt": row[3]}}))
+        else:
+            print(json.dumps({"ok": True, "progress": None}))
+
+    # ── COURSE STUDIO LEARNER COMMANDS (Phase 6) ───────────────────────────────
+    def _cs_concept_row(r):
+        return {"courseId": r[0], "concept": r[1], "lessonId": r[2] or "",
+                "exposure": r[3], "attempts": r[4], "correct": r[5], "hints": r[6],
+                "streak": r[7], "mastery": r[8], "nextReview": r[9], "updatedAt": r[10]}
+
+    if cmd == "cs_concept_save":
+        p = json.loads(sys.argv[2])
+        now = p.get("updatedAt") or datetime.utcnow().isoformat()
+        conn.execute(
+            "INSERT INTO cs_concepts (course_id, concept, lesson_id, exposure, attempts, correct, hints, streak, mastery, next_review, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(course_id, concept) DO UPDATE SET lesson_id=excluded.lesson_id, exposure=excluded.exposure, "
+            "attempts=excluded.attempts, correct=excluded.correct, hints=excluded.hints, streak=excluded.streak, "
+            "mastery=excluded.mastery, next_review=excluded.next_review, updated_at=excluded.updated_at",
+            (p.get("courseId", ""), p.get("concept", ""), p.get("lessonId", ""),
+             int(p.get("exposure", 0)), int(p.get("attempts", 0)), int(p.get("correct", 0)),
+             int(p.get("hints", 0)), int(p.get("streak", 0)), float(p.get("mastery", 0)),
+             p.get("nextReview", ""), now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "courseId": p.get("courseId", ""), "concept": p.get("concept", "")}))
+
+    elif cmd == "cs_concept_list_by_course":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        c_id = p.get("courseId", "")
+        cur = conn.execute("SELECT course_id, concept, lesson_id, exposure, attempts, correct, hints, streak, mastery, next_review, updated_at FROM cs_concepts WHERE course_id=? ORDER BY mastery ASC, next_review ASC", (c_id,))
+        print(json.dumps({"ok": True, "concepts": [_cs_concept_row(r) for r in cur.fetchall()]}))
+
+    elif cmd == "cs_concept_delete":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        conn.execute("DELETE FROM cs_concepts WHERE course_id=? AND concept=?", (p.get("courseId", ""), p.get("concept", "")))
+        conn.commit()
+        print(json.dumps({"ok": True, "deleted": True}))
+
+    # ── COMPUTE COMMANDS (Phase 7) ───────────────────────────────────────────
+    def _cp_job_row(r):
+        def _j(v, d):
+            try:
+                return json.loads(v) if v else d
+            except Exception:
+                return d
+        return {"id": r[0], "jobType": r[1], "route": r[2], "provider": r[3],
+                "worker_id": r[4], "status": r[5], "progress": r[6],
+                "spec": _j(r[7], {}), "estimate": _j(r[8], {}),
+                "error": _j(r[9], {}), "artifacts": _j(r[10], []),
+                "metrics": _j(r[11], {}), "transport": r[12] or "file",
+                "kernelRef": r[13] or "", "createdAt": r[14], "updatedAt": r[15]}
+
+    def _cp_worker_row(r):
+        def _j(v, d):
+            try:
+                return json.loads(v) if v else d
+            except Exception:
+                return d
+        return {"id": r[0], "provider": r[1], "status": r[2], "caps": _j(r[3], {}),
+                "redactions": r[4], "last_seen": r[5], "updatedAt": r[6]}
+
+    if cmd == "cp_job_save":
+        p = json.loads(sys.argv[2])
+        now = p.get("updatedAt") or datetime.utcnow().isoformat()
+        created = p.get("createdAt") or now
+        err = p.get("error") or {}
+        conn.execute(
+            "INSERT INTO cp_jobs (id, job_type, route, provider, worker_id, status, progress, spec_json, estimate_json, error_json, artifacts_json, metrics_json, transport, kernel_ref, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET job_type=excluded.job_type, route=excluded.route, provider=excluded.provider, "
+            "worker_id=excluded.worker_id, status=excluded.status, progress=excluded.progress, spec_json=excluded.spec_json, "
+            "estimate_json=excluded.estimate_json, error_json=excluded.error_json, artifacts_json=excluded.artifacts_json, "
+            "metrics_json=excluded.metrics_json, transport=excluded.transport, kernel_ref=excluded.kernel_ref, updated_at=excluded.updated_at",
+            (p.get("id"), p.get("jobType", ""), p.get("route", "AUTO"), p.get("provider", ""),
+             p.get("worker_id") or "", p.get("status", "CREATED"),
+             p.get("progress", "UNKNOWN") if isinstance(p.get("progress"), str) else json.dumps(p.get("progress", "UNKNOWN")),
+             json.dumps(p.get("spec") or {}), json.dumps(p.get("estimate") or {}),
+             json.dumps(err), json.dumps(p.get("artifacts") or []), json.dumps(p.get("metrics") or {}),
+             p.get("transport", "file"), p.get("kernelRef", ""), created, now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "id": p.get("id")}))
+
+    elif cmd == "cp_job_get":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        j_id = p.get("id", "") if isinstance(p, dict) else str(p)
+        cur = conn.execute("SELECT id, job_type, route, provider, worker_id, status, progress, spec_json, estimate_json, error_json, artifacts_json, metrics_json, transport, kernel_ref, created_at, updated_at FROM cp_jobs WHERE id=?", (j_id,))
+        row = cur.fetchone()
+        if row:
+            print(json.dumps({"ok": True, "job": _cp_job_row(row)}))
+        else:
+            print(json.dumps({"ok": False, "error": "Not found"}))
+
+    elif cmd == "cp_job_list":
+        cur = conn.execute("SELECT id, job_type, route, provider, worker_id, status, progress, spec_json, estimate_json, error_json, artifacts_json, metrics_json, transport, kernel_ref, created_at, updated_at FROM cp_jobs ORDER BY updated_at DESC LIMIT 200")
+        print(json.dumps({"ok": True, "jobs": [_cp_job_row(r) for r in cur.fetchall()]}))
+
+    elif cmd == "cp_worker_save":
+        p = json.loads(sys.argv[2])
+        now = p.get("updatedAt") or datetime.utcnow().isoformat()
+        conn.execute(
+            "INSERT INTO cp_workers (id, provider, status, caps_json, redactions, last_seen, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET provider=excluded.provider, status=excluded.status, caps_json=excluded.caps_json, "
+            "redactions=excluded.redactions, last_seen=excluded.last_seen, updated_at=excluded.updated_at",
+            (p.get("id"), p.get("provider", "kaggle"), p.get("status", "offline"),
+             json.dumps(p.get("caps") or {}), int(p.get("redactions", 0)),
+             p.get("last_seen", ""), now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "id": p.get("id")}))
+
+    elif cmd == "cp_worker_get":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        w_id = p.get("id", "") if isinstance(p, dict) else str(p)
+        cur = conn.execute("SELECT id, provider, status, caps_json, redactions, last_seen, updated_at FROM cp_workers WHERE id=?", (w_id,))
+        row = cur.fetchone()
+        if row:
+            print(json.dumps({"ok": True, "worker": _cp_worker_row(row)}))
+        else:
+            print(json.dumps({"ok": False, "error": "Not found"}))
+
+    elif cmd == "cp_worker_list":
+        cur = conn.execute("SELECT id, provider, status, caps_json, redactions, last_seen, updated_at FROM cp_workers ORDER BY last_seen DESC")
+        print(json.dumps({"ok": True, "workers": [_cp_worker_row(r) for r in cur.fetchall()]}))
+
+    elif cmd == "cp_event_add":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        now = datetime.utcnow().isoformat()
+        conn.execute("INSERT INTO cp_events (job_id, type, detail, created_at) VALUES (?, ?, ?, ?)",
+                     (p.get("job_id", ""), p.get("type", ""), str(p.get("detail", ""))[:500], now))
+        conn.commit()
+        print(json.dumps({"ok": True}))
+
+    elif cmd == "cp_event_list":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        j_id = p.get("jobId", "")
+        if j_id:
+            cur = conn.execute("SELECT seq, job_id, type, detail, created_at FROM cp_events WHERE job_id=? ORDER BY seq DESC LIMIT 200", (j_id,))
+        else:
+            cur = conn.execute("SELECT seq, job_id, type, detail, created_at FROM cp_events ORDER BY seq DESC LIMIT 200")
+        rows = [{"seq": r[0], "job_id": r[1], "type": r[2], "detail": r[3], "createdAt": r[4]} for r in cur.fetchall()]
+        print(json.dumps({"ok": True, "events": rows}))
+
+    # ── POINTER COMMANDS (Phase 11) ────────────────────────────────────────
+    def _pp_session_row(r):
+        return {"id": r[0], "mode": r[1], "guardrails": bool(r[2]),
+                "startedAt": r[3], "endedAt": r[4] or None}
+
+    if cmd == "pp_session_save":
+        p = json.loads(sys.argv[2])
+        now = p.get("startedAt") or datetime.utcnow().isoformat()
+        ended = p.get("endedAt") or ""
+        conn.execute(
+            "INSERT INTO pp_sessions (id, mode, guardrails, started_at, ended_at) VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET mode=excluded.mode, guardrails=excluded.guardrails, "
+            "started_at=excluded.started_at, ended_at=excluded.ended_at",
+            (p.get("id"), p.get("mode", "follow"), 1 if p.get("guardrails", True) else 0, now, ended)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "id": p.get("id")}))
+
+    elif cmd == "pp_session_get":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        s_id = p.get("id", "") if isinstance(p, dict) else str(p)
+        cur = conn.execute("SELECT id, mode, guardrails, started_at, ended_at FROM pp_sessions WHERE id=?", (s_id,))
+        row = cur.fetchone()
+        if row:
+            print(json.dumps({"ok": True, "session": _pp_session_row(row)}))
+        else:
+            print(json.dumps({"ok": False, "error": "Not found"}))
+
+    elif cmd == "pp_session_list":
+        cur = conn.execute("SELECT id, mode, guardrails, started_at, ended_at FROM pp_sessions ORDER BY started_at DESC LIMIT 100")
+        print(json.dumps({"ok": True, "sessions": [_pp_session_row(r) for r in cur.fetchall()]}))
+
+    elif cmd == "pp_action_save":
+        p = json.loads(sys.argv[2])
+        now = p.get("createdAt") or datetime.utcnow().isoformat()
+        conn.execute(
+            "INSERT INTO pp_actions (id, session_id, kind, target, confirmed, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (p.get("id"), p.get("sessionId", ""), p.get("kind", ""),
+             json.dumps(p.get("target") or {}), 1 if p.get("confirmed") else 0, now)
+        )
+        conn.commit()
+        print(json.dumps({"ok": True, "id": p.get("id")}))
+
+    elif cmd == "pp_action_list":
+        p = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
+        s_id = p.get("sessionId", "")
+        if s_id:
+            cur = conn.execute("SELECT id, session_id, kind, target, confirmed, created_at FROM pp_actions WHERE session_id=? ORDER BY created_at DESC LIMIT 200", (s_id,))
+        else:
+            cur = conn.execute("SELECT id, session_id, kind, target, confirmed, created_at FROM pp_actions ORDER BY created_at DESC LIMIT 200")
+        rows = [{"id": r[0], "sessionId": r[1], "kind": r[2],
+                 "target": (lambda v: json.loads(v) if v else {})(r[3]),
+                 "confirmed": bool(r[4]), "createdAt": r[5]} for r in cur.fetchall()]
+        print(json.dumps({"ok": True, "actions": rows}))
+
+    else:
+        print(json.dumps({"ok": False, "error": f"Unknown command: {cmd}"}))
+
+
+
+
+
+except Exception as e:
+    print(json.dumps({"ok": False, "error": str(e)}))
+
+finally:
+    conn.close()

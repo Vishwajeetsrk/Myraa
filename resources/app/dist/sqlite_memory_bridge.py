@@ -209,6 +209,79 @@ conn.execute("CREATE INDEX IF NOT EXISTS idx_proj_name ON project_index(name);")
 cmd = sys.argv[1] if len(sys.argv) > 1 else "list"
 
 try:
+    # ── shared row/arg helpers for the single dispatch chain below ────────────
+    def _cs_arg_id(pos, key):
+        # Accept {"id": "..."} JSON (routes style) or a bare string id.
+        try:
+            raw = sys.argv[pos] if len(sys.argv) > pos else ""
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                return str(parsed.get(key, ""))
+            return str(parsed)
+        except Exception:
+            try:
+                return str(sys.argv[pos]) if len(sys.argv) > pos else ""
+            except Exception:
+                return ""
+
+    def _cs_course_row(r):
+        return {"id": r[0], "title": r[1], "objective": r[2], "audience": r[3],
+                "sourceKind": r[4], "sourceRef": r[5], "sourceText": r[6],
+                "compute": r[7] or "AUTO",
+                "status": r[8], "createdAt": r[9], "updatedAt": r[10]}
+
+    def _cs_lesson_row(r):
+        def _j(v, d):
+            try:
+                return json.loads(v) if v else d
+            except Exception:
+                return d
+        return {"id": r[0], "courseId": r[1], "idx": r[2], "title": r[3],
+                "objective": r[4], "moduleTitle": r[5], "scenes": _j(r[6], []),
+                "narration": _j(r[7], []), "quiz": _j(r[8], []), "summary": r[9],
+                "status": r[10], "createdAt": r[11], "updatedAt": r[12]}
+
+    def _cs_job_row(r):
+        def _j(v, d):
+            try:
+                return json.loads(v) if v else d
+            except Exception:
+                return d
+        return {"id": r[0], "kind": r[1], "refId": r[2], "status": r[3],
+                "steps": _j(r[4], []), "progress": r[5], "error": r[6],
+                "attempts": r[7], "meta": _j(r[8], {}), "createdAt": r[9], "updatedAt": r[10]}
+
+    def _cs_concept_row(r):
+        return {"courseId": r[0], "concept": r[1], "lessonId": r[2] or "",
+                "exposure": r[3], "attempts": r[4], "correct": r[5], "hints": r[6],
+                "streak": r[7], "mastery": r[8], "nextReview": r[9], "updatedAt": r[10]}
+
+    def _cp_job_row(r):
+        def _j(v, d):
+            try:
+                return json.loads(v) if v else d
+            except Exception:
+                return d
+        return {"id": r[0], "jobType": r[1], "route": r[2], "provider": r[3],
+                "worker_id": r[4], "status": r[5], "progress": r[6],
+                "spec": _j(r[7], {}), "estimate": _j(r[8], {}),
+                "error": _j(r[9], {}), "artifacts": _j(r[10], []),
+                "metrics": _j(r[11], {}), "transport": r[12] or "file",
+                "kernelRef": r[13] or "", "createdAt": r[14], "updatedAt": r[15]}
+
+    def _cp_worker_row(r):
+        def _j(v, d):
+            try:
+                return json.loads(v) if v else d
+            except Exception:
+                return d
+        return {"id": r[0], "provider": r[1], "status": r[2], "caps": _j(r[3], {}),
+                "redactions": r[4], "last_seen": r[5], "updatedAt": r[6]}
+
+    def _pp_session_row(r):
+        return {"id": r[0], "mode": r[1], "guardrails": bool(r[2]),
+                "startedAt": r[3], "endedAt": r[4] or None}
+
     if cmd == "list":
         cat = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] != "all" else None
         if cat:
@@ -320,47 +393,7 @@ try:
         print(json.dumps({"ok": True, "projects": rows}))
 
     # ── COURSE STUDIO COMMANDS (Phase 2 vertical slice) ──────────────────────────
-    def _cs_arg_id(pos, key):
-        # Accept {"id": "..."} JSON (routes style) or a bare string id.
-        try:
-            raw = sys.argv[pos] if len(sys.argv) > pos else ""
-            parsed = json.loads(raw)
-            if isinstance(parsed, dict):
-                return str(parsed.get(key, ""))
-            return str(parsed)
-        except Exception:
-            try:
-                return str(sys.argv[pos]) if len(sys.argv) > pos else ""
-            except Exception:
-                return ""
-    def _cs_course_row(r):
-        return {"id": r[0], "title": r[1], "objective": r[2], "audience": r[3],
-                "sourceKind": r[4], "sourceRef": r[5], "sourceText": r[6],
-                "compute": r[7] or "AUTO",
-                "status": r[8], "createdAt": r[9], "updatedAt": r[10]}
-
-    def _cs_lesson_row(r):
-        def _j(v, d):
-            try:
-                return json.loads(v) if v else d
-            except Exception:
-                return d
-        return {"id": r[0], "courseId": r[1], "idx": r[2], "title": r[3],
-                "objective": r[4], "moduleTitle": r[5], "scenes": _j(r[6], []),
-                "narration": _j(r[7], []), "quiz": _j(r[8], []), "summary": r[9],
-                "status": r[10], "createdAt": r[11], "updatedAt": r[12]}
-
-    def _cs_job_row(r):
-        def _j(v, d):
-            try:
-                return json.loads(v) if v else d
-            except Exception:
-                return d
-        return {"id": r[0], "kind": r[1], "refId": r[2], "status": r[3],
-                "steps": _j(r[4], []), "progress": r[5], "error": r[6],
-                "attempts": r[7], "meta": _j(r[8], {}), "createdAt": r[9], "updatedAt": r[10]}
-
-    if cmd == "cs_course_save":
+    elif cmd == "cs_course_save":
         p = json.loads(sys.argv[2])
         now = p.get("updatedAt") or datetime.utcnow().isoformat()
         created = p.get("createdAt") or now
@@ -478,12 +511,7 @@ try:
             print(json.dumps({"ok": True, "progress": None}))
 
     # ── COURSE STUDIO LEARNER COMMANDS (Phase 6) ───────────────────────────────
-    def _cs_concept_row(r):
-        return {"courseId": r[0], "concept": r[1], "lessonId": r[2] or "",
-                "exposure": r[3], "attempts": r[4], "correct": r[5], "hints": r[6],
-                "streak": r[7], "mastery": r[8], "nextReview": r[9], "updatedAt": r[10]}
-
-    if cmd == "cs_concept_save":
+    elif cmd == "cs_concept_save":
         p = json.loads(sys.argv[2])
         now = p.get("updatedAt") or datetime.utcnow().isoformat()
         conn.execute(
@@ -513,29 +541,7 @@ try:
         print(json.dumps({"ok": True, "deleted": True}))
 
     # ── COMPUTE COMMANDS (Phase 7) ───────────────────────────────────────────
-    def _cp_job_row(r):
-        def _j(v, d):
-            try:
-                return json.loads(v) if v else d
-            except Exception:
-                return d
-        return {"id": r[0], "jobType": r[1], "route": r[2], "provider": r[3],
-                "worker_id": r[4], "status": r[5], "progress": r[6],
-                "spec": _j(r[7], {}), "estimate": _j(r[8], {}),
-                "error": _j(r[9], {}), "artifacts": _j(r[10], []),
-                "metrics": _j(r[11], {}), "transport": r[12] or "file",
-                "kernelRef": r[13] or "", "createdAt": r[14], "updatedAt": r[15]}
-
-    def _cp_worker_row(r):
-        def _j(v, d):
-            try:
-                return json.loads(v) if v else d
-            except Exception:
-                return d
-        return {"id": r[0], "provider": r[1], "status": r[2], "caps": _j(r[3], {}),
-                "redactions": r[4], "last_seen": r[5], "updatedAt": r[6]}
-
-    if cmd == "cp_job_save":
+    elif cmd == "cp_job_save":
         p = json.loads(sys.argv[2])
         now = p.get("updatedAt") or datetime.utcnow().isoformat()
         created = p.get("createdAt") or now
@@ -619,11 +625,7 @@ try:
         print(json.dumps({"ok": True, "events": rows}))
 
     # ── POINTER COMMANDS (Phase 11) ────────────────────────────────────────
-    def _pp_session_row(r):
-        return {"id": r[0], "mode": r[1], "guardrails": bool(r[2]),
-                "startedAt": r[3], "endedAt": r[4] or None}
-
-    if cmd == "pp_session_save":
+    elif cmd == "pp_session_save":
         p = json.loads(sys.argv[2])
         now = p.get("startedAt") or datetime.utcnow().isoformat()
         ended = p.get("endedAt") or ""

@@ -23,6 +23,9 @@ All notable changes to MYRAA AI OS are documented here.
 ### Changed
 - README overhauled for v9.4.0 (capability matrix, Autonomous Operations Stack section, endpoints reference, directory layout).
 
+### Fixed
+- Dist SQLite bridge (`sqlite_memory_bridge.py`): the command dispatch had split into 5 separate if/elif chains, so commands handled by earlier chains printed their success JSON and then the final chain also printed `Unknown command`. Effect: Course Studio create returned HTTP 500 (`bridge returned non-JSON`) even though the row was silently saved, and the course list masked store errors as empty. Memory/compute/pointer commands emitted a spurious second line too. All chains are now a single dispatch (helper defs moved above, later chain starts are `elif`); every command returns exactly one JSON line. Verified live: `POST /api/course-studio/courses` -> 200.
+
 ### Installers
 - `MYRAA-Setup-9.4.0.exe` (308.9 MB, NSIS x64) and `MYRAA-Portable-9.4.0.exe` (302.9 MB) built, hash-verified, packed to `Installers\v9.4.0` + Desktop copy.
 
