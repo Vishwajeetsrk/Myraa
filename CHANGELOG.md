@@ -2,6 +2,19 @@
 
 All notable changes to MYRAA AI OS are documented here.
 
+## [Unreleased]
+
+### Added
+- **REA preset (8th official server):** `rea` = `npx -y rea-agents mcp` - REA "Reverse Engineer Anything" (morluto/rea, MIT): evidence-backed analysis of JavaScript/Electron apps, native binaries, .NET assemblies and websites. Live-verified through MYRAA's own stdio transport: probe (207 tools, serverInfo `rea 6.7.0`), real `tools/call` `inspect_electron_fuses` on the installed `MYRAA.exe` (PE x86_64, SHA256-bound). Needs Node 22+.
+- MCP tool cache cap raised `MAX_TOOLS` 200 -> 300; REA advertises 207 tools and none are truncated now.
+
+### Changed
+- `tests/test_mcp_transport.cjs`: now 32 default checks (8-preset expectations + `rea` add/verify); live mode (`MYRAA_MCP_LIVE=1`) additionally probes `rea` and requires `analyze_javascript_application` to be exposed.
+- Docs updated to 318 checks across the 10 documented suites.
+
+### Fixed
+- **UI contrast pass** (replica-design method, WCAG AA): `--text-muted` `#657086` -> `#7E8DA4` (3.95:1 -> 5.84:1 on bg, 5.27:1 on surface), new `--border-input` role `#526689` (3.39:1), visible focus state on the input bar (`.bottom-input-container:focus-within`), `mobile_companion.html` 11px label `#64748b` -> `#94a3b8`. All 19 token pairs pass; artifacts in `replica/` (`recon.md`, `design/tokens.json`, `design/components.md`).
+
 ## [9.5.0] - 2026-10-18
 
 ### Added

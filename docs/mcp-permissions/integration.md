@@ -39,7 +39,7 @@ API: `registerServer({name, transport, command|url})`, `disableServer`,
 `listTools`, `callTool`, `listPresets`, `addPreset({preset, name?, ...vars})`,
 `status`, `createRouter`, `registerAgiTools`
 HTTP: GET `/api/mcp`, `/servers`, `/servers/:name/tools`, `/presets`; POST `/register`, `/probe`, `/call`, `/presets/add`, `/disable`, `/enable`
-Presets: curated official MCP servers (filesystem, memory, everything, git, fetch, time, sqlite); `filesystem` needs `dir`, `git` needs `dir`, `sqlite` needs `db`; npx presets need Node 18+, uvx presets need uv. Nothing downloads until the first probe/call.
+Presets: curated official MCP servers (filesystem, memory, everything, git, fetch, time, sqlite, rea); `filesystem` needs `dir`, `git` needs `dir`, `sqlite` needs `db`; npx presets need Node 18+ (rea needs Node 22+), uvx presets need uv. `rea` (morluto/rea, MIT) is fully live-verified through MYRAA: probe 207 tools, real `inspect_electron_fuses` call on MYRAA.exe. Nothing downloads until the first probe/call. Tool cache cap: 300 per server (`MAX_TOOLS`).
 agi tools: `mcp_servers`, `mcp_status` (LOW), `mcp_probe` (MEDIUM), `mcp_call` (HIGH, approval-gated) - category `mcp`
 
 ## Voice
@@ -58,7 +58,7 @@ agi tools: `mcp_servers`, `mcp_status` (LOW), `mcp_probe` (MEDIUM), `mcp_call` (
 ## Tests
 - `tests/test_permissions_mcp.cjs` - policy + registry (34 checks,
   standalone with `NODE_PATH` when outside repo layout)
-- `tests/test_mcp_transport.cjs` - 31 checks: registry, validation, presets,
+- `tests/test_mcp_transport.cjs` - 32 checks: registry, validation, presets,
   and honest errors; nothing is spawned in the default run. Real-server
   verification is env-gated (`MYRAA_MCP_LIVE=1`) and runs against the
   official `npx -y @modelcontextprotocol/server-everything` - probe,

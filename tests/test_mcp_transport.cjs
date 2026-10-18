@@ -86,8 +86,8 @@ function skipCheck(name, why) { skip++; console.log('[SKIP] ' + name + ' :: ' + 
 
   // ---- presets (real official servers, no spawn on add) ----
   const pr = mcp.listPresets();
-  check('presets: 7 official stdio servers', pr.ok === true && pr.count === 7 && pr.presets.every((p) => p.transport === 'stdio' && p.source === 'official'));
-  check('presets include filesystem/everything/fetch', ['filesystem', 'everything', 'fetch'].every((id) => pr.presets.some((p) => p.id === id)));
+  check('presets: 8 official stdio servers', pr.ok === true && pr.count === 8 && pr.presets.every((p) => p.transport === 'stdio' && p.source === 'official'));
+  check('presets include filesystem/everything/fetch/rea', ['filesystem', 'everything', 'fetch', 'rea'].every((id) => pr.presets.some((p) => p.id === id)));
   const pa0 = mcp.addPreset({ preset: 'nope-9000' });
   check('unknown preset rejected', pa0.ok === false && pa0.code === 'VALIDATION');
   const pa1 = mcp.addPreset({ preset: 'filesystem' });
@@ -98,8 +98,10 @@ function skipCheck(name, why) { skip++; console.log('[SKIP] ' + name + ' :: ' + 
   check('everything preset added under custom name', pa3.ok === true && pa3.server.name === 'ref' && /server-everything/.test(pa3.server.command));
   const pa4 = mcp.addPreset({ preset: 'sqlite', db: 'C:\\tmp\\x.db' });
   check('sqlite preset fills db var', pa4.ok === true && /--db-path "C:\\tmp\\x\.db"/.test(pa4.server.command));
+  const pa5 = mcp.addPreset({ preset: 'rea' });
+  check('rea preset added (no vars)', pa5.ok === true && /rea-agents mcp/.test(pa5.server.command) && pa5.server.preset === 'rea');
   const st2 = mcp.status();
-  check('status counts preset additions', st2.count === 6 && st2.events >= 3);
+  check('status counts preset additions', st2.count === 7 && st2.events >= 4);
 
   const router = mcp.createRouter();
   check('router builds or null', router === null || typeof router.use === 'function');
@@ -134,6 +136,17 @@ function skipCheck(name, why) { skip++; console.log('[SKIP] ' + name + ' :: ' + 
           const la2 = await live.callTool({ name: 'everything', tool: 'add', args: { a: 2, b: 3 } });
           check('live: real tools/call add', la2.ok === true && la2.content.some((c) => c.type === 'text' && /5/.test(c.text)));
         }
+      }
+
+      console.log('--- MYRAA_MCP_LIVE=1: real-server checks (npx rea-agents mcp) ---');
+      const lrea = live.addPreset({ preset: 'rea', name: 'rea' });
+      check('live: rea preset registered', lrea.ok === true);
+      const lrp = await live.probe({ name: 'rea' });
+      if (!lrp.ok && ['SPAWN_ERROR', 'SERVER_EXITED', 'TIMEOUT'].includes(lrp.code)) {
+        skipCheck('live rea probe', 'REA not reachable right now (' + lrp.code + ') - first run needs network for the npx download, Node 22+');
+      } else {
+        check('live: rea real probe ok (tools listed)', lrp.ok === true && lrp.tools.length >= 5, lrp.ok ? '' : JSON.stringify(lrp).slice(0, 200));
+        check('live: rea exposes javascript analysis tool', lrp.ok === true && lrp.tools.some((t) => t.name === 'analyze_javascript_application'));
       }
     }
   } else {

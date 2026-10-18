@@ -16,7 +16,7 @@ const { createStdioSession } = require('./mcp_stdio_client.cjs');
 const EVENTS_CAP = 200;
 const TRANSPORTS = ['stdio', 'http'];
 const NAME_RE = /^[a-z0-9_-]{1,40}$/i;
-const MAX_TOOLS = 200;
+const MAX_TOOLS = 300;
 const PROBE_TIMEOUT_MS = 15000;
 const CALL_TIMEOUT_MS = 20000;
 
@@ -28,6 +28,7 @@ const PRESETS = [
   { id: 'fetch', transport: 'stdio', command: 'uvx mcp-server-fetch', vars: [], note: 'Official fetch server - URLs to markdown. Needs uv (uvx) installed.' },
   { id: 'time', transport: 'stdio', command: 'uvx mcp-server-time', vars: [], note: 'Official time/timezone server. Needs uv (uvx) installed.' },
   { id: 'sqlite', transport: 'stdio', command: 'uvx mcp-server-sqlite --db-path "{db}"', vars: ['db'], note: 'Official SQLite server - query one database file. Needs uv (uvx) installed.' },
+  { id: 'rea', transport: 'stdio', command: 'npx -y rea-agents mcp', vars: [], note: 'REA - Reverse Engineer Anything (morluto/rea, MIT): real analysis of JS/Electron apps, native binaries, .NET assemblies and websites with evidence; pass absolute target paths per tool call. Needs Node 22+/npx.' },
 ];
 
 function dataDir() {
@@ -226,7 +227,7 @@ function createMcpManager(opts) {
       ok: true,
       count: PRESETS.length,
       presets: PRESETS.map((p) => ({ id: p.id, transport: p.transport, command: p.command, vars: p.vars.slice(), note: p.note, source: 'official' })),
-      note: 'curated official MCP servers - npx presets need Node 18+, uv presets need uv/uvx; nothing is downloaded until the first probe/call',
+      note: 'curated official MCP servers - npx presets need Node 18+ (rea needs Node 22+), uv presets need uv/uvx; nothing is downloaded until the first probe/call',
     };
   }
 
