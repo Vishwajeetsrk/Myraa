@@ -1,6 +1,6 @@
 [package]
 name = "myraa-ai-os"
-version = "7.5.0"
+version = "9.4.0"
 description = "MYRAA AI OS — Native Desktop AI Companion"
 authors = ["Vishwajeet & Open Source Community"]
 edition = "2021"

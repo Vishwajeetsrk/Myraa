@@ -37,7 +37,7 @@ function api(path, opts, ctx) {
   const { method = 'GET', body } = opts || {};
   const token = getToken();
   const headers = {
-    'User-Agent': 'MYRAA-AI-OS/7.5.0',
+    'User-Agent': 'MYRAA-AI-OS/9.0.0',
     'Accept': 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
   };

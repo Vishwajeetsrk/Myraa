@@ -46,6 +46,9 @@ contextBridge.exposeInMainWorld('myraa', {
   getAbout: () => ipcRenderer.invoke('myraa:get-about'),
   getDiagnostics: () => ipcRenderer.invoke('myraa:get-diagnostics'),
   openFolder: (p) => ipcRenderer.invoke('myraa:open-folder', p),
+  getStartup: () => ipcRenderer.invoke('myraa:get-startup'),
+  setStartup: (enable) => ipcRenderer.invoke('myraa:set-startup', enable),
+  selfRepair: () => ipcRenderer.invoke('myraa:self-repair'),
 });
 
 contextBridge.exposeInMainWorld('myraaDesktop', desktopWindow);

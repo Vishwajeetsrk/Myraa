@@ -45,6 +45,21 @@ const SENSITIVE_PREFIXES = [
   '/api/agent-health',
   '/api/office',
   '/api/computer',
+  // P0-R1 (2026-10-07): screen-capture surface. Screenshots must never be
+  // pullable from the LAN without a paired-device token. These inherit both
+  // the 60/min rate limit and the LAN pair-token guard via AUTH_REQUIRED_PREFIXES.
+  '/api/screen',
+  '/api/desktop/capture',
+  '/api/desktop/windows',
+  '/api/vision/',
+  '/api/browser/screenshot',
+  '/api/screen-awareness',
+  '/api/course-studio',
+  '/api/awareness',
+  '/api/compute',
+  '/api/pointer',
+  '/api/evidence',
+  '/api/gesture',
   '/api/voice',
   '/api/proxy',
   '/api/web-proxy',

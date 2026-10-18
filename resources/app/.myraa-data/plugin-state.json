@@ -1,0 +1,10 @@
+{
+  "enabled": {
+    "myraa-utils": false
+  },
+  "settings": {
+    "myraa-utils": {
+      "theme": "dark"
+    }
+  }
+}

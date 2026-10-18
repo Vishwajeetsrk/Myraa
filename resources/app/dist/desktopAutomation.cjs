@@ -423,7 +423,7 @@ if ($p) {
     let userAliases = {};
     try {
       const pathsToTry = [
-        'C:\\Users\\Vishwajeet\\Music\\Myraa\\config\\app_aliases.json',
+        path.join(__dirname, '..', 'config', 'app_aliases.json'),
         path.join(process.cwd(), 'config', 'app_aliases.json'),
         path.join(__dirname, 'config', 'app_aliases.json'),
         path.join(__dirname, '..', 'config', 'app_aliases.json'),
@@ -624,7 +624,7 @@ $searchRoots = @(
     (Join-Path $env:USERPROFILE 'OneDrive\\Desktop'),
     [Environment]::GetFolderPath('MyDocuments'),
     (Join-Path $env:USERPROFILE 'Downloads'),
-    'D:\\Team of Vishwajeet'
+    path.join(process.env.USERPROFILE || require('os').homedir(), 'Documents')
 )
 $results = @()
 foreach ($root in $searchRoots) {
@@ -1535,6 +1535,141 @@ try {
     return { ok: true, message: "Word editing executed", details: res };
   },
 
+  // ── 25b. WORD COM LIVE AUTOMATION (open/close/undo/redo/print) ─────────────
+  openWord(filePath) {
+    const targetFile = filePath ? path.resolve(filePath) : null;
+    const script = `
+try {
+    $word = $null
+    try {
+        $word = [System.Runtime.InteropServices.Marshal]::GetActiveObject("Word.Application")
+    } catch {
+        $word = New-Object -ComObject Word.Application
+    }
+    $word.Visible = $true
+    ${targetFile ? `
+    if (Test-Path '${targetFile.replace(/'/g, "''")}') {
+        $doc = $word.Documents.Open('${targetFile.replace(/'/g, "''")}')
+        Write-Output "OPENED: ${targetFile.replace(/'/g, "''")}"
+    } else {
+        $doc = $word.Documents.Add()
+        Write-Output "CREATED: New document"
+    }
+    ` : `
+    if ($word.Documents.Count -gt 0) {
+        Write-Output "ACTIVE: Using active document"
+    } else {
+        $doc = $word.Documents.Add()
+        Write-Output "CREATED: New document"
+    }
+    `}
+} catch {
+    Start-Process "winword.exe" -ErrorAction SilentlyContinue
+    Write-Output "FALLBACK_LAUNCHED: Word launched"
+}
+`;
+    const res = runPowerShell(script, 15000);
+    return { ok: true, message: "Word opened", details: res };
+  },
+
+  closeWord() {
+    const script = `
+try {
+    $word = [System.Runtime.InteropServices.Marshal]::GetActiveObject("Word.Application")
+    $word.Quit()
+    [System.Runtime.InteropServices.Marshal]::ReleaseComObject($word) | Out-Null
+    Write-Output "CLOSED: Word application closed"
+} catch {
+    Write-Output "ERROR: Could not close Word - $($_.Exception.Message)"
+}
+`;
+    const res = runPowerShell(script, 10000);
+    return { ok: true, message: "Word close executed", details: res };
+  },
+
+  undoWord() {
+    const script = `
+try {
+    $word = [System.Runtime.InteropServices.Marshal]::GetActiveObject("Word.Application")
+    $word.Selection.Undo()
+    Write-Output "UNDONE: Last action undone"
+} catch {
+    Write-Output "ERROR: Could not undo - $($_.Exception.Message)"
+}
+`;
+    const res = runPowerShell(script, 10000);
+    return { ok: true, message: "Undo executed", details: res };
+  },
+
+  redoWord() {
+    const script = `
+try {
+    $word = [System.Runtime.InteropServices.Marshal]::GetActiveObject("Word.Application")
+    $word.Selection.Redo()
+    Write-Output "REDONE: Last action redone"
+} catch {
+    Write-Output "ERROR: Could not redo - $($_.Exception.Message)"
+}
+`;
+    const res = runPowerShell(script, 10000);
+    return { ok: true, message: "Redo executed", details: res };
+  },
+
+  printWord(filePath) {
+    const targetFile = filePath ? path.resolve(filePath) : null;
+    const script = `
+try {
+    $word = [System.Runtime.InteropServices.Marshal]::GetActiveObject("Word.Application")
+    ${targetFile ? `
+    $doc = $word.Documents.Open('${targetFile.replace(/'/g, "''")}')
+    $doc.PrintOut()
+    Write-Output "PRINTED: ${targetFile.replace(/'/g, "''")}"
+    ` : `
+    $word.ActiveDocument.PrintOut()
+    Write-Output "PRINTED: Active document"
+    `}
+} catch {
+    Write-Output "ERROR: Could not print - $($_.Exception.Message)"
+}
+`;
+    const res = runPowerShell(script, 15000);
+    return { ok: true, message: "Print executed", details: res };
+  },
+
+  saveWord(filePath) {
+    const targetFile = filePath ? path.resolve(filePath) : null;
+    const script = `
+try {
+    $word = [System.Runtime.InteropServices.Marshal]::GetActiveObject("Word.Application")
+    ${targetFile ? `
+    $word.ActiveDocument.SaveAs([ref]'${targetFile.replace(/'/g, "''")}')
+    Write-Output "SAVED: ${targetFile.replace(/'/g, "''")}"
+    ` : `
+    $word.ActiveDocument.Save()
+    Write-Output "SAVED: Active document"
+    `}
+} catch {
+    Write-Output "ERROR: Could not save - $($_.Exception.Message)"
+}
+`;
+    const res = runPowerShell(script, 10000);
+    return { ok: true, message: "Save executed", details: res };
+  },
+
+  selectAllWord() {
+    const script = `
+try {
+    $word = [System.Runtime.InteropServices.Marshal]::GetActiveObject("Word.Application")
+    $word.Selection.WholeStory()
+    Write-Output "SELECTED: All text selected"
+} catch {
+    Write-Output "ERROR: Could not select all - $($_.Exception.Message)"
+}
+`;
+    const res = runPowerShell(script, 10000);
+    return { ok: true, message: "Select all executed", details: res };
+  },
+
   // ── 26. MICROSOFT EXCEL AUTOMATION ──────────────────────────────────────────
   editExcel(data, filePath = null) {
     const content = typeof data === 'string' ? data : JSON.stringify(data);
@@ -1685,17 +1820,45 @@ try {
   // ── 31. WI-FI & NETWORK CONTROL ─────────────────────────────────────────────
   wifiControl(args = {}) {
     const action = (args.action || 'status').toLowerCase();
-    if (action === 'networks' || action === 'list') {
+    if (action === 'networks' || action === 'list' || action === 'scan') {
       const out = runPowerShell('netsh wlan show networks mode=Bssid', 6000);
-      return { ok: true, action: 'list', output: out };
+      return { ok: true, action: 'scan', output: out };
     }
     if (action === 'connect' && args.ssid) {
-      const out = runPowerShell(`netsh wlan connect name="${args.ssid.replace(/"/g, '')}"`, 8000);
+      const ssid = String(args.ssid).replace(/["<>&]/g, '');
+      const pass = args.password || args.key || args.passphrase;
+      if (pass && String(pass).length >= 8) {
+        const esc = (s) => String(s).replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+        const xml = '<?xml version="1.0"?>' +
+          '<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">' +
+          `<name>${esc(ssid)}</name><SSIDConfig><SSID><name>${esc(ssid)}</name></SSID></SSIDConfig>` +
+          '<connectionType>ESS</connectionType><connectionMode>auto</connectionMode>' +
+          '<MSM><authEncryption><auth>WPA2PSK</auth><encryption>AES</encryption><useOneX>false</useOneX></authEncryption>' +
+          `<sharedKey><keyType>passPhrase</keyType><protected>false</protected><keyMaterial>${esc(pass)}</keyMaterial></sharedKey>` +
+          '</MSM></WLANProfile>';
+        const profilePath = path.join(os.tmpdir(), `myraa-wifi-${Date.now()}.xml`);
+        try { fs.writeFileSync(profilePath, xml, 'utf8'); } catch (e) {
+          return { ok: false, action: 'connect', error: 'profile write failed: ' + e.message };
+        }
+        try { runPowerShell(`netsh wlan add profile filename="${profilePath}"`, 6000); } catch (e) {}
+        try { fs.unlinkSync(profilePath); } catch (e) {}
+      }
+      const out = runPowerShell(`netsh wlan connect name="${ssid}"`, 8000);
       return { ok: true, action: 'connect', ssid: args.ssid, message: out };
     }
     if (action === 'disconnect') {
       const out = runPowerShell('netsh wlan disconnect', 5000);
       return { ok: true, action: 'disconnect', message: out };
+    }
+    if (action === 'enable' || action === 'on' || action === 'disable' || action === 'off') {
+      const enabling = action === 'enable' || action === 'on';
+      const cmd = enabling ? 'Enable-NetAdapter' : 'Disable-NetAdapter';
+      const script = `$i=Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.NdisPhysicalMedium -eq 80211 -or $_.Name -match 'Wi-?Fi|WLAN|Wireless' } | Select-Object -First 1; if($i){ try { ${cmd} -Name $i.Name -Confirm:$false -ErrorAction Stop; "RADIO_CHANGED:" + $i.Name } catch { "RADIO_ERROR:" + $_.Exception.Message } } else { "NO_WIFI_ADAPTER" }`;
+      const out = runPowerShell(script, 8000);
+      if (String(out).includes('NO_WIFI_ADAPTER')) return { ok: false, action, error: 'No Wi-Fi adapter found' };
+      if (String(out).includes('RADIO_ERROR')) return { ok: false, action, error: String(out).split('RADIO_ERROR:')[1].trim() };
+      if (String(out).includes('RADIO_CHANGED')) return { ok: true, action, message: `Wi-Fi radio ${enabling ? 'enabled' : 'disabled'} on ${String(out).split('RADIO_CHANGED:')[1].trim()}` };
+      return { ok: false, action, error: String(out).trim() || 'no output' };
     }
     // Default: status
     const out = runPowerShell('netsh wlan show interfaces', 5000);
@@ -1705,10 +1868,21 @@ try {
   // ── 32. BLUETOOTH CONTROL ───────────────────────────────────────────────────
   bluetoothControl(args = {}) {
     const action = (args.action || 'status').toLowerCase();
-    const script = `
+    const readScript = `
 Get-Service -Name bthserv, BthAvctpSvc -ErrorAction SilentlyContinue | Select-Object Name, Status, DisplayName | ConvertTo-Json
 `;
-    const out = runPowerShell(script, 5000);
+    if (action === 'enable' || action === 'on' || action === 'disable' || action === 'off') {
+      const enabling = action === 'enable' || action === 'on';
+      const svcAction = enabling ? 'Start-Service' : 'Stop-Service';
+      runPowerShell(`${svcAction} bthserv -ErrorAction SilentlyContinue; ${svcAction} BthAvctpSvc -ErrorAction SilentlyContinue`, 6000);
+      const out = runPowerShell(readScript, 5000);
+      let parsed = null;
+      try { parsed = JSON.parse(out); } catch (e) { parsed = out; }
+      const status = (String(out).match(/"Status":\s*"(\w+)"/) || [])[1] || 'unknown';
+      const nowRunning = status.toLowerCase() === 'running';
+      return { ok: nowRunning === enabling, action, enabled: nowRunning, bluetoothServices: parsed };
+    }
+    const out = runPowerShell(readScript, 5000);
     let parsed = null;
     try { parsed = JSON.parse(out); } catch(e) { parsed = out; }
     return { ok: true, action, bluetoothServices: parsed };
@@ -1775,7 +1949,7 @@ Get-Service -Name bthserv, BthAvctpSvc -ErrorAction SilentlyContinue | Select-Ob
 
   // ── 35. TODAY TASKS & PROGRESS ──────────────────────────────────────────────
   getTodayTasks() {
-    const tasksFile = 'C:\\Users\\Vishwajeet\\Music\\Myraa\\Projects\\TODAY_TASKS.json';
+    const tasksFile = path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'Projects', 'TODAY_TASKS.json');
     try {
       if (fs.existsSync(tasksFile)) {
         return { ok: true, ...JSON.parse(fs.readFileSync(tasksFile, 'utf8')) };
@@ -1795,7 +1969,7 @@ Get-Service -Name bthserv, BthAvctpSvc -ErrorAction SilentlyContinue | Select-Ob
   },
 
   addTodayTask(title, priority = 'NORMAL') {
-    const tasksFile = 'C:\\Users\\Vishwajeet\\Music\\Myraa\\Projects\\TODAY_TASKS.json';
+    const tasksFile = path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'Projects', 'TODAY_TASKS.json');
     let current = this.getTodayTasks();
     const newTask = {
       id: Date.now(),
@@ -1841,73 +2015,619 @@ Get-StartApps | Where-Object { $_.Name -like "*${query}*" } | Select-Object Name
   // ── 37. PROJECT CREATION & CREATIVE WORKFLOWS ───────────────────────────────
   createWebsiteProject(projectName, description = '') {
     const cleanName = (projectName || 'Modern_Web_App').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const targetDir = path.join('C:\\Users\\Vishwajeet\\Music\\Myraa\\Projects\\Website Design', cleanName);
-    fs.mkdirSync(targetDir, { recursive: true });
+    const desktopDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Desktop', 'Myraa_Websites', cleanName);
+    const targetDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'Projects', 'Website Design', cleanName);
+    const altDir = path.join(process.cwd(), 'Projects', 'Websites', cleanName);
+    let chosenDir = desktopDir;
+    try {
+      if (!fs.existsSync(desktopDir)) fs.mkdirSync(desktopDir, { recursive: true });
+      chosenDir = desktopDir;
+    } catch (e1) {
+      try {
+        if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+        chosenDir = targetDir;
+      } catch (e2) {
+        try {
+          if (!fs.existsSync(altDir)) fs.mkdirSync(altDir, { recursive: true });
+          chosenDir = altDir;
+        } catch (e3) {
+          const fallback = path.join(process.env.TEMP || require('os').tmpdir(), 'Myraa_Websites', cleanName);
+          if (!fs.existsSync(fallback)) fs.mkdirSync(fallback, { recursive: true });
+          chosenDir = fallback;
+        }
+      }
+    }
 
     const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${cleanName} - Created by MYRAA AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <title>${cleanName} — 3 Autonomous Designs by MYRAA AI OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="glow"></div>
-  <header>
-    <div class="logo">⚡ ${cleanName}</div>
-    <nav>
-      <a href="#features">Features</a>
-      <a href="#about">About</a>
-      <button class="btn-primary">Launch Project</button>
+<body data-theme="obsidian">
+  <!-- DESIGN SWITCHER FLOATING BAR -->
+  <div class="theme-switcher-bar">
+    <div class="switcher-label">[DESIGN SELECTOR]:</div>
+    <div class="switcher-buttons">
+      <button class="theme-btn active" data-set-theme="obsidian">
+        <span class="theme-dot dot-obsidian"></span> 1. Obsidian Glass (Dark)
+      </button>
+      <button class="theme-btn" data-set-theme="cyber">
+        <span class="theme-dot dot-cyber"></span> 2. Cyber Vanguard (Neon)
+      </button>
+      <button class="theme-btn" data-set-theme="editorial">
+        <span class="theme-dot dot-editorial"></span> 3. Editorial Luxe (Light)
+      </button>
+    </div>
+  </div>
+
+  <div class="ambient-glow"></div>
+
+  <!-- NAVIGATION -->
+  <header class="navbar">
+    <div class="logo">
+      <div class="logo-mark">M</div>
+      <span class="logo-text">${cleanName}</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#features">Capabilities</a>
+      <a href="#metrics">Performance</a>
+      <a href="#services">Architecture</a>
+      <a href="#contact" class="nav-cta">Launch Project</a>
     </nav>
   </header>
+
   <main>
-    <section class="hero">
-      <span class="badge">Engineered by MYRAA APEX</span>
-      <h1>Crafted for High Performance & Elegant Design</h1>
-      <p>${description || 'A state-of-the-art web experience architected autonomously.'}</p>
-      <div class="cta-group">
-        <button class="btn-primary">Get Started</button>
-        <button class="btn-secondary">Documentation</button>
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+      <div class="badge-hero">Engineered Autonomously by MYRAA AI OS</div>
+      <h1 class="hero-title">Next-Generation Digital Experience</h1>
+      <p class="hero-subtitle">${description || 'Architected with precision engineering, responsive performance, and triple design variations switchable in real time.'}</p>
+      
+      <div class="hero-cta-group">
+        <a href="#services" class="btn btn-primary">Explore Platform</a>
+        <a href="#features" class="btn btn-secondary">System Specs</a>
+      </div>
+
+      <!-- LIVE METRICS BAR -->
+      <div class="metrics-grid" id="metrics">
+        <div class="metric-card">
+          <div class="metric-num" data-val="99.99">99.99%</div>
+          <div class="metric-label">Execution Uptime</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-num" data-val="5">&lt; 5ms</div>
+          <div class="metric-label">IPC Latency</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-num" data-val="150">150+</div>
+          <div class="metric-label">Native Windows Tools</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-num" data-val="24">24/7</div>
+          <div class="metric-label">Autonomous Operation</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CORE FEATURES SECTION -->
+    <section class="features-section" id="features">
+      <div class="section-header">
+        <span class="section-badge">Core Capabilities</span>
+        <h2>Engineered for Mission-Critical Automation</h2>
+        <p>Three visual identities built over one robust, type-safe architecture.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="card-icon">[DOC]</div>
+          <h3>Office Document Engine</h3>
+          <p>Autonomous generation of formatted Word (.docx), PowerPoint (.pptx), and Excel (.xlsx) files with dynamic styles and formula totals.</p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon">[DEV]</div>
+          <h3>Autonomous Coding Loop</h3>
+          <p>Full unified coding cycle: plan, generate, test, observe errors, patch, retest, and commit changes with real Git integration.</p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon">[UI]</div>
+          <h3>Desktop Automation & COM</h3>
+          <p>Direct Win32 UI automation, window switching, keyboard typing into target apps, and hardware audio/volume control.</p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon">[EYE]</div>
+          <h3>Multimodal Screen Vision</h3>
+          <p>High-resolution screen inspection, OCR text targeting, and visual inspection without intrusive overlays.</p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon">[MCP]</div>
+          <h3>Model Context Protocol</h3>
+          <p>Extensible 400+ tool MCP registry with dynamic skill execution, memory RAG recall, and live telemetry.</p>
+        </div>
+        <div class="feature-card">
+          <div class="card-icon">[SEC]</div>
+          <h3>Enterprise Security</h3>
+          <p>Additive operations, safe local storage, password field exclusion, and strict data loss prevention rules.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE TABBED SERVICES -->
+    <section class="services-section" id="services">
+      <div class="section-header">
+        <span class="section-badge">Architecture Tabs</span>
+        <h2>Deep System Layers</h2>
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-tab="tab-core">Cognitive Runtime</button>
+          <button class="tab-btn" data-tab="tab-native">Native Windows Link</button>
+          <button class="tab-btn" data-tab="tab-stream">Live Audio & Voice</button>
+        </div>
+
+        <div class="tab-content active" id="tab-core">
+          <h3>Self-Reflective Cognitive Engine</h3>
+          <p>Maintains persistent situation models, goal trees, long-term memory vector recall, and mistake prevention ledgers across all sessions.</p>
+        </div>
+        <div class="tab-content" id="tab-native">
+          <h3>Win32 / PowerShell Native Execution</h3>
+          <p>Zero-dependency execution bridge that coordinates winword.exe, powerpnt.exe, excel.exe, and local terminal processes directly.</p>
+        </div>
+        <div class="tab-content" id="tab-stream">
+          <h3>Bidirectional WebSocket Live Stream</h3>
+          <p>Real-time 16kHz audio ingestion with voice activity detection, sub-second transcription, and immediate native action dispatch.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT / LAUNCH CTA -->
+    <section class="cta-section" id="contact">
+      <div class="cta-box">
+        <h2>Ready to Deploy Autonomous Workflows?</h2>
+        <p>Built and verified on your local desktop. All project assets are saved and ready for production.</p>
+        <form class="contact-form" onsubmit="event.preventDefault(); alert('[OK] Configuration deployed successfully!');">
+          <input type="text" placeholder="Project or feature name" required>
+          <button type="submit" class="btn btn-primary">Deploy Module</button>
+        </form>
       </div>
     </section>
   </main>
+
+  <footer>
+    <div class="footer-content">
+      <p>&copy; 2026 ${cleanName} — Autonomous System by MYRAA AI OS. Rule 1 Certified (Zero Emojis).</p>
+      <div class="footer-meta">Target: <code>${targetDir}</code></div>
+    </div>
+  </footer>
+
   <script src="script.js"></script>
 </body>
 </html>`;
 
-    const cssContent = `* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-body { background: #070913; color: #f1f5f9; min-height: 100vh; overflow-x: hidden; position: relative; }
-.glow { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 600px; height: 400px; background: radial-gradient(circle, rgba(0,229,255,0.2) 0%, transparent 70%); pointer-events: none; z-index: 0; }
-header { position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 24px 60px; border-bottom: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
-.logo { font-size: 20px; font-weight: 700; color: #00e5ff; letter-spacing: 0.05em; }
-nav a { color: #94a3b8; text-decoration: none; margin-right: 28px; font-size: 14px; transition: color 0.2s; }
-nav a:hover { color: #fff; }
-.btn-primary { background: linear-gradient(135deg, #00e5ff 0%, #3b82f6 100%); color: #000; border: none; padding: 10px 22px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
-.btn-primary:hover { transform: scale(1.04); }
-.btn-secondary { background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 10px 22px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-left: 12px; }
-.hero { text-align: center; max-width: 800px; margin: 100px auto 40px; padding: 0 20px; position: relative; z-index: 10; }
-.badge { display: inline-block; padding: 6px 16px; border-radius: 20px; background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.3); color: #00e5ff; font-size: 12px; font-weight: 600; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.08em; }
-.hero h1 { font-size: 48px; font-weight: 700; line-height: 1.2; margin-bottom: 20px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero p { font-size: 18px; color: #94a3b8; line-height: 1.6; margin-bottom: 36px; }
-.cta-group { display: flex; justify-content: center; }`;
+    const cssContent = `/* =============================================================================
+   MYRAA AI OS — 3-DESIGN UNIFIED STYLESHEET
+   1. Theme: obsidian (Dark Glassmorphism)
+   2. Theme: cyber (Neon Cyber Vanguard)
+   3. Theme: editorial (Clean Luxe Light)
+   ============================================================================= */
 
-    const jsContent = `console.log('${cleanName} initialized successfully by MYRAA.');`;
+/* ── BASE CSS VARIABLES ────────────────────────────────────────────────────── */
+:root {
+  --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-    fs.writeFileSync(path.join(targetDir, 'index.html'), htmlContent, 'utf8');
-    fs.writeFileSync(path.join(targetDir, 'style.css'), cssContent, 'utf8');
-    fs.writeFileSync(path.join(targetDir, 'script.js'), jsContent, 'utf8');
+/* ── DESIGN 1: OBSIDIAN GLASS (DEFAULT) ────────────────────────────────────── */
+body[data-theme="obsidian"] {
+  --bg-page: #060813;
+  --bg-surface: rgba(15, 23, 42, 0.65);
+  --bg-surface-hover: rgba(30, 41, 59, 0.75);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-highlight: rgba(0, 229, 255, 0.35);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-color: #00e5ff;
+  --accent-glow: rgba(0, 229, 255, 0.15);
+  --accent-gradient: linear-gradient(135deg, #00e5ff 0%, #3b82f6 50%, #8b5cf6 100%);
+  --btn-text: #040813;
+  --backdrop: blur(16px);
+  --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
 
-    // Launch in default browser
-    runPowerShell(`Start-Process "${path.join(targetDir, 'index.html')}"`);
-    return { ok: true, message: `Created website project in ${targetDir} and opened in browser`, targetDir };
+/* ── DESIGN 2: CYBER VANGUARD (NEON) ───────────────────────────────────────── */
+body[data-theme="cyber"] {
+  --bg-page: #040508;
+  --bg-surface: #0a0d14;
+  --bg-surface-hover: #101622;
+  --border-color: #00ff9d44;
+  --border-highlight: #00ff9d;
+  --text-primary: #00ff9d;
+  --text-secondary: #7dd3fc;
+  --text-muted: #38bdf888;
+  --accent-color: #00ff9d;
+  --accent-glow: rgba(0, 255, 157, 0.2);
+  --accent-gradient: linear-gradient(135deg, #00ff9d 0%, #ffb703 100%);
+  --btn-text: #020617;
+  --backdrop: none;
+  --card-shadow: 0 0 20px rgba(0, 255, 157, 0.15);
+  --font-main: 'JetBrains Mono', monospace;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+}
+
+/* ── DESIGN 3: EDITORIAL LUXE (LIGHT) ──────────────────────────────────────── */
+body[data-theme="editorial"] {
+  --bg-page: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f5f9;
+  --border-color: rgba(15, 23, 42, 0.1);
+  --border-highlight: #2563eb;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent-color: #2563eb;
+  --accent-glow: rgba(37, 99, 235, 0.1);
+  --accent-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --btn-text: #ffffff;
+  --backdrop: none;
+  --card-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+/* ── GENERAL STYLES ────────────────────────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  min-height: 100vh;
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* Design Switcher Bar */
+.theme-switcher-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: var(--backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 24px;
+}
+.switcher-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.switcher-buttons { display: flex; gap: 8px; }
+.theme-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+.theme-btn:hover { color: var(--text-primary); border-color: var(--accent-color); }
+.theme-btn.active {
+  background: var(--accent-color);
+  color: var(--btn-text);
+  border-color: var(--accent-color);
+}
+.theme-dot { width: 8px; height: 8px; rounded: 50%; border-radius: 50%; display: inline-block; }
+.dot-obsidian { background: #00e5ff; }
+.dot-cyber { background: #00ff9d; }
+.dot-editorial { background: #2563eb; }
+
+/* Ambient Glow */
+.ambient-glow {
+  position: fixed;
+  top: -150px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 500px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  transition: background 0.3s;
+}
+
+/* Navbar */
+.navbar {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 48px;
+  border-bottom: 1px solid var(--border-color);
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-gradient);
+  color: var(--btn-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+}
+.logo-text { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+.nav-links { display: flex; align-items: center; gap: 28px; }
+.nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; transition: var(--transition); }
+.nav-links a:hover { color: var(--accent-color); }
+.nav-cta {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 8px 18px !important;
+  border-radius: var(--radius-md);
+  color: var(--text-primary) !important;
+}
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+  z-index: 10;
+  max-width: 960px;
+  margin: 60px auto 40px;
+  padding: 0 24px;
+  text-align: center;
+}
+.badge-hero {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-color);
+  margin-bottom: 24px;
+  font-family: var(--font-mono);
+}
+.hero-title {
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  letter-spacing: -0.03em;
+}
+body[data-theme="editorial"] .hero-title { font-family: var(--font-serif); }
+.hero-subtitle {
+  font-size: clamp(16px, 2vw, 20px);
+  color: var(--text-secondary);
+  max-width: 720px;
+  margin: 0 auto 36px;
+}
+.hero-cta-group { display: flex; justify-content: center; gap: 16px; margin-bottom: 60px; }
+.btn {
+  padding: 12px 28px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--transition);
+  display: inline-block;
+  border: none;
+}
+.btn-primary { background: var(--accent-gradient); color: var(--btn-text); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--accent-glow); }
+.btn-secondary { background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color); }
+.btn-secondary:hover { background: var(--bg-surface-hover); border-color: var(--border-highlight); }
+
+/* Metrics */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 40px;
+}
+.metric-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 24px 16px;
+  border-radius: var(--radius-md);
+  backdrop-filter: var(--backdrop);
+  box-shadow: var(--card-shadow);
+}
+.metric-num { font-size: 32px; font-weight: 800; color: var(--accent-color); font-family: var(--font-mono); }
+.metric-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+
+/* Features */
+.features-section { max-width: 1120px; margin: 80px auto; padding: 0 24px; position: relative; z-index: 10; }
+.section-header { text-align: center; margin-bottom: 48px; }
+.section-badge { font-size: 11px; font-weight: 700; color: var(--accent-color); font-family: var(--font-mono); text-transform: uppercase; }
+.section-header h2 { font-size: 36px; font-weight: 700; margin: 8px 0 12px; letter-spacing: -0.02em; }
+body[data-theme="editorial"] .section-header h2 { font-family: var(--font-serif); }
+.section-header p { color: var(--text-secondary); font-size: 16px; }
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+.feature-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--backdrop);
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+}
+.feature-card:hover { transform: translateY(-4px); border-color: var(--border-highlight); }
+.card-icon { font-size: 13px; font-family: var(--font-mono); font-weight: 700; color: var(--accent-color); margin-bottom: 16px; }
+.feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+.feature-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+/* Tabs */
+.services-section { max-width: 900px; margin: 80px auto; padding: 0 24px; position: relative; z-index: 10; }
+.tabs-container { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 32px; backdrop-filter: var(--backdrop); }
+.tabs-nav { display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px; }
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { background: var(--accent-color); color: var(--btn-text); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.tab-content h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+.tab-content p { color: var(--text-secondary); font-size: 15px; }
+
+/* CTA Box */
+.cta-section { max-width: 800px; margin: 80px auto; padding: 0 24px; text-align: center; }
+.cta-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 48px;
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--backdrop);
+  box-shadow: var(--card-shadow);
+}
+.cta-box h2 { font-size: 28px; margin-bottom: 12px; font-weight: 700; }
+.cta-box p { color: var(--text-secondary); margin-bottom: 24px; font-size: 15px; }
+.contact-form { display: flex; justify-content: center; gap: 12px; max-width: 500px; margin: 0 auto; }
+.contact-form input {
+  flex: 1;
+  background: rgba(0,0,0,0.1);
+  border: 1px solid var(--border-color);
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+}
+.contact-form input:focus { border-color: var(--accent-color); }
+
+/* Footer */
+footer { border-top: 1px solid var(--border-color); padding: 32px 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
+.footer-meta { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar { padding: 16px 20px; }
+  .nav-links { display: none; }
+  .features-grid { grid-template-columns: 1fr; }
+  .contact-form { flex-direction: column; }
+  .theme-switcher-bar { flex-direction: column; gap: 8px; }
+}`;
+
+    const jsContent = `// MYRAA AI OS — Autonomous Website Interactive Runtime
+document.addEventListener('DOMContentLoaded', () => {
+  // 1. Theme Switcher Engine
+  const themeButtons = document.querySelectorAll('[data-set-theme]');
+  themeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const theme = btn.getAttribute('data-set-theme');
+      document.body.setAttribute('data-theme', theme);
+      themeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      localStorage.setItem('myraa_site_theme', theme);
+    });
+  });
+
+  const savedTheme = localStorage.getItem('myraa_site_theme');
+  if (savedTheme) {
+    document.body.setAttribute('data-theme', savedTheme);
+    themeButtons.forEach(b => {
+      if (b.getAttribute('data-set-theme') === savedTheme) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+  }
+
+  // 2. Interactive Architecture Tabs
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-tab');
+      tabButtons.forEach(b => b.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      const target = document.getElementById(targetId);
+      if (target) target.classList.add('active');
+    });
+  });
+
+  console.log('[MYRAA AI OS] Project ${cleanName} active with 3 switchable designs.');
+});`;
+
+    const readmeContent = `# ${cleanName}
+Generated Autonomously by MYRAA AI OS (v9.3.0)
+
+## Architecture Overview
+This project includes 3 complete production-grade visual designs in one responsive build:
+1. **Design 1: Obsidian Glass** — Modern minimal dark glassmorphism with frosted layers and neon gradients.
+2. **Design 2: Cyber Vanguard** — High-contrast cyberpunk HUD styling with electric green and amber accents.
+3. **Design 3: Editorial Luxe** — Refined corporate light editorial with serif typography and crisp cards.
+
+## Features
+- Interactive Real-Time Design Switcher bar at top
+- Fully responsive HTML5 & CSS3 layout
+- Modular CSS design system tokens
+- Zero Unicode emojis (Strict Rule 1 Compliance)
+
+## Location
+- Master path: \`${targetDir}\`
+- Web viewable at: \`file://${targetDir.replace(/\\/g, '/')}/index.html\`
+`;
+
+    // Write to chosen directory first
+    fs.writeFileSync(path.join(chosenDir, 'index.html'), htmlContent, 'utf8');
+    fs.writeFileSync(path.join(chosenDir, 'style.css'), cssContent, 'utf8');
+    fs.writeFileSync(path.join(chosenDir, 'script.js'), jsContent, 'utf8');
+    fs.writeFileSync(path.join(chosenDir, 'README.md'), readmeContent, 'utf8');
+
+    // Launch in default browser via detached child process
+    try {
+      const { spawn } = require('child_process');
+      const htmlPath = path.join(chosenDir, 'index.html');
+      const p = spawn('cmd.exe', ['/c', 'start', '', htmlPath], {
+        detached: true,
+        stdio: 'ignore',
+        windowsHide: true
+      });
+      p.unref();
+    } catch (_) {}
+    return { ok: true, message: `Created 3-design website in ${chosenDir} and opened in browser`, targetDir: chosenDir };
   },
 
   createResume(candidateName = 'Vishwajeet', details = {}) {
     const cleanName = (candidateName || 'Candidate').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const targetDir = 'C:\\Users\\Vishwajeet\\Music\\Myraa\\Projects\\Resumes';
+    const targetDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'Projects', 'Resumes');
     fs.mkdirSync(targetDir, { recursive: true });
     const targetFile = path.join(targetDir, `${cleanName}_Executive_Resume.md`);
 
@@ -1954,7 +2674,7 @@ Dynamic technology leader, architect, and full-stack software engineer with deep
 
   createPrdReport(featureName = 'MYRAA Universal Core', specDetails = '') {
     const cleanName = (featureName || 'Product_PRD').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const targetDir = 'C:\\Users\\Vishwajeet\\Music\\Myraa\\Projects\\Reports';
+    const targetDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'Projects', 'Reports');
     fs.mkdirSync(targetDir, { recursive: true });
     const targetFile = path.join(targetDir, `PRD_${cleanName}.md`);
 
@@ -1997,7 +2717,7 @@ Users require an intelligent desktop companion that executes complex cross-appli
   },
 
   createClientEmail(clientName = 'Valued Partner', subject = 'Project Update & Next Steps', bodyDetails = '') {
-    const targetDir = 'C:\\Users\\Vishwajeet\\Music\\Myraa\\Projects\\Emails';
+    const targetDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'Projects', 'Emails');
     fs.mkdirSync(targetDir, { recursive: true });
     const targetFile = path.join(targetDir, `Email_${Date.now()}.txt`);
 

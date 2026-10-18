@@ -318,6 +318,89 @@ const CONNECTORS = {
       return { ok: true, taskId, deleted: true };
     }
   },
+  word: {
+    name: 'Microsoft Word Professional Engine',
+    description: 'Professional document creation, editing, formatting, review, redesign, merge, split, find/replace, PDF export',
+    async ping() {
+      const startTime = Date.now();
+      const engineOk = fs.existsSync(path.join(__dirname, 'office_doc_engine.cjs'));
+      return { ok: true, alive: engineOk, latencyMs: Date.now() - startTime, engine: 'OfficeDocEngine Professional Word Engine' };
+    },
+    async createDocument(filename, title, subtitle, sections, table, docType, design) {
+      try {
+        const officeDocEngine = require('./office_doc_engine.cjs');
+        const res = await officeDocEngine.generateWord({ filename, title, subtitle, sections, table, docType, design });
+        logActivity('Word', `Generated document: ${path.basename(res.path || filename)}`, 'SUCCESS');
+        return { ok: true, path: res.path || filename, filename: path.basename(res.path || filename) };
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    },
+    async readDocument(filePath) {
+      try {
+        const officeDocEngine = require('./office_doc_engine.cjs');
+        return await officeDocEngine.readDocument(filePath);
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    },
+    async reviewDocument(filePath, content) {
+      try {
+        const officeDocEngine = require('./office_doc_engine.cjs');
+        return await officeDocEngine.reviewWord({ filePath, content });
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    },
+    async redesignDocument(filePath, options) {
+      try {
+        const officeDocEngine = require('./office_doc_engine.cjs');
+        return await officeDocEngine.redesignWord({ filePath, options });
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    },
+    async mergeDocuments(filePaths, outputFilename) {
+      try {
+        const officeDocEngine = require('./office_doc_engine.cjs');
+        return await officeDocEngine.mergeWord({ filePaths, outputFilename });
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    },
+    async splitDocument(filePath, splitBy) {
+      try {
+        const officeDocEngine = require('./office_doc_engine.cjs');
+        return await officeDocEngine.splitWord({ filePath, splitBy });
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    },
+    async findReplace(filePath, findText, replaceText, caseSensitive, wholeWord) {
+      try {
+        const officeDocEngine = require('./office_doc_engine.cjs');
+        return await officeDocEngine.findReplaceWord({ filePath, findText, replaceText, caseSensitive, wholeWord });
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    },
+    async exportPdf(filePath) {
+      try {
+        const officeDocEngine = require('./office_doc_engine.cjs');
+        return await officeDocEngine.exportToPdf({ filePath });
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    },
+    async analyzeDocument(filePath) {
+      try {
+        const officeDocEngine = require('./office_doc_engine.cjs');
+        return await officeDocEngine.analyzeWord({ filePath });
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    }
+  },
   excel: {
     name: 'Excel Data Engine',
     description: 'Local OpenXML / Spreadsheet automation & generation',
@@ -959,4 +1042,67 @@ router.post('/api/weather/location', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// 7. AUTONOMOUS DESIGN + ENGINEERING INTELLIGENCE V2 ENDPOINTS
+// ---------------------------------------------------------------------------
+let autonomousEngine = null;
+try { autonomousEngine = require('./autonomous_decision_engine.cjs'); } catch (e) {}
+
+// GET /api/intelligence/status
+router.get('/api/intelligence/status', (req, res) => {
+  if (!autonomousEngine) {
+    return res.status(503).json({ ok: false, error: 'Autonomous decision engine not loaded' });
+  }
+  res.json({
+    ok: true,
+    version: autonomousEngine.version,
+    svgIconsAvailable: Object.keys(autonomousEngine.SVG_ICONS).length,
+    defaultTokens: autonomousEngine.DEFAULT_DESIGN_TOKENS
+  });
+});
+
+// POST /api/intelligence/plan
+router.post('/api/intelligence/plan', (req, res) => {
+  const { request } = req.body || {};
+  if (!request) return res.status(400).json({ ok: false, error: 'Prompt/request is required' });
+  if (!autonomousEngine) return res.status(503).json({ ok: false, error: 'Engine not loaded' });
+  
+  const prd = autonomousEngine.generateMiniPRD(request);
+  res.json({ ok: true, prd });
+});
+
+// POST /api/intelligence/design-tokens
+router.post('/api/intelligence/design-tokens', (req, res) => {
+  if (!autonomousEngine) return res.status(503).json({ ok: false, error: 'Engine not loaded' });
+  const { tokens } = req.body || {};
+  const activeTokens = tokens || autonomousEngine.DEFAULT_DESIGN_TOKENS;
+  const css = autonomousEngine.generateCssVariables(activeTokens);
+  res.json({ ok: true, tokens: activeTokens, cssVariables: css });
+});
+
+// POST /api/intelligence/evaluate-feedback
+router.post('/api/intelligence/evaluate-feedback', (req, res) => {
+  const { feedback, currentTokens } = req.body || {};
+  if (!feedback) return res.status(400).json({ ok: false, error: 'Feedback text is required' });
+  if (!autonomousEngine) return res.status(503).json({ ok: false, error: 'Engine not loaded' });
+
+  const result = autonomousEngine.processDesignFeedback(feedback, currentTokens);
+  res.json({ ok: true, result });
+});
+
+// POST /api/intelligence/quality-gate
+router.post('/api/intelligence/quality-gate', (req, res) => {
+  if (!autonomousEngine) return res.status(503).json({ ok: false, error: 'Engine not loaded' });
+  const result = autonomousEngine.runQualityGate(req.body || {});
+  res.json({ ok: true, result });
+});
+
+// POST /api/intelligence/acceptance-test
+router.post('/api/intelligence/acceptance-test', (req, res) => {
+  if (!autonomousEngine) return res.status(503).json({ ok: false, error: 'Engine not loaded' });
+  const report = autonomousEngine.runAcceptanceTest();
+  res.json({ ok: true, report });
+});
+
 module.exports = router;
+

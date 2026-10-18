@@ -327,8 +327,8 @@
 
             <!-- Central Evelyn 3D Avatar -->
             <div class="avatar-stage-container">
-              <div class="avatar-viewport" id="evelyn-avatar-canvas">
-                <img src="/assets/characters/evelyn/textures/tex_0.png" class="avatar-fallback-img" alt="MYRAA Evelyn Avatar" onerror="this.src='/build/icon.ico'" />
+              <div class="avatar-viewport" id="evelyn-avatar-canvas" title="Click to enter 3D Holographic Avatar & Live Voice Mode" style="cursor: pointer;" onclick="if(window.toggleLiveMode)window.toggleLiveMode(true);">
+                <img src="/myraa_avatar.png" class="avatar-fallback-img" alt="MYRAA Evelyn Avatar" onerror="this.src='/logo.png'" />
               </div>
               <div class="avatar-speech-bubble" id="avatar-speech-bubble">
                 <span id="speech-bubble-text">${state.speechBubbleText}</span>
@@ -798,7 +798,7 @@
     initializeIdentityAndGreeting();
     initializeHardwareControls();
     renderChatStream();
-    loadActiveViewData('home');
+    switchView('home');
   }
 
   // ── 3b. IDENTITY, GREETING, PANEL POLLING ───────────────────────────────────
@@ -874,9 +874,15 @@
   function switchView(viewName) {
     state.activeView = viewName;
 
+    // Ensure desktop shell is visible if returning from live mode
+    const shell = document.getElementById('myraa-app-root');
+    if (shell && shell.classList.contains('live-mode-active')) {
+      toggleLiveMode(false);
+    }
+
     // Update navigation item active state
-    document.querySelectorAll('.left-sidebar .nav-item').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.view === viewName);
+    document.querySelectorAll('.left-sidebar .nav-item, #myraa-aceternity-sidebar .myraa-sidebar-link').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === viewName || btn.id === `nav-link-${viewName}`);
     });
 
     // Toggle view containers
@@ -886,6 +892,7 @@
 
     loadActiveViewData(viewName);
   }
+  window.myraaSwitchView = switchView;
 
   function loadActiveViewData(viewName) {
     if (viewName === 'app_studio') loadAppStudioProjects();
@@ -2231,7 +2238,7 @@
       setBubble(String(data.reply).slice(0, 90) + (String(data.reply).length > 90 ? '…' : ''));
       if (state.speakReplies) speakText(data.reply);
     } catch (err) {
-      addChatMessage('myraa', `⚠ ${err.message}`);
+      addChatMessage('myraa', `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> ${err.message}`);
       setBubble('Something failed — check the chat for details.');
     } finally {
       state.isSendingChat = false;
@@ -2315,11 +2322,11 @@
       const render = (job) => {
         box.innerHTML = `
           <div style="font-weight:600; margin-bottom:6px; color:${job.status === 'COMPLETE' ? 'var(--success)' : job.status === 'FAILED' ? 'var(--error)' : 'var(--accent-cyan)'};">
-            ${job.status === 'COMPLETE' ? '✓ Research complete' : job.status === 'FAILED' ? '✗ Research failed' : '● Research running'} — <span style="font-weight:400; font-size:11px;">${esc(job.synthesis || 'live pipeline')}</span>
+            ${job.status === 'COMPLETE' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Research complete' : job.status === 'FAILED' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Research failed' : '● Research running'} — <span style="font-weight:400; font-size:11px;">${esc(job.synthesis || 'live pipeline')}</span>
           </div>
           ${job.steps.map((s) => `
             <div style="font-size:11.5px; margin-bottom:3px; color:${s.status === 'DONE' ? 'var(--success)' : s.status === 'ACTIVE' ? 'var(--accent-cyan)' : s.status === 'FAILED' ? 'var(--error)' : 'var(--text-muted)'};">
-              ${s.status === 'DONE' ? '✓' : s.status === 'ACTIVE' ? '→' : s.status === 'FAILED' ? '✗' : '○'} ${esc(s.label)}${s.detail ? ` — ${esc(s.detail)}` : ''}
+              ${s.status === 'DONE' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : s.status === 'ACTIVE' ? '→' : s.status === 'FAILED' ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>' : '○'} ${esc(s.label)}${s.detail ? ` — ${esc(s.detail)}` : ''}
             </div>`).join('')}
           ${job.sources && job.sources.length ? `
             <div style="margin-top:8px; font-size:11px; color:var(--text-muted);">Sources actually read:</div>
@@ -2356,7 +2363,7 @@
     try {
       const data = await apiPost('/api/github/analyze', { repoPath });
       box.innerHTML = `
-        <div style="color: var(--success); font-weight: 600; margin-bottom: 4px;">✓ ${esc(data.kind)} repository: ${esc(data.name)}${data.stars != null ? ` • ★ ${esc(data.stars)}` : ''}</div>
+        <div style="color: var(--success); font-weight: 600; margin-bottom: 4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${esc(data.kind)} repository: ${esc(data.name)}${data.stars != null ? ` • <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${esc(data.stars)}` : ''}</div>
         <div style="font-size: 11px; margin-bottom: 4px;">Files analyzed: ${esc(data.filesCount)} • Languages: ${esc((data.languages || []).slice(0, 4).map((l) => l.language).join(', ')) || '—'}</div>
         <div style="font-size: 11px; margin-bottom: 6px;">Frameworks detected: ${esc((data.frameworks || []).join(', ')) || 'none detected'}</div>
         ${data.description ? `<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">${esc(data.description)}</div>` : ''}
@@ -2402,7 +2409,7 @@
         ${WF_ACTION_TYPES.map((t, i) => `<option value="${t.value}">${t.label}</option>`).join('')}
       </select>
       <input type="text" class="wf-action-param" placeholder="Value" style="flex:1; background: rgba(7,11,20,0.6); border: 1px solid var(--border-divider); border-radius: var(--radius-md); color: #fff; padding: 7px 10px; font-size: 12px;" />
-      <button class="section-view-all" style="color: var(--error); border-color: var(--error);">✕</button>
+      <button class="section-view-all" style="color: var(--error); border-color: var(--error);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     `;
     row.querySelector('.wf-action-type').addEventListener('change', (e) => {
       const t = WF_ACTION_TYPES.find((x) => x.value === e.target.value);
@@ -2560,19 +2567,22 @@
   }
 
   // ── 8b. IMMERSIVE LIVE VOICE MODE ───────────────────────────────────────────
-  function toggleLiveMode() {
+  function toggleLiveMode(forceEntering) {
     const shell = document.getElementById('myraa-app-root');
     const reactRoot = document.getElementById('root');
     if (!shell || !reactRoot) return;
-    const entering = !shell.classList.contains('live-mode-active');
+    const entering = (typeof forceEntering === 'boolean') ? forceEntering : !shell.classList.contains('live-mode-active');
     if (entering) {
       shell.classList.add('live-mode-active');
       reactRoot.classList.add('live-mode-active');
-      const exit = document.createElement('button');
-      exit.id = 'myraa-live-exit-btn';
-      exit.textContent = '← Back to Desktop';
-      exit.addEventListener('click', toggleLiveMode);
-      document.body.appendChild(exit);
+      let exit = document.getElementById('myraa-live-exit-btn');
+      if (!exit) {
+        exit = document.createElement('button');
+        exit.id = 'myraa-live-exit-btn';
+        exit.textContent = '← Back to Desktop';
+        exit.addEventListener('click', () => toggleLiveMode(false));
+        document.body.appendChild(exit);
+      }
       logClientActivity('Voice', 'Entered immersive Live voice mode');
     } else {
       shell.classList.remove('live-mode-active');
@@ -2581,6 +2591,7 @@
       logClientActivity('Voice', 'Returned to desktop shell');
     }
   }
+  window.toggleLiveMode = toggleLiveMode;
 
   // ── 9. GLOBAL HELPER FUNCTIONS (real behaviors only) ────────────────────────
   window.myraaRunWorkflow = async (id) => {

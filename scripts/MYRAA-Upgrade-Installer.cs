@@ -152,9 +152,8 @@ namespace MyraaInstaller
             string[] avatarCandidates = new[] {
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "myraa_avatar.png"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo.png"),
-                @"D:\Team of Vishwajeet\MYRAA\myraa_avatar.png",
-                @"D:\Team of Vishwajeet\MYRAA\resources\app\dist\myraa_avatar.png",
-                @"C:\Users\Vishwajeet\Downloads\Myraa.png"
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "app", "dist", "myraa_avatar.png"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "app", "dist", "logo.png")
             };
             foreach (var p in avatarCandidates)
             {

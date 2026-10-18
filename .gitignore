@@ -7,6 +7,8 @@ release/
 *.blockmap
 *.yml
 builder-debug.yml
+dist-release/
+.mimosa/
 
 # Executables / Installers (use GitHub Releases for binaries — GitHub rejects >100 MB files)
 *.exe
@@ -16,6 +18,10 @@ builder-debug.yml
 Installers/**/*.exe
 Installers/**/*.zip
 release/
+
+# Large media masters / local backups (keep repo lean; runtime assets live in dist/assets/)
+resources/app/assets/*.mp4
+resources/app/dist/assets/*.bak*
 
 # Environment / secrets
 .env

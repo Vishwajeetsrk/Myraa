@@ -258,24 +258,24 @@ async function runUpgrade(newBuildDir, opts = {}) {
       throw new Error('Build directory is missing package.json — invalid build');
     }
 
-    broadcast('VERIFY', 15, 'Build directory validated ✓', 'success');
+    broadcast('VERIFY', 15, 'Build directory validated [OK]', 'success');
 
     // ── STAGE 2: TERMINATE OLD PROCESS ───────────────────────────────
     broadcast('TERMINATE', 25, 'Stopping active MYRAA processes…', 'info');
     if (!dryRun) await killMYRAA();
-    broadcast('TERMINATE', 35, 'All MYRAA processes terminated ✓', 'success');
+    broadcast('TERMINATE', 35, 'All MYRAA processes terminated [OK]', 'success');
 
     // ── STAGE 3: WIPE CACHES & TEMP ──────────────────────────────────
     broadcast('PURGE', 40, 'Clearing Electron GPU / Code Caches…', 'info');
     if (!dryRun) wipeElectronCaches();
     broadcast('PURGE', 50, 'Clearing temp artefacts from %TEMP%…', 'info');
     if (!dryRun) wipeTempFiles();
-    broadcast('PURGE', 58, 'Cache purge complete ✓', 'success');
+    broadcast('PURGE', 58, 'Cache purge complete [OK]', 'success');
 
     // ── STAGE 4: INSTALL NEW BUILD ────────────────────────────────────
     broadcast('INSTALL', 62, `Installing v${toVersion} into ${APP_DIR}…`, 'info');
     if (!dryRun) await installBuild(newBuildDir);
-    broadcast('INSTALL', 80, `v${toVersion} installed ✓`, 'success');
+    broadcast('INSTALL', 80, `v${toVersion} installed [OK]`, 'success');
 
     // ── STAGE 5: POST-INSTALL CLEANUP ────────────────────────────────
     broadcast('CLEANUP', 85, 'Removing previous build staging directory…', 'info');
@@ -283,7 +283,7 @@ async function runUpgrade(newBuildDir, opts = {}) {
       // Only wipe if it is a separate staging path — never wipe live dir
       try { fs.rmSync(newBuildDir, { recursive: true, force: true }); } catch {}
     }
-    broadcast('CLEANUP', 90, 'Post-install cleanup complete ✓', 'success');
+    broadcast('CLEANUP', 90, 'Post-install cleanup complete [OK]', 'success');
 
     // ── STAGE 6: RELAUNCH ────────────────────────────────────────────
     if (relaunch) {
@@ -291,7 +291,7 @@ async function runUpgrade(newBuildDir, opts = {}) {
       if (!dryRun) relaunchMYRAA();
     }
 
-    broadcast('DONE', 100, `🎉 Upgrade complete: v${fromVersion} → v${toVersion}`, 'success');
+    broadcast('DONE', 100, `[Done] Upgrade complete: v${fromVersion} → v${toVersion}`, 'success');
 
     return { success: true, fromVersion, toVersion, errors };
 

@@ -1,0 +1,15 @@
+{
+  "totalCalls": 1,
+  "totalCostUSD": 0,
+  "recent": [
+    {
+      "ts": 1790963706484,
+      "provider": "groq",
+      "model": "groq/openai/gpt-oss-120b",
+      "ms": 6367,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "costUSD": 0
+    }
+  ]
+}

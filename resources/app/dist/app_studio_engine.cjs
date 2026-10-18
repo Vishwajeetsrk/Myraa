@@ -214,12 +214,12 @@ ${rawName} is a state-of-the-art ${type.toLowerCase()} designed to deliver seaml
       const out = document.getElementById('outputLog');
       if (!val) return;
       out.classList.remove('hidden');
-      out.innerHTML = \`<span class="text-cyan-400">✓ Executed:</span> \${val} — \${new Date().toLocaleTimeString()}\`;
+      out.innerHTML = \`<span class="text-cyan-400">[OK] Executed:</span> \${val} — \${new Date().toLocaleTimeString()}\`;
       document.getElementById('userInput').value = '';
     }
     function saveProjectData() {
       localStorage.setItem('${slug}_data', JSON.stringify({ savedAt: new Date().toISOString() }));
-      alert('✓ Project state successfully saved locally.');
+      alert('[OK] Project state successfully saved locally.');
     }
   </script>
 </body>

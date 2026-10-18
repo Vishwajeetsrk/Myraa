@@ -117,7 +117,13 @@ body, html {
   flex-direction: column;
   width: 100vw;
   height: 100vh;
+  position: fixed;
+  inset: 0;
+  padding-left: 60px;
+  z-index: 10;
   background: radial-gradient(circle at 50% 0%, rgba(30, 155, 255, 0.05) 0%, transparent 70%), var(--bg-base);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* ── TOP COMMAND BAR ───────────────────────────────────────────────────────── */
@@ -1012,25 +1018,44 @@ body, html {
 }
 
 #root {
-  display: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  padding-left: 60px !important;
+  background: transparent !important;
+  z-index: 10 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 
+#myraa-holographic-desktop {
+  background: transparent !important;
+}
 
-/* ── IMMERSIVE LIVE VOICE MODE (v6.1) ────────────────────────────────────────
- * Toggles between the v6 desktop shell and the full holographic Gemini Live
- * experience (React app with the 3D MYRAA avatar and real-time voice). */
-#myraa-app-root.live-mode-active {
+#myraa-app-root {
   display: none;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  inset: 0;
+  padding-left: 60px;
+  z-index: 20;
+  background: radial-gradient(circle at 50% 0%, rgba(30, 155, 255, 0.05) 0%, transparent 70%), var(--bg-base);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#myraa-app-root.active-workspace {
+  display: flex !important;
 }
 
 #root.live-mode-active {
-  display: block !important;
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 100;
-  background: #05070d;
+  display: flex !important;
+  z-index: 50 !important;
 }
 
 #myraa-live-exit-btn {

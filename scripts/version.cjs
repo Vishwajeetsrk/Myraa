@@ -56,19 +56,27 @@ function bump(version, type) {
 function setCargoVersion(filePath, version) {
   if (!fs.existsSync(filePath)) { console.warn('  ! Cargo.toml missing, skipped'); return; }
   let s = fs.readFileSync(filePath, 'utf8');
-  // Replace version line directly under [package] (before the first blank line)
   const re = /(^\[package\]\s*(?:\n[^\[]*?)?\n)version\s*=\s*"[^"]*"/;
-  if (re.test(s)) { s = s.replace(re, (m, prefix) => `${prefix}version = "${version}"`); fs.writeFileSync(filePath, s); ok('   Cargo.toml [package].version = ' + version); }
-  else { console.warn('  ! [package] version not found in ' + filePath); }
+  if (re.test(s)) {
+    const next = s.replace(re, (m, prefix) => `${prefix}version = "${version}"`);
+    if (next !== s) {
+      try { fs.writeFileSync(filePath, next); ok('   Cargo.toml [package].version = ' + version); } catch(e) { console.warn('  ! Cargo.toml write: ' + e.message); }
+    } else {
+      ok('   Cargo.toml already at version ' + version);
+    }
+  } else { console.warn('  ! [package] version not found in ' + filePath); }
 }
 
 function setTauriVersion(filePath, version) {
   if (!fs.existsSync(filePath)) { console.warn('  ! tauri.conf.json missing, skipped'); return; }
   const j = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   if (j.version === undefined) { console.warn('  ! no .version key, skipped'); return; }
-  j.version = version;
-  fs.writeFileSync(filePath, JSON.stringify(j, null, 2) + '\n');
-  ok('   tauri.conf.json .version = ' + version);
+  if (j.version !== version) {
+    j.version = version;
+    try { fs.writeFileSync(filePath, JSON.stringify(j, null, 2) + '\n'); ok('   tauri.conf.json .version = ' + version); } catch(e) { console.warn('  ! tauri.conf write: ' + e.message); }
+  } else {
+    ok('   tauri.conf.json already at version ' + version);
+  }
 }
 
 function setNsisVersion(filePath, version) {
@@ -76,18 +84,24 @@ function setNsisVersion(filePath, version) {
   let s = fs.readFileSync(filePath, 'utf8');
   const m = s.match(/DetailPrint\s+"([^"]*)"/);
   if (m) {
-    s = s.replace(m[1], `MYRAA AI OS ${version} installer initializing...`);
-    fs.writeFileSync(filePath, s);
-    ok('   nsis-installer.nsh DetailPrint = ' + version);
+    const next = s.replace(m[1], `MYRAA AI OS ${version} installer initializing...`);
+    if (next !== s) {
+      try { fs.writeFileSync(filePath, next); ok('   nsis-installer.nsh DetailPrint = ' + version); } catch(e) { console.warn('  ! nsis-installer write: ' + e.message); }
+    } else {
+      ok('   nsis-installer.nsh already at version ' + version);
+    }
   }
 }
 
 function setVersionJson(filePath, version) {
   if (!fs.existsSync(filePath)) { console.warn('  ! version.json missing, creating...'); }
   const data = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : {};
-  data.version = version;
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
-  ok('   version.json .version = ' + version);
+  if (data.version !== version) {
+    data.version = version;
+    try { fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n'); ok('   version.json .version = ' + version); } catch(e) { console.warn('  ! version.json write: ' + e.message); }
+  } else {
+    ok('   version.json already at version ' + version);
+  }
 }
 
 function buildDate() {
@@ -130,8 +144,12 @@ Semantic Versioning (MAJOR.MINOR.PATCH)
 
 Generated: ${new Date().toISOString()}
 `;
-  fs.writeFileSync(filePath, md, 'utf8');
-  ok('   VERSION.md written');
+  try {
+    fs.writeFileSync(filePath, md, 'utf8');
+    ok('   VERSION.md written');
+  } catch (e) {
+    console.warn('  ! VERSION.md write: ' + e.message);
+  }
 }
 
 // ------------------------------------------------ main
@@ -162,9 +180,17 @@ if (next === current && cmd !== 'sync') {
   console.log('Already at ' + current + ' — nothing to bump. Use "sync" to re-sync consumers.');
 }
 
-pkg.version = next;
-fs.writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + '\n');
-ok('package.json version = ' + next);
+if (pkg.version !== next) {
+  pkg.version = next;
+  try {
+    fs.writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + '\n');
+    ok('package.json version = ' + next);
+  } catch (e) {
+    console.warn('[WARN] Could not write package.json: ' + e.message);
+  }
+} else {
+  ok('package.json already at version ' + next);
+}
 
 setCargoVersion(CARGO_PATH, next);
 setTauriVersion(TAURI_PATH, next);

@@ -44,12 +44,29 @@ class GeminiLiveSupervisor {
       }
     } catch (e) {}
     try {
-      const paths = ['D:\\Team of Vishwajeet\\.env.local', 'D:\\Team of Vishwajeet\\.env'];
+      const paths = [
+        path.join(process.env.APPDATA || '', 'MYRAA', 'secrets.json'),
+        path.join(process.env.APPDATA || '', 'MYRAA AI OS', 'secrets.json'),
+        path.join(process.cwd(), 'secrets.json'),
+        path.join(process.cwd(), '.myraa-data', 'secrets.json'),
+        path.join(process.env.USERPROFILE || require('os').homedir(), '.env.local'),
+        path.join(process.env.USERPROFILE || require('os').homedir(), '.env'),
+        path.join(process.cwd(), '.env.local'),
+        path.join(process.cwd(), '.env')
+      ];
       for (const envPath of paths) {
         if (fs.existsSync(envPath)) {
-          const env = fs.readFileSync(envPath, 'utf8');
-          const m = env.match(/GEMINI_API_KEY=([^\r\n]+)/);
-          if (m) return m[1].replace(/['"]/g, '').trim();
+          const content = fs.readFileSync(envPath, 'utf8');
+          if (envPath.endsWith('.json')) {
+            const parsed = JSON.parse(content);
+            if (parsed.geminiApiKey && parsed.geminiApiKey.trim()) return parsed.geminiApiKey.trim();
+          } else {
+            const m = content.match(/GEMINI_API_KEY=([^\r\n]+)/);
+            if (m) {
+              const val = m[1].replace(/['"]/g, '').trim();
+              if (val) return val;
+            }
+          }
         }
       }
     } catch (e) {}
@@ -124,7 +141,22 @@ class GeminiLiveSupervisor {
     const cleanReason = String(reason || 'No close reason provided').trim();
     const cleanCode = Number(code) || 1006;
 
-    // 1. Category 1: AUTH FAILURE
+    // 1. If keyValidation verified the key is VALID, this is NEVER an AUTH_FAILURE
+    if (keyValidation && keyValidation.valid === true) {
+      if (/not found|not supported|model/i.test(cleanReason)) {
+        return {
+          category: 'MODEL_UNSUPPORTED',
+          title: 'Model Update Required',
+          userMessage: `Model configuration notice: ${cleanReason}`,
+          canAutoRetry: false,
+          code: cleanCode,
+          reason: cleanReason,
+          actionPrompt: 'Switched to active Gemini Live model'
+        };
+      }
+    }
+
+    // 2. Genuine AUTH FAILURE (Only if Google actually rejected the key)
     if (keyValidation && !keyValidation.valid && keyValidation.category === 'AUTH_FAILURE') {
       return {
         category: 'AUTH_FAILURE',
@@ -137,7 +169,7 @@ class GeminiLiveSupervisor {
       };
     }
 
-    if (cleanCode === 1008 || /api.?key|auth|unauthenticated|credential|permission/i.test(cleanReason)) {
+    if ((!keyValidation || !keyValidation.valid) && /api.?key.*invalid|invalid.*api.?key|unauthenticated|credential|API_KEY_INVALID/i.test(cleanReason)) {
       return {
         category: 'AUTH_FAILURE',
         title: 'Authentication Error',

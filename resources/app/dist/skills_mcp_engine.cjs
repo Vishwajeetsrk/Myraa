@@ -34,6 +34,9 @@ try { skillDiscovery = require('./skill_discovery_engine.cjs'); } catch (e) { co
 let freeApiRegistry = null;
 try { freeApiRegistry = require('./free_api_registry.cjs'); } catch (e) { console.warn('free_api_registry:', e.message); }
 
+let tavilySearch = null;
+try { tavilySearch = require('./tavily_search.cjs'); } catch (e) { console.warn('tavily_search:', e.message); }
+
 // ── TOOL RISK MAP ────────────────────────────────────────────────────────────
 const TOOL_RISK_MAP = {
   'generate_word': 'MEDIUM', 'generate_excel': 'MEDIUM', 'generate_presentation': 'MEDIUM',
@@ -49,6 +52,7 @@ const TOOL_RISK_MAP = {
   'dev_self_healing_build': 'HIGH', 'heartbeat_trigger_check': 'LOW',
   'memory_recall': 'LOW', 'memory_remember': 'LOW', 'memory_ingest': 'LOW',
   'free_api_list': 'LOW', 'free_api_call': 'LOW',
+  'tavily_search': 'LOW', 'tavily_extract': 'LOW', 'tavily_map': 'LOW',
 };
 const RISK_RANK = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
 function toolRisk(name) {
@@ -488,6 +492,44 @@ const MCP_TOOLS = [
       },
       required: ["api_id"]
     }
+  },
+  {
+    name: "tavily_search",
+    description: "Live AI-optimized web search (Tavily). Returns ranked results with titles, URLs, and content snippets — stronger than scraping for current events, research, prices, and news. topic supports general/news/finance.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Search query" },
+        max_results: { type: "number", description: "Max results 1-20 (default 8)" },
+        search_depth: { type: "string", description: "basic (fast/free) or advanced" },
+        topic: { type: "string", description: "general | news | finance" }
+      },
+      required: ["query"]
+    }
+  },
+  {
+    name: "tavily_extract",
+    description: "Extract clean readable markdown content from known URLs (Tavily Extract). Use after tavily_search to read page bodies for summarization or analysis.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        urls: { type: "array", items: { type: "string" }, description: "1-5 URLs to extract" }
+      },
+      required: ["urls"]
+    }
+  },
+  {
+    name: "tavily_map",
+    description: "Discover all URLs on a known website (Tavily Map). Use for site audits, documentation indexing, or finding pages before extraction.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        url: { type: "string", description: "Site root URL (e.g. https://example.com)" },
+        max_depth: { type: "number", description: "Crawl depth 1-3 (default 1)" },
+        limit: { type: "number", description: "Max URLs 1-500 (default 50)" }
+      },
+      required: ["url"]
+    }
   }
 ];
 
@@ -646,6 +688,34 @@ async function executeTool(name, args) {
   if (name === 'free_api_call' && freeApiRegistry) {
     const params = { query: args.query, status: args.status, lat: args.lat, lon: args.lon, weight: args.weight, height: args.height };
     return await freeApiRegistry.execute(args.api_id, params);
+  }
+
+  // 5b. Tavily Web Intelligence (live search / extract / map)
+  if (name === 'tavily_search' && tavilySearch) {
+    try {
+      const r = await tavilySearch.search(args.query, {
+        maxResults: args.max_results || 8,
+        searchDepth: args.search_depth,
+        topic: args.topic
+      });
+      return { ok: (r.results || []).length > 0, ...r };
+    } catch (e) {
+      return { ok: false, error: e.message, provider: 'tavily', results: [] };
+    }
+  }
+  if (name === 'tavily_extract' && tavilySearch) {
+    try {
+      return await tavilySearch.extract(args.urls || []);
+    } catch (e) {
+      return { ok: false, error: e.message, provider: 'tavily', pages: [] };
+    }
+  }
+  if (name === 'tavily_map' && tavilySearch) {
+    try {
+      return await tavilySearch.map(args.url, { maxDepth: args.max_depth, limit: args.limit });
+    } catch (e) {
+      return { ok: false, error: e.message, provider: 'tavily', urls: [] };
+    }
   }
 
   // 6. Hot-loadable Plugins

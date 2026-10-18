@@ -22,7 +22,7 @@ const path = require('path');
 const uiAutomation = require('./ui_automation_service.cjs');
 const memoryCore = require('./memory_core_service.cjs');
 
-const appData = process.env.APPDATA || path.join(process.env.USERPROFILE || 'C:\\Users\\Vishwajeet', 'AppData', 'Roaming');
+const appData = process.env.APPDATA || path.join(process.env.USERPROFILE || require('os').homedir(), 'AppData', 'Roaming');
 const myraaDir = path.join(appData, 'MYRAA');
 const LOG_FILE = path.join(myraaDir, 'passive_learning_log.json');
 const WORKFLOWS_FILE = path.join(myraaDir, 'automation_workflows.json');
@@ -100,7 +100,7 @@ class PassiveLearningService {
       sessionName: this.sessionName,
       status: this.indicator,
       startedAt: this.startedAt,
-      message: '✓ Continuous passive learning activated. All password fields excluded automatically.'
+      message: '[OK] Continuous passive learning activated. All password fields excluded automatically.'
     };
   }
 
@@ -162,7 +162,7 @@ class PassiveLearningService {
       startedAt: this.startedAt,
       endedAt,
       workflow,
-      message: '✓ Passive learning stopped. Actions consolidated and saved.'
+      message: '[OK] Passive learning stopped. Actions consolidated and saved.'
     };
   }
 
@@ -300,7 +300,7 @@ class PassiveLearningService {
       workflowName: wf.name,
       stepsExecuted: results.length,
       details: results,
-      message: `✓ Replayed workflow '${wf.name}' (${results.length} steps executed)`
+      message: `[OK] Replayed workflow '${wf.name}' (${results.length} steps executed)`
     };
   }
 }

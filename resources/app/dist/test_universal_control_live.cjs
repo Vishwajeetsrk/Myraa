@@ -1,8 +1,9 @@
-const express = require('C:/Users/Vishwajeet/Music/Myraa/resources/app/node_modules/express');
+const path = require('path');
+const express = require(path.join(__dirname, '..', 'node_modules', 'express'));
 const app = express();
 app.use(express.json());
 
-const realRoutes = require('C:/Users/Vishwajeet/Music/Myraa/resources/app/dist/myraa_v6_real_routes.cjs');
+const realRoutes = require(path.join(__dirname, 'myraa_v6_real_routes.cjs'));
 app.use(realRoutes);
 
 const srv = app.listen(4055, async () => {
@@ -71,7 +72,7 @@ const srv = app.listen(4055, async () => {
     console.log(`[PASS] 6B. Password Redaction Barrier -> Redacted: ${isRedacted} (value: "${pwdData.recorded ? pwdData.recorded.value : 'none'}")`);
 
     // Verify raw log file on disk to guarantee plain password NEVER hit disk
-    const logPath = require('path').join(process.env.APPDATA || 'C:\\Users\\Vishwajeet\\AppData\\Roaming', 'MYRAA', 'passive_learning_log.json');
+    const logPath = require('path').join(process.env.APPDATA || path.join(require('os').homedir(), 'AppData', 'Roaming'), 'MYRAA', 'passive_learning_log.json');
     const logContent = require('fs').readFileSync(logPath, 'utf8');
     const leakFound = logContent.includes('SuperSecret123!');
     console.log(`[PASS] 6C. Log Inspection on Disk -> Password Leak Found: ${leakFound} (Guaranteed Excluded: ${!leakFound})`);

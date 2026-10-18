@@ -23,7 +23,7 @@ function checkHealth() {
 
   // Executable
   try {
-    const { resolveExecutable } = require('../launcher/executable_resolver.cjs');
+    const { resolveExecutable } = require('../../launcher/executable_resolver.cjs');
     const r = resolveExecutable();
     info.executable = r.found ? r.path : null;
     info.executableFound = r.found;
@@ -32,7 +32,7 @@ function checkHealth() {
 
   // Config
   try {
-    const reg = require('../launcher/installation_detector.cjs').readRegistry();
+    const reg = require('../../launcher/installation_detector.cjs').readRegistry();
     info.registry = reg ? 'ok' : 'missing';
     if (!reg) issues.push('Install registry missing — will be recreated');
   } catch (e) { issues.push('Registry check failed'); }

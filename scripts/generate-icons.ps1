@@ -1,6 +1,6 @@
 # MYRAA AI OS — Icon generation pipeline (single source)
 # -----------------------------------------------------------------------------
-# Source of truth : C:\Users\Vishwajeet\Music\Myraa.png
+# Source of truth : logo.png in the repository root
 # Generates       : resources/app/build/icon.png, icon.ico  (Electron)
 #                  src-tauri/icons/*                          (Tauri)
 #                  docs/installer/icon-*.png                  (installer assets)
@@ -10,7 +10,7 @@
 $ErrorActionPreference = 'Stop'
 
 $root    = Split-Path $PSScriptRoot -Parent
-$srcPng  = 'C:\Users\Vishwajeet\Music\Myraa.png'
+$srcPng  = Join-Path $root 'logo.png'
 $buildDir = Join-Path $root 'resources\app\build'
 $tauriIcons = Join-Path $root 'src-tauri\icons'
 $instDir = Join-Path $root 'docs\installer'

@@ -21,6 +21,24 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
+// Self-healing module resolution
+(function() {
+  const _fs = require("fs");
+  const _path = require("path");
+  const _candidates = [
+    _path.join(__dirname, "..", "node_modules"),
+    _path.join(__dirname, "..", "..", "node_modules"),
+    _path.join(__dirname, "..", "app.asar", "node_modules"),
+    _path.join(process.cwd(), "node_modules"),
+    process.env.MYRAA_APP_ROOT ? _path.join(process.env.MYRAA_APP_ROOT, "node_modules") : null,
+    process.resourcesPath ? _path.join(process.resourcesPath, "app.asar", "node_modules") : null,
+    process.resourcesPath ? _path.join(process.resourcesPath, "app", "node_modules") : null,
+  ].filter(p => p && _fs.existsSync(p));
+  for (const p of _candidates) {
+    if (!module.paths.includes(p)) module.paths.unshift(p);
+  }
+})();
+
 // server.ts
 var import_express = __toESM(require("express"), 1);
 var import_http = __toESM(require("http"), 1);
@@ -46,6 +64,36 @@ try {
   import_fs.default.mkdirSync(DATA_DIR, { recursive: true });
 } catch {
 }
+process.on("uncaughtException", (err) => {
+  console.error("[Server Guard] Uncaught Exception intercepted (prevented exit):", err && (err.stack || err.message || err));
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("[Server Guard] Unhandled Rejection intercepted (prevented exit):", reason && (reason.stack || reason.message || reason));
+});
+
+async function safeAtomicWrite(filePath, data, fsPromises) {
+  try {
+    const dir = import_path.default.dirname(filePath);
+    await fsPromises.mkdir(dir, { recursive: true }).catch(() => {});
+    const temp = `${filePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 6)}.tmp`;
+    try {
+      await fsPromises.writeFile(temp, data, "utf-8");
+      try {
+        await fsPromises.rename(temp, filePath);
+        return;
+      } catch (renameErr) {
+        // Fallback on Windows if rename encounters lock or AV check
+        await fsPromises.writeFile(filePath, data, "utf-8");
+        try { await fsPromises.unlink(temp); } catch (_) {}
+      }
+    } catch (writeErr) {
+      await fsPromises.writeFile(filePath, data, "utf-8");
+    }
+  } catch (err) {
+    // Session, memory or state persistence errors must never crash the backend
+  }
+}
+
 function dataFile(name) {
   return import_path.default.join(DATA_DIR, name);
 }
@@ -66,23 +114,36 @@ function getGeminiApiKey() {
   if (env) return env;
   try {
     const fallbackFiles = [
-      "C:\\Users\\Vishwajeet\\Music\\Myraa\\secrets.json",
-      "C:\\Users\\Vishwajeet\\Music\\Myraa\\.myraa-data\\secrets.json",
-      "C:\\Users\\Vishwajeet\\AppData\\Roaming\\MYRAA\\secrets.json",
-      "C:\\Users\\Vishwajeet\\AppData\\Local\\Programs\\MYRAA-AI-OS\\resources\\app\\secrets.json",
-      "C:\\Users\\Vishwajeet\\AppData\\Local\\Programs\\MYRAA-AI-OS\\resources\\app\\dist\\secrets.json",
-      "D:\\Team of Vishwajeet\\.env.local",
-      "D:\\Team of Vishwajeet\\.env"
+      path.join(process.env.APPDATA || "", "MYRAA", "secrets.json"),
+      path.join(process.env.APPDATA || "", "MYRAA AI OS", "secrets.json"),
+      path.join(process.env.USERPROFILE || os.homedir(), "Music", "Myraa", "secrets.json"),
+      path.join(process.env.USERPROFILE || os.homedir(), "Music", "Myraa", ".myraa-data", "secrets.json"),
+      path.join(process.env.LOCALAPPDATA || "", "Programs", "MYRAA", "resources", "app", "secrets.json"),
+      path.join(process.env.LOCALAPPDATA || "", "Programs", "MYRAA", "resources", "app", "dist", "secrets.json"),
+      path.join(process.env.LOCALAPPDATA || "", "Programs", "MYRAA-AI-OS", "resources", "app", "secrets.json"),
+      path.join(process.env.LOCALAPPDATA || "", "Programs", "MYRAA-AI-OS", "resources", "app", "dist", "secrets.json")
     ];
     for (const file of fallbackFiles) {
       if (import_fs.default.existsSync(file)) {
         const content = import_fs.default.readFileSync(file, "utf-8");
         if (file.endsWith(".json")) {
           const parsed = JSON.parse(content);
-          if (parsed.geminiApiKey?.trim()) return parsed.geminiApiKey.trim();
+          if (parsed.geminiApiKey?.trim()) {
+            const val = parsed.geminiApiKey.trim();
+            try {
+              const cur = readSecrets();
+              cur.geminiApiKey = val;
+              delete cur.ignoreEnvironmentApiKey;
+              import_fs.default.writeFileSync(SECRETS_FILE, JSON.stringify(cur, null, 2), "utf-8");
+            } catch {}
+            return val;
+          }
         } else {
           const match = content.match(/GEMINI_API_KEY=([^\r\n]+)/);
-          if (match) return match[1].replace(/['"]/g, "").trim();
+          if (match) {
+            const val = match[1].replace(/['"]/g, "").trim();
+            if (val) return val;
+          }
         }
       }
     }
@@ -93,7 +154,7 @@ function hasGeminiApiKey() {
   return Boolean(getGeminiApiKey());
 }
 function setGeminiApiKey(key) {
-  const trimmed = (key || "").trim();
+  const trimmed = key.trim();
   if (!trimmed) throw new Error("API key must not be empty.");
   const current = readSecrets();
   current.geminiApiKey = trimmed;
@@ -101,17 +162,27 @@ function setGeminiApiKey(key) {
   import_fs.default.writeFileSync(SECRETS_FILE, JSON.stringify(current, null, 2), "utf-8");
   try {
     import_fs.default.chmodSync(SECRETS_FILE, 384);
-  } catch {
-  }
+  } catch {}
+
+  // Mirror across common MYRAA AppData directories for total consistency
+  try {
+    const mirrorDirs = [
+      path.join(process.env.APPDATA || "", "MYRAA"),
+      path.join(process.env.APPDATA || "", "MYRAA AI OS")
+    ];
+    for (const d of mirrorDirs) {
+      if (!import_fs.default.existsSync(d)) import_fs.default.mkdirSync(d, { recursive: true });
+      const secPath = path.join(d, "secrets.json");
+      let existing = {};
+      try { if (import_fs.default.existsSync(secPath)) existing = JSON.parse(import_fs.default.readFileSync(secPath, "utf-8")); } catch {}
+      existing.geminiApiKey = trimmed;
+      delete existing.ignoreEnvironmentApiKey;
+      import_fs.default.writeFileSync(secPath, JSON.stringify(existing, null, 2), "utf-8");
+    }
+  } catch {}
 }
 function clearGeminiApiKey() {
-  const current = readSecrets();
-  delete current.geminiApiKey;
-  current.ignoreEnvironmentApiKey = true;
-  try {
-    import_fs.default.writeFileSync(SECRETS_FILE, JSON.stringify(current, null, 2), "utf-8");
-  } catch {
-  }
+  console.warn("[Key Management] clearGeminiApiKey invoked - preserving user credentials per Rule 2");
 }
 
 // server_memory.ts
@@ -902,10 +973,8 @@ var GoalManager = class {
   async persist() {
     const payload = { version: 1, goals: this.goals };
     this.writeQueue = this.writeQueue.then(async () => {
-      const temp = `${this.filePath}.${process.pid}.tmp`;
-      await import_promises2.default.writeFile(temp, JSON.stringify(payload, null, 2), "utf-8");
-      await import_promises2.default.rename(temp, this.filePath);
-    });
+      await safeAtomicWrite(this.filePath, JSON.stringify(payload, null, 2), import_promises2.default);
+    }).catch(() => {});
     await this.writeQueue;
   }
   assertLoaded() {
@@ -2084,10 +2153,8 @@ var SkillManager = class {
   async persist() {
     const payload = { version: 1, skills: this.skills };
     this.writeQueue = this.writeQueue.then(async () => {
-      const temp = `${this.filePath}.${process.pid}.tmp`;
-      await import_promises3.default.writeFile(temp, JSON.stringify(payload, null, 2), "utf-8");
-      await import_promises3.default.rename(temp, this.filePath);
-    });
+      await safeAtomicWrite(this.filePath, JSON.stringify(payload, null, 2), import_promises3.default);
+    }).catch(() => {});
     await this.writeQueue;
   }
   assertLoaded() {
@@ -2312,10 +2379,8 @@ var StructuredMemoryStore = class {
   async persist() {
     const payload = { version: 1, memories: this.memories };
     this.writeQueue = this.writeQueue.then(async () => {
-      const temp = `${this.filePath}.${process.pid}.tmp`;
-      await import_promises4.default.writeFile(temp, JSON.stringify(payload, null, 2), "utf-8");
-      await import_promises4.default.rename(temp, this.filePath);
-    });
+      await safeAtomicWrite(this.filePath, JSON.stringify(payload, null, 2), import_promises4.default);
+    }).catch(() => {});
     await this.writeQueue;
   }
   assertLoaded() {
@@ -2580,19 +2645,19 @@ var CognitiveRuntime = class {
     this.sessionPersistTimer.unref?.();
   }
   async persistSession() {
-    const cognitionDir = import_node_path4.default.join(this.options.dataDir, "cognition");
-    await import_promises5.default.mkdir(cognitionDir, { recursive: true });
-    const target = import_node_path4.default.join(cognitionDir, "last-session.json");
-    const temp = `${target}.${process.pid}.tmp`;
-    const payload = {
-      version: 1,
-      savedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      // Pending actions are intentionally not persisted or resumed.
-      situation: { ...this.situation.getSnapshot(), pendingRisk: null },
-      unfinishedGoals: this.goals.list().filter((goal) => ["active", "blocked", "pending"].includes(goal.status))
-    };
-    await import_promises5.default.writeFile(temp, JSON.stringify(payload, null, 2), "utf-8");
-    await import_promises5.default.rename(temp, target);
+    try {
+      const cognitionDir = import_node_path4.default.join(this.options.dataDir, "cognition");
+      const target = import_node_path4.default.join(cognitionDir, "last-session.json");
+      const payload = {
+        version: 1,
+        savedAt: (/* @__PURE__ */ new Date()).toISOString(),
+        situation: { ...this.situation.getSnapshot(), pendingRisk: null },
+        unfinishedGoals: this.goals.list().filter((goal) => ["active", "blocked", "pending"].includes(goal.status))
+      };
+      await safeAtomicWrite(target, JSON.stringify(payload, null, 2), import_promises5.default);
+    } catch (err) {
+      // Non-fatal: session state failure must never bring down the server
+    }
   }
   async log(outcome) {
     await this.options.logger?.({
@@ -2993,6 +3058,44 @@ function isImportantPath(value, projectRoot) {
 var PERMISSIONS_FILE = dataFile("permissions.json");
 var PERMISSIONS_CACHE = null;
 var PERMISSIONS_CACHE_AT = 0;
+// -- Screen-awareness consent (P0-R2 2026-10-07) -----------------------------
+// REST screen capture requires explicit opt-in. Default comes from
+// MYRAA_ENABLE_SCREEN_AWARENESS (default false). Consent persists in
+// screen_awareness_consent.json next to permissions.json. The WS
+// SHARE-SCREEN button flow is unchanged (the button press is the consent
+// for that session flow). One-time enable: POST /api/screen-awareness/consent.
+var SCREEN_CONSENT_FILE = dataFile("screen_awareness_consent.json");
+var SCREEN_CONSENT_CACHE = null;
+function defaultScreenConsent() {
+  const v = String(process.env.MYRAA_ENABLE_SCREEN_AWARENESS || "").toLowerCase();
+  return v === "1" || v === "true" || v === "yes" || v === "on";
+}
+function loadScreenConsent() {
+  if (SCREEN_CONSENT_CACHE !== null) return SCREEN_CONSENT_CACHE;
+  let enabled = defaultScreenConsent();
+  let updatedAt = null;
+  try {
+    if (import_fs.default.existsSync(SCREEN_CONSENT_FILE)) {
+      const parsed = JSON.parse(import_fs.default.readFileSync(SCREEN_CONSENT_FILE, "utf-8"));
+      if (parsed && typeof parsed.enabled === "boolean") { enabled = parsed.enabled; updatedAt = parsed.updatedAt || null; }
+    }
+  } catch {
+  }
+  SCREEN_CONSENT_CACHE = { enabled: enabled, updatedAt: updatedAt };
+  return SCREEN_CONSENT_CACHE;
+}
+function saveScreenConsent(enabled) {
+  SCREEN_CONSENT_CACHE = { enabled: Boolean(enabled), updatedAt: new Date().toISOString() };
+  try {
+    import_fs.default.writeFileSync(SCREEN_CONSENT_FILE, JSON.stringify(SCREEN_CONSENT_CACHE, null, 2), "utf-8");
+  } catch {
+  }
+  return SCREEN_CONSENT_CACHE;
+}
+function screenCaptureAllowed() { return loadScreenConsent().enabled === true; }
+function screenConsentDenied(res) {
+  return res.status(403).json({ ok: false, code: "SCREEN_AWARENESS_CONSENT_REQUIRED", error: "Screen awareness is OFF. Enable it first: POST /api/screen-awareness/consent {\"enabled\": true}. Status: GET /api/screen-awareness/status." });
+}
 function defaultApprovedRoots() {
   const home = process.env.USERPROFILE || process.env.HOME || (process.platform === "win32" ? "C:\\Users" : "/home");
   const desktop = import_path.default.join(home, "Desktop");
@@ -3419,10 +3522,10 @@ var ApiAdapterRegistry = class {
     return structuredClone(adapter);
   }
   async persist() {
-    const temporary = `${this.filePath}.tmp-${process.pid}`;
-    const payload = { version: 1, adapters: [...this.adapters.values()] };
-    await import_promises6.default.writeFile(temporary, JSON.stringify(payload, null, 2), "utf-8");
-    await import_promises6.default.rename(temporary, this.filePath);
+    try {
+      const payload = { version: 1, adapters: [...this.adapters.values()] };
+      await safeAtomicWrite(this.filePath, JSON.stringify(payload, null, 2), import_promises6.default);
+    } catch (_) {}
   }
   assertLoaded() {
     if (!this.loaded) throw new Error("API adapter registry has not been initialized.");
@@ -4050,10 +4153,8 @@ var ApiCapabilityRegistry = class {
       providers: [...this.providers.values()]
     };
     this.writeQueue = this.writeQueue.then(async () => {
-      const temporary = `${this.filePath}.tmp-${process.pid}`;
-      await import_promises7.default.writeFile(temporary, JSON.stringify(payload, null, 2), "utf-8");
-      await import_promises7.default.rename(temporary, this.filePath);
-    });
+      await safeAtomicWrite(this.filePath, JSON.stringify(payload, null, 2), import_promises7.default);
+    }).catch(() => {});
     return this.writeQueue;
   }
   assertLoaded() {
@@ -4385,6 +4486,11 @@ var DESKTOP_TOOLS = /* @__PURE__ */ new Set([
   "createWordDocument",
   "createWord",
   "editWord",
+  "executeCodingTask",
+  "codingTask",
+  "codingAgent",
+  "executeSkill",
+  "runSkill",
   // applications / websites / search
   "openApplication",
   "closeApplication",
@@ -4511,11 +4617,15 @@ async function captureViaElectron(maxDim) {
     }
   });
 }
+
 function findPythonRuntime() {
+  const localApp = process.env.LOCALAPPDATA || '';
   const candidates = [
     process.env.MYRAA_PYTHON,
-    "C:\\Users\\MSI\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
-    "C:\\Users\\MSI\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+    path.join(localApp, 'Programs', 'Python', 'Python314', 'python.exe'),
+    path.join(localApp, 'Programs', 'Python', 'Python312', 'python.exe'),
+    path.join(localApp, 'Programs', 'Python', 'Python311', 'python.exe'),
+    path.join(localApp, 'Programs', 'Python', 'Python310', 'python.exe'),
     "python",
     "python3"
   ].filter(Boolean);
@@ -4537,7 +4647,7 @@ function spawnDesktopAgent() {
   const frozenCandidates = [
     process.env.MYRAA_AGENT_EXE,
     import_path2.default.join(__dirname, "..", "..", "agent", "myraa-agent.exe"),
-    "C:\\Users\\Vishwajeet\\Music\\Myraa\\resources\\agent\\myraa-agent.exe",
+    import_path2.default.join(process.env.USERPROFILE || require('os').homedir(), "Music", "Myraa", "resources", "agent", "myraa-agent.exe"),
     import_path2.default.join(process.cwd(), "resources", "agent", "myraa-agent.exe"),
     import_path2.default.join(process.cwd(), "agent_dist", "myraa-agent", "myraa-agent.exe")
   ];
@@ -4888,9 +4998,51 @@ async function callDesktopAgent(tool, args = {}, outerSignal) {
 
     // ── Universal App Typing & Office Automation ───────────────────────────
     else if (tool === "typeIntoApp" || tool === "writeIntoApp" || tool === "editApp") nativeRes = nativeDA.typeIntoApp(args.appName || args.app || args.target || args.name, args.text || args.content || args.body, args.clearFirst || false);
-    else if (tool === "editWord" || tool === "createWord" || tool === "wordDocument" || tool === "createWordDocument") nativeRes = nativeDA.editWord(args.text || args.content || args.body, args.filePath || args.path, args.title || args.name);
-    else if (tool === "editExcel" || tool === "createExcel" || tool === "excelSpreadsheet" || tool === "createExcelDocument") nativeRes = nativeDA.editExcel(args.data || args.text || args.content, args.filePath || args.path);
-    else if (tool === "editPowerPoint" || tool === "createPowerPoint" || tool === "pptPresentation") nativeRes = nativeDA.editPowerPoint(args.title || args.name, args.content || args.text || args.body, args.filePath || args.path);
+    else if (tool === "editWord" || tool === "createWord" || tool === "wordDocument" || tool === "createWordDocument") {
+      const OfficeDocEngine = require('./office_doc_engine.cjs');
+      const action = args.action || 'create';
+      if (action === 'review') {
+        nativeRes = await OfficeDocEngine.reviewWord({ filePath: args.filePath, content: args.text || args.content });
+      } else if (action === 'redesign') {
+        nativeRes = await OfficeDocEngine.redesignWord({ filePath: args.filePath, options: args.design || {} });
+      } else if (action === 'merge') {
+        nativeRes = await OfficeDocEngine.mergeWord({ filePaths: args.filePaths || [], outputFilename: args.filePath });
+      } else if (action === 'split') {
+        nativeRes = await OfficeDocEngine.splitWord({ filePath: args.filePath, splitBy: args.splitBy || 'heading' });
+      } else if (action === 'findReplace') {
+        nativeRes = await OfficeDocEngine.findReplaceWord({ filePath: args.filePath, findText: args.findText, replaceText: args.replaceText, caseSensitive: args.caseSensitive, wholeWord: args.wholeWord });
+      } else if (action === 'exportPdf') {
+        nativeRes = await OfficeDocEngine.exportToPdf({ filePath: args.filePath });
+      } else if (action === 'analyze') {
+        nativeRes = await OfficeDocEngine.analyzeWord({ filePath: args.filePath });
+      } else if (action === 'read') {
+        nativeRes = await OfficeDocEngine.readDocument(args.filePath);
+      } else {
+        nativeRes = await OfficeDocEngine.generateWord({ filename: args.filePath || args.title, title: args.title, subtitle: args.subtitle, sections: args.sections, table: args.table, docType: args.docType, design: args.design, images: args.images });
+      }
+    }
+    else if (tool === "editExcel" || tool === "createExcel" || tool === "excelSpreadsheet" || tool === "createExcelDocument") {
+      const OfficeDocEngine = require('./office_doc_engine.cjs');
+      nativeRes = await OfficeDocEngine.generateExcel({ sheetName: args.sheetName || args.title || 'Data Sheet', headers: args.headers, rows: args.rows, totalFormula: args.totalFormula });
+      if (nativeRes && nativeRes.ok && nativeRes.path && OfficeDocEngine.openInSystem) {
+        OfficeDocEngine.openInSystem(nativeRes.path);
+      }
+    }
+    else if (tool === "editPowerPoint" || tool === "createPowerPoint" || tool === "pptPresentation") {
+      const OfficeDocEngine = require('./office_doc_engine.cjs');
+      nativeRes = await OfficeDocEngine.generatePresentation({ title: args.title || args.name || 'Executive Presentation', subtitle: args.subtitle, slides: args.slides });
+      if (nativeRes && nativeRes.ok && nativeRes.path && OfficeDocEngine.openInSystem) {
+        OfficeDocEngine.openInSystem(nativeRes.path);
+      }
+    }
+    else if (tool === "executeCodingTask" || tool === "codingTask" || tool === "codingAgent") {
+      const codingOrchestrator = require('./coding_orchestrator.cjs');
+      nativeRes = await codingOrchestrator.executeCodingTask(args.task || args.prompt || args.query || args.message || 'git status', { projectDir: args.projectDir || process.env.MYRAA_PROJECT_DIR || process.cwd() });
+    }
+    else if (tool === "executeSkill" || tool === "runSkill") {
+      const skillsMcpEngine = require('./skills_mcp_engine.cjs');
+      nativeRes = await skillsMcpEngine.executeTool(args.name || args.skill, args.parameters || args.args || {});
+    }
     else if (tool === "openPaint" || tool === "editPaint" || tool === "drawPaint") nativeRes = nativeDA.openPaint(args.filePath || args.path, args.action || 'open');
     else if (tool === "printDocument" || tool === "print" || tool === "msPrint") nativeRes = nativeDA.printDocument(args.filePath || args.path, args.printerName || args.printer);
     else if (tool === "editVsCode" || tool === "openVsCode" || tool === "writeVsCode") nativeRes = nativeDA.editVsCode(args.filePath || args.path, args.content || args.code, args.line || 1);
@@ -4946,7 +5098,7 @@ async function callDesktopAgent(tool, args = {}, outerSignal) {
 }
 async function startServer() {
   const app = (0, import_express.default)();
-  const PORT = 3e3;
+  const PORT = process.env.MYRAA_LAUNCHED_BY === 'electron' ? 3000 : (Number(process.env.MYRAA_PORT || process.env.PORT) || 3000);
   app.use(import_express.default.json({ limit: "25mb" }));
   try {
     const { createSecurityMiddleware } = require(import_path2.default.join(__dirname, "server_security.cjs"));
@@ -4955,6 +5107,114 @@ async function startServer() {
   } catch(e) {
     console.warn("[Server] Security layer not mounted:", e.message);
   }
+  try {
+    const courseStudioRoutes = require(import_path2.default.join(__dirname, "course_studio_routes.cjs"));
+    app.use(courseStudioRoutes);
+    console.log("[Server] Successfully mounted course_studio_routes.cjs");
+  } catch(e) {
+    console.warn("[Server] Could not mount course_studio_routes.cjs:", e.message);
+  }
+  try {
+    const awarenessRoutes = require(import_path2.default.join(__dirname, "live_awareness_routes.cjs"));
+    app.use(awarenessRoutes);
+    console.log("[Server] Successfully mounted live_awareness_routes.cjs");
+  } catch(e) {
+    console.warn("[Server] Could not mount live_awareness_routes.cjs:", e.message);
+  }
+  try {
+    const courseLearnRoutes = require(import_path2.default.join(__dirname, "course_studio_learn_routes.cjs"));
+    app.use(courseLearnRoutes);
+    console.log("[Server] Successfully mounted course_studio_learn_routes.cjs");
+  } catch(e) {
+    console.warn("[Server] Could not mount course_studio_learn_routes.cjs:", e.message);
+  }
+  try {
+    const computeRoutes = require(import_path2.default.join(__dirname, "compute_routes.cjs"));
+    app.use(computeRoutes);
+    console.log("[Server] Successfully mounted compute_routes.cjs");
+  } catch(e) {
+    console.warn("[Server] Could not mount compute_routes.cjs:", e.message);
+  }
+  try {
+    const pointerRoutes = require(import_path2.default.join(__dirname, "pointer_routes.cjs"));
+    app.use(pointerRoutes);
+    console.log("[Server] Successfully mounted pointer_routes.cjs");
+  } catch(e) {
+    console.warn("[Server] Could not mount pointer_routes.cjs:", e.message);
+  }
+  try {
+    const gestureRoutes = require(import_path2.default.join(__dirname, "gesture_routes.cjs"));
+    app.use(gestureRoutes);
+    console.log("[Server] Successfully mounted gesture_routes.cjs");
+  } catch(e) {
+    console.warn("[Server] Could not mount gesture_routes.cjs:", e.message);
+  }
+  try {
+    const evidenceRoutes = require(import_path2.default.join(__dirname, "evidence_routes.cjs"));
+    app.use(evidenceRoutes);
+    console.log("[Server] Successfully mounted evidence_routes.cjs");
+  } catch(e) {
+    console.warn("[Server] Could not mount evidence_routes.cjs:", e.message);
+  }
+
+  try {
+    // Phase 19: connector marketplace -> agi tool_execution_engine + status router
+    const connToolEngine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
+    const connectorMarket = require(import_path2.default.join(__dirname, "connector_market.cjs"));
+    const mountedConn = connectorMarket.registerAgiTools(connToolEngine);
+    app.use("/api/connector-market", connectorMarket.createRouter());
+    console.log("[Server] Connector market mounted " + mountedConn.count + " agi tools (Phase 19)");
+  } catch(e) {
+    console.warn("[Server] Could not mount connector market:", e.message);
+  }
+  try {
+    // Phase 20: model gateway -> agi tool_execution_engine + status/probe/chat router
+    const gwToolEngine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
+    const modelGateway = require(import_path2.default.join(__dirname, "model_gateway.cjs"));
+    const mountedGw = modelGateway.registerAgiTools(gwToolEngine);
+    app.use("/api/model-gateway", modelGateway.createRouter());
+    console.log("[Server] Model gateway mounted " + mountedGw.count + " agi tools (Phase 20)");
+  } catch(e) {
+    console.warn("[Server] Could not mount model gateway:", e.message);
+  }
+  try {
+    // Phase 22: unified event bus -> agi tool + /api/events router
+    const eventsToolEngine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
+    const eventBus = require(import_path2.default.join(__dirname, "event_bus.cjs"));
+    const mountedEvents = eventBus.registerAgiTools(eventsToolEngine);
+    app.use("/api/events", eventBus.createRouter());
+    eventBus.emit('system.server_start', { phase: 22, note: 'boot' }, { source: 'server' });
+    console.log("[Server] Event bus mounted " + mountedEvents.count + " agi tools (Phase 22)");
+  } catch(e) {
+    console.warn("[Server] Could not mount event bus:", e.message);
+  }
+  try {
+    // Phase 23: task timeline -> agi tools + /api/timeline router
+    const timelineToolEngine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
+    const taskTimeline = require(import_path2.default.join(__dirname, "task_timeline.cjs"));
+    const mountedTimeline = taskTimeline.registerAgiTools(timelineToolEngine);
+    app.use("/api/timeline", taskTimeline.createRouter());
+    console.log("[Server] Task timeline mounted " + mountedTimeline.count + " agi tools (Phase 23)");
+  } catch(e) {
+    console.warn("[Server] Could not mount task timeline:", e.message);
+  }
+  try {
+    // Phase 24: per-agent tool permissions + MCP manager skeleton
+    const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
+    const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
+    const mcpManager = require(import_path2.default.join(__dirname, "mcp_manager.cjs"));
+    const mountedPerm = toolPermissions.registerAgiTools(phase24Engine);
+    const mountedMcp = mcpManager.registerAgiTools(phase24Engine);
+    app.use("/api/permissions", toolPermissions.createRouter());
+    app.use("/api/mcp", mcpManager.createRouter());
+    console.log("[Server] Permissions + MCP skeleton mounted " + (mountedPerm.count + mountedMcp.count) + " agi tools (Phase 24)");
+  } catch(e) {
+    console.warn("[Server] Could not mount permissions/mcp:", e.message);
+  }
+
+
+
+
   try {
     const realRoutes = require(import_path2.default.join(__dirname, "myraa_v6_real_routes.cjs"));
     app.use(realRoutes);
@@ -5272,17 +5532,17 @@ async function startServer() {
   app.get("/api/api-hub/health", async (_req, res) => {
     try {
       const providers = apiHub.registry.list({ limit: 500 });
-      const results = [];
       const slice = providers.slice(0, 40);
-      for (const p of slice) {
+      const results = await Promise.all(slice.map(async (p) => {
         try {
-          results.push(Object.assign({ id: p.id, name: p.name }, await apiHub.checkProvider(p.id)));
+          return Object.assign({ id: p.id, name: p.name }, await apiHub.checkProvider(p.id));
         } catch (e) {
-          results.push({ id: p.id, name: p.name, state: "unchecked", error: e.message || String(e) });
+          return { id: p.id, name: p.name, state: "unchecked", error: e.message || String(e) };
         }
-      }
-      const healthy = results.filter(function (r) { return r.state === "healthy"; }).length;
-      const broken = results.filter(function (r) { return r.state === "broken"; }).length;
+      }));
+      const stateOf = function (r) { return (r.health && r.health.state) || r.state || "unchecked"; };
+      const healthy = results.filter(function (r) { return stateOf(r) === "healthy"; }).length;
+      const broken = results.filter(function (r) { return stateOf(r) === "broken"; }).length;
       res.json({ checkedAt: new Date().toISOString(), total: results.length, healthy: healthy, broken: broken, degraded: results.length - healthy - broken, providers: results });
     } catch (e) {
       res.status(500).json({ error: e.message || String(e) });
@@ -5608,8 +5868,33 @@ async function startServer() {
     saveApprovedRoots(roots);
     res.json({ roots: roots });
   });
+  app.get("/api/screen-awareness/status", (_req, res) => {
+    const c = loadScreenConsent();
+    res.json({ ok: true, enabled: c.enabled, updatedAt: c.updatedAt, defaultFromEnv: defaultScreenConsent(), consentFile: "screen_awareness_consent.json" });
+  });
+  app.post("/api/screen-awareness/consent", (req, res) => {
+    const enabled = req.body?.enabled;
+    if (typeof enabled !== "boolean") return res.status(400).json({ ok: false, error: '"enabled" (boolean) is required.' });
+    const c = saveScreenConsent(enabled);
+    res.json({ ok: true, enabled: c.enabled, updatedAt: c.updatedAt });
+  });
   app.get("/api/config", (_req, res) => {
     res.json({ hasApiKey: hasGeminiApiKey() });
+  });
+  app.post("/api/desktop/capture", async (_req, res) => {
+    if (!screenCaptureAllowed()) return screenConsentDenied(res);
+    try {
+      const nativeDA = require("./desktopAutomation.cjs");
+      const snap = nativeDA.takeScreenshot();
+      if (snap && snap.image) {
+        const rawB64 = snap.image.replace(/^data:image\/[a-z]+;base64,/, "");
+        res.json({ ok: true, image_base64: rawB64, image_mime: "image/jpeg", width: 1920, height: 1080, message: "Captured desktop screenshot" });
+      } else {
+        res.json({ ok: false, error: snap?.message || "Desktop screen capture unavailable in current headless/minimized session" });
+      }
+    } catch (e) {
+      res.json({ ok: false, error: e.message });
+    }
   });
   app.post("/api/config/apikey", async (req, res) => {
     try {
@@ -5657,6 +5942,7 @@ async function startServer() {
     }
   });
   app.post("/api/screen-vision", async (req, res) => {
+    if (!screenCaptureAllowed()) return screenConsentDenied(res);
     try {
       const maxDim = Math.max(320, Math.min(1920, Number(req.body?.max_dim) || 1024));
       const keepFile = Boolean(req.body?.keep_file);
@@ -6049,6 +6335,213 @@ ${interceptorScript}`);
     }
   });
 
+  // ========== WORLD AWARENESS ENGINE ==========
+  let worldAwareness = null;
+  try {
+    const WorldAwarenessEngine = require('./world_awareness_engine.cjs');
+    worldAwareness = new WorldAwarenessEngine();
+    console.log('[WorldAwareness] Engine loaded');
+  } catch (e) { console.warn('[WorldAwareness] Not available:', e.message); }
+
+  app.get('/api/world/time', async (_req, res) => {
+    try { res.json(await worldAwareness.getTime()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/world/weather', async (req, res) => {
+    try { res.json(await worldAwareness.getWeather(req.query.city, req.query.units)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/world/location', async (_req, res) => {
+    try { res.json(await worldAwareness.getLocation()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/world/news', async (req, res) => {
+    try { res.json(await worldAwareness.getNews(req.query.category, req.query.country, parseInt(req.query.limit) || 10)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/world/search', async (req, res) => {
+    try { res.json(await worldAwareness.searchWeb(req.query.q, parseInt(req.query.limit) || 10)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/world/verify-source', async (req, res) => {
+    try { res.json(await worldAwareness.verifySource(req.body.claim)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/world/truth-check', async (req, res) => {
+    try { res.json(await worldAwareness.truthCheck(req.body.statement)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/world/freshness', async (req, res) => {
+    try { res.json(await worldAwareness.checkFreshness(req.query.topic)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/world/briefing', async (req, res) => {
+    try { res.json(await worldAwareness.getMorningBriefing(req.query.city)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/world/breaking', async (req, res) => {
+    try { res.json(await worldAwareness.getBreakingNews(req.query.category)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/world/configure', async (req, res) => {
+    try { res.json(worldAwareness.configure(req.body)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/world/state', (_req, res) => {
+    try { res.json(worldAwareness.getState()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  // ========== GESTURE ENGINE ==========
+  let gestureEngine = null;
+  try {
+    const GestureEngine = require('./gesture_engine.cjs');
+    gestureEngine = new GestureEngine();
+    console.log('[Gesture] Engine loaded');
+  } catch (e) { console.warn('[Gesture] Not available:', e.message); }
+
+  app.get('/api/gesture/state', (_req, res) => {
+    try { res.json(gestureEngine.getState()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/gesture/start', (_req, res) => {
+    try { res.json(gestureEngine.start()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/gesture/stop', (_req, res) => {
+    try { res.json(gestureEngine.stop()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/gesture/configure', (req, res) => {
+    try { res.json(gestureEngine.configure(req.body)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/gesture/history', (_req, res) => {
+    try { res.json(gestureEngine.getGestureHistory()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/gesture/registered', (_req, res) => {
+    try { res.json(gestureEngine.getRegisteredGestures()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/gesture/register', (req, res) => {
+    try { gestureEngine.registerGesture(req.body.name, req.body.config); res.json({ registered: req.body.name }); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/gesture/process-landmarks', (req, res) => {
+    try { res.json(gestureEngine.processHandLandmarks(req.body.landmarks, req.body.width, req.body.height)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  // ========== CAD ENGINE ==========
+  let cadEngine = null;
+  try {
+    const CADEngine = require('./cad_engine.cjs');
+    cadEngine = new CADEngine();
+    console.log('[CAD] Engine loaded');
+  } catch (e) { console.warn('[CAD] Not available:', e.message); }
+
+  app.get('/api/cad/state', (_req, res) => {
+    try { res.json(cadEngine.getState()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/cad/capabilities', (_req, res) => {
+    try { res.json(cadEngine.getCapabilities()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/cad/generate', async (req, res) => {
+    try { res.json(await cadEngine.generateDesign(req.body.prompt, req.body.options)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/cad/iterate', async (req, res) => {
+    try { res.json(await cadEngine.iterateDesign(req.body.iteration)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/cad/history', (_req, res) => {
+    try { res.json(cadEngine.getDesignHistory()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/cad/designs', (_req, res) => {
+    try { res.json(cadEngine.listDesigns()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/cad/export', async (req, res) => {
+    try { res.json(await cadEngine.exportDesign(req.body.name, req.body.format)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/cad/set-python', (req, res) => {
+    try { res.json(cadEngine.setPythonPath(req.body.pythonPath)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  // ========== BROWSER AGENT ==========
+  let browserAgent = null;
+  try {
+    const BrowserAgent = require('./browser_agent.cjs');
+    browserAgent = new BrowserAgent();
+    console.log('[Browser] Agent loaded');
+  } catch (e) { console.warn('[Browser] Agent not available:', e.message); }
+
+  app.get('/api/browser/state', (_req, res) => {
+    try { res.json(browserAgent.getState()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/browser/capabilities', (_req, res) => {
+    try { res.json(browserAgent.getCapabilities()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/start', async (req, res) => {
+    try { res.json(await browserAgent.start(req.body.headless)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/stop', async (_req, res) => {
+    try { res.json(await browserAgent.stop()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/navigate', async (req, res) => {
+    try { res.json(await browserAgent.navigate(req.body.url, req.body.options)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/back', async (_req, res) => {
+    try { res.json(await browserAgent.goBack()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/forward', async (_req, res) => {
+    try { res.json(await browserAgent.goForward()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/click', async (req, res) => {
+    try { res.json(await browserAgent.click(req.body.selector, req.body.options)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/type', async (req, res) => {
+    try { res.json(await browserAgent.type(req.body.selector, req.body.text, req.body.options)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/press', async (req, res) => {
+    try { res.json(await browserAgent.press(req.body.key, req.body.options)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/scroll', async (req, res) => {
+    try { res.json(await browserAgent.scroll(req.body.direction, req.body.amount)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/screenshot', async (req, res) => {
+    try { res.json(await browserAgent.screenshot(req.body.options)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/evaluate', async (req, res) => {
+    try { res.json(await browserAgent.evaluate(req.body.script)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/browser/search', async (req, res) => {
+    try { res.json(await browserAgent.searchGoogle(req.body.query)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/browser/history', (_req, res) => {
+    try { res.json(browserAgent.getActionHistory()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  // ========== 3D PRINT ENGINE ==========
+  let printEngine = null;
+  try {
+    const PrintEngine3D = require('./print_engine_3d.cjs');
+    printEngine = new PrintEngine3D();
+    console.log('[Print3D] Engine loaded');
+  } catch (e) { console.warn('[Print3D] Engine not available:', e.message); }
+
+  app.get('/api/print/state', (_req, res) => {
+    try { res.json(printEngine.getState()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/print/capabilities', (_req, res) => {
+    try { res.json(printEngine.getCapabilities()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/print/add-printer', async (req, res) => {
+    try { res.json(await printEngine.addPrinter(req.body)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/print/remove-printer', (req, res) => {
+    try { res.json(printEngine.removePrinter(req.body.printerId)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/print/printers', (_req, res) => {
+    try { res.json(printEngine.getPrinters()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/print/status/:printerId?', async (req, res) => {
+    try { res.json(await printEngine.getStatus(req.params.printerId)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/print/slice', async (req, res) => {
+    try { res.json(await printEngine.slice(req.body.stlPath, req.body.options)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/print/upload', async (req, res) => {
+    try { res.json(await printEngine.uploadAndPrint(req.body.printerId, req.body.gcodePath)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/print/cancel', async (req, res) => {
+    try { res.json(await printEngine.cancelPrint(req.body.printerId)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.post('/api/print/pause', async (req, res) => {
+    try { res.json(await printEngine.pausePrint(req.body.printerId)); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+  app.get('/api/print/history', (_req, res) => {
+    try { res.json(printEngine.getPrintHistory()); } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
   const server = import_http.default.createServer(app);
   const wss = new import_ws.WebSocketServer({ noServer: true });
   server.on("upgrade", (request, socket, head) => {
@@ -6071,6 +6564,17 @@ ${interceptorScript}`);
   });
   wss.on("connection", async (clientWs) => {
     console.log("Client WebSocket connected to /live");
+    let isWsAlive = true;
+    clientWs.on("pong", () => { isWsAlive = true; });
+    const wsHeartbeatInterval = setInterval(() => {
+      if (clientWs.readyState !== 1) return;
+      if (!isWsAlive) {
+        console.log("[Myraa WS] Client heartbeat missing, terminating dead socket");
+        return clientWs.terminate();
+      }
+      isWsAlive = false;
+      clientWs.ping();
+    }, 25000);
     const connectionId = (0, import_node_crypto10.randomUUID)();
     let screenVision = null;
     const rememberScreenVision = (pipeline) => {
@@ -6270,7 +6774,7 @@ ${presenceInstructions}`,
         userCognitionTimer.unref?.();
       };
       const session = await ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-latest",
         config: {
           responseModalities: [import_genai2.Modality.AUDIO],
           inputAudioTranscription: {},
@@ -6743,15 +7247,23 @@ ${presenceInstructions}`,
                 // --- Office & Universal Typing Tools ---
                 {
                   name: "editWord",
-                  description: "Creates, writes, or edits a Microsoft Word document (.docx). Opens Word, writes formatted title and content, and saves to file if requested.",
+                  description: "Creates, writes, edits, formats, reviews, redesigns, merges, splits, finds/replaces in Microsoft Word documents. Supports 20+ document types including letters, reports, resumes, proposals, contracts, technical docs, SOPs, manuals, whitepapers. Professional design system with typography, styles, tables, images, headers/footers, TOC, PDF export.",
                   parameters: {
                     type: import_genai2.Type.OBJECT,
                     properties: {
+                      action: { type: import_genai2.Type.STRING, description: "Action to perform: create, read, edit, format, review, redesign, merge, split, findReplace, exportPdf, analyze" },
                       title: { type: import_genai2.Type.STRING, description: "Document title or headline." },
                       text: { type: import_genai2.Type.STRING, description: "Full document body text or report content to write into Word." },
-                      filePath: { type: import_genai2.Type.STRING, description: "Optional path to save or open the Word document." }
+                      filePath: { type: import_genai2.Type.STRING, description: "Path to existing Word document for read/edit/review/redesign/merge/split/export operations." },
+                      docType: { type: import_genai2.Type.STRING, description: "Document type: letter, report, resume, proposal, contract, technical, sops, manual, whitepaper, essay, article, meetingMinutes, invoice, prd, readme" },
+                      sections: { type: import_genai2.Type.ARRAY, items: { type: import_genai2.Type.OBJECT }, description: "Document sections with heading and content" },
+                      table: { type: import_genai2.Type.OBJECT, description: "Table data with headers and rows arrays" },
+                      findText: { type: import_genai2.Type.STRING, description: "Text to find (for findReplace action)" },
+                      replaceText: { type: import_genai2.Type.STRING, description: "Replacement text (for findReplace action)" },
+                      filePaths: { type: import_genai2.Type.ARRAY, items: { type: import_genai2.Type.STRING }, description: "Array of file paths for merge action" },
+                      design: { type: import_genai2.Type.OBJECT, description: "Design options: accentColor, bodyFont, headingFont, pageSize, orientation, margins" }
                     },
-                    required: ["text"]
+                    required: ["action"]
                   }
                 },
                 {
@@ -6991,6 +7503,169 @@ ${presenceInstructions}`,
                     },
                     required: ["repoUrl"]
                   }
+                },
+                // ======== WORLD AWARENESS TOOLS ========
+                {
+                  name: "getTime",
+                  description: "Get current date, time, timezone, greeting, and day of week for the user's location.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {} }
+                },
+                {
+                  name: "getWeather",
+                  description: "Get current weather, temperature, humidity, wind, and conditions for any city. Auto-detects user location if no city specified.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    city: { type: import_genai2.Type.STRING, description: "City name. Leave empty for auto-detect." },
+                    units: { type: import_genai2.Type.STRING, enum: ["metric", "imperial"], description: "Temperature units (default metric)." }
+                  } }
+                },
+                {
+                  name: "getLocation",
+                  description: "Get user's approximate geographic location (city, region, country, timezone) from IP address.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {} }
+                },
+                {
+                  name: "getNews",
+                  description: "Get top news headlines by category (general, technology, science, business, entertainment, health, sports).",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    category: { type: import_genai2.Type.STRING, enum: ["general", "technology", "science", "business", "entertainment", "health", "sports"], description: "News category." },
+                    limit: { type: import_genai2.Type.INTEGER, description: "Number of articles (default 10)." }
+                  } }
+                },
+                {
+                  name: "searchWeb",
+                  description: "Search the web for any query using DuckDuckGo. Returns titles, URLs, and snippets.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    query: { type: import_genai2.Type.STRING, description: "Search query." },
+                    limit: { type: import_genai2.Type.INTEGER, description: "Max results (default 10)." }
+                  }, required: ["query"] }
+                },
+                {
+                  name: "verifySource",
+                  description: "Verify a claim by searching multiple sources. Returns corroboration status and confidence level.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    claim: { type: import_genai2.Type.STRING, description: "Claim or statement to verify." }
+                  }, required: ["claim"] }
+                },
+                {
+                  name: "truthCheck",
+                  description: "Fact-check a statement against web sources. Returns verdict (likely_true, partially_corroborated, unverified, limited_evidence, no_evidence) with confidence level.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    statement: { type: import_genai2.Type.STRING, description: "Statement to fact-check." }
+                  }, required: ["statement"] }
+                },
+                {
+                  name: "checkFreshness",
+                  description: "Check how recent/old information is about a topic. Returns freshness rating (very_fresh, recent, moderate, stale).",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    topic: { type: import_genai2.Type.STRING, description: "Topic to check freshness for." }
+                  }, required: ["topic"] }
+                },
+                {
+                  name: "getMorningBriefing",
+                  description: "Get a complete morning briefing with time, weather, tech news, and world news in one call.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    city: { type: import_genai2.Type.STRING, description: "City for weather. Leave empty for auto-detect." }
+                  } }
+                },
+                // ======== 3D CAD TOOLS ========
+                {
+                  name: "generateCAD",
+                  description: "Generate a parametric 3D model using build123d. Describe the object and MYRAA will create an STL file.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    prompt: { type: import_genai2.Type.STRING, description: "Description of the 3D model to create (e.g. 'a gear with 20 teeth and 50mm diameter')." },
+                    name: { type: import_genai2.Type.STRING, description: "Optional design name." }
+                  }, required: ["prompt"] }
+                },
+                {
+                  name: "iterateCAD",
+                  description: "Iterate on the current 3D design with modifications. Requires a previous CAD generation.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    iteration: { type: import_genai2.Type.STRING, description: "Changes to make (e.g. 'add holes', 'increase size by 20%', 'make it hollow')." }
+                  }, required: ["iteration"] }
+                },
+                // ======== 3D PRINTING TOOLS ========
+                {
+                  name: "addPrinter",
+                  description: "Add a 3D printer by IP address. Supports OctoPrint, Moonraker/Klipper, and PrusaLink protocols.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    name: { type: import_genai2.Type.STRING, description: "Printer name (e.g. 'Ender 3', 'Prusa MK4')." },
+                    ip: { type: import_genai2.Type.STRING, description: "Printer IP address." },
+                    type: { type: import_genai2.Type.STRING, enum: ["octoprint", "moonraker", "prusalink"], description: "Printer type." },
+                    port: { type: import_genai2.Type.INTEGER, description: "Port number (default 80)." },
+                    apiKey: { type: import_genai2.Type.STRING, description: "API key for OctoPrint." }
+                  }, required: ["name", "ip"] }
+                },
+                {
+                  name: "getPrinterStatus",
+                  description: "Get status of all connected 3D printers or a specific printer by ID.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    printerId: { type: import_genai2.Type.STRING, description: "Optional specific printer ID." }
+                  } }
+                },
+                {
+                  name: "sliceSTL",
+                  description: "Slice an STL file using OrcaSlicer or PrusaSlicer to generate G-code for 3D printing.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    stlPath: { type: import_genai2.Type.STRING, description: "Path to the STL file to slice." },
+                    profile: { type: import_genai2.Type.STRING, description: "Optional slicer profile name." }
+                  }, required: ["stlPath"] }
+                },
+                {
+                  name: "printStart",
+                  description: "Upload G-code to a 3D printer and start printing.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    printerId: { type: import_genai2.Type.STRING, description: "Printer ID from addPrinter." },
+                    gcodePath: { type: import_genai2.Type.STRING, description: "Path to G-code file." }
+                  }, required: ["printerId", "gcodePath"] }
+                },
+                {
+                  name: "printCancel",
+                  description: "Cancel an active 3D print job.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    printerId: { type: import_genai2.Type.STRING, description: "Printer ID." }
+                  }, required: ["printerId"] }
+                },
+                {
+                  name: "printPause",
+                  description: "Pause an active 3D print job.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    printerId: { type: import_genai2.Type.STRING, description: "Printer ID." }
+                  }, required: ["printerId"] }
+                },
+                // ======== BROWSER AUTOMATION TOOLS ========
+                {
+                  name: "browseOpen",
+                  description: "Open a URL in the headless browser agent for automation tasks.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    url: { type: import_genai2.Type.STRING, description: "URL to open." }
+                  }, required: ["url"] }
+                },
+                {
+                  name: "browseClick",
+                  description: "Click an element on the current browser page by CSS selector.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    selector: { type: import_genai2.Type.STRING, description: "CSS selector (e.g. '#submit-button', '.login')." }
+                  }, required: ["selector"] }
+                },
+                {
+                  name: "browseType",
+                  description: "Type text into an input field on the browser page.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    selector: { type: import_genai2.Type.STRING, description: "CSS selector of the input field." },
+                    text: { type: import_genai2.Type.STRING, description: "Text to type." }
+                  }, required: ["selector", "text"] }
+                },
+                {
+                  name: "browseScreenshot",
+                  description: "Take a screenshot of the current browser page.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {} }
+                },
+                {
+                  name: "browseSearch",
+                  description: "Search Google for a query using the browser agent.",
+                  parameters: { type: import_genai2.Type.OBJECT, properties: {
+                    query: { type: import_genai2.Type.STRING, description: "Search query." }
+                  }, required: ["query"] }
                 }
               ]
             }
@@ -7099,8 +7774,23 @@ ${presenceInstructions}`,
               clientWs.send(JSON.stringify({ type: "transcription", role: "user", text: userTextOutput }));
               dialogueHistory.push({ role: "user", text: userTextOutput });
               recordTranscriptToDisk("User", userTextOutput);
-              queueCognitiveUserText(userTextOutput, "voice");
               const voiceChunk = String(userTextOutput).trim();
+              try {
+                const unifiedRouter = require("./unified_capability_router.cjs");
+                void (async () => {
+                  try {
+                    const capRes = await unifiedRouter.dispatchCapability(voiceChunk);
+                    if (capRes && capRes.handled) {
+                      clientWs.send(JSON.stringify({ type: "transcription", role: "model", text: capRes.reply }));
+                      clientWs.send(JSON.stringify({ type: "turnComplete" }));
+                      dialogueHistory.push({ role: "model", text: capRes.reply });
+                      recordTranscriptToDisk("MYRAA", capRes.reply);
+                    }
+                  } catch (e) {}
+                })();
+              } catch (capErr) {
+                console.warn("[UnifiedRouter Voice] Error checking capability:", capErr.message);
+              }
               if (voiceChunk.startsWith(voiceScreenIntentText)) {
                 voiceScreenIntentText = voiceChunk;
               } else {
@@ -7262,6 +7952,65 @@ A fresh screenshot is attached. Analyze it and answer the spoken question direct
                       }]
                     });
                   })();
+                } else if (["getTime", "getWeather", "getLocation", "getNews", "searchWeb", "verifySource", "truthCheck", "checkFreshness", "getMorningBriefing"].includes(fc.name)) {
+                  (async () => {
+                    try {
+                      let result;
+                      switch (fc.name) {
+                        case "getTime": result = await worldAwareness.getTime(); break;
+                        case "getWeather": result = await worldAwareness.getWeather(fc.args?.city, fc.args?.units); break;
+                        case "getLocation": result = await worldAwareness.getLocation(); break;
+                        case "getNews": result = await worldAwareness.getNews(fc.args?.category, 'us', fc.args?.limit); break;
+                        case "searchWeb": result = await worldAwareness.searchWeb(fc.args?.query, fc.args?.limit); break;
+                        case "verifySource": result = await worldAwareness.verifySource(fc.args?.claim); break;
+                        case "truthCheck": result = await worldAwareness.truthCheck(fc.args?.statement); break;
+                        case "checkFreshness": result = await worldAwareness.checkFreshness(fc.args?.topic); break;
+                        case "getMorningBriefing": result = await worldAwareness.getMorningBriefing(fc.args?.city); break;
+                      }
+                      session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: result }, id: fc.id }] });
+                    } catch (err) { console.error(`${fc.name} error:`, err); session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: { error: err.message } }, id: fc.id }] }); }
+                  })();
+                } else if (["generateCAD", "iterateCAD"].includes(fc.name)) {
+                  (async () => {
+                    try {
+                      let result;
+                      switch (fc.name) {
+                        case "generateCAD": result = await cadEngine.generateDesign(fc.args?.prompt, { name: fc.args?.name }); break;
+                        case "iterateCAD": result = await cadEngine.iterateDesign(fc.args?.iteration); break;
+                      }
+                      session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: result }, id: fc.id }] });
+                    } catch (err) { console.error(`${fc.name} error:`, err); session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: { error: err.message } }, id: fc.id }] }); }
+                  })();
+                } else if (["addPrinter", "getPrinterStatus", "sliceSTL", "printStart", "printCancel", "printPause"].includes(fc.name)) {
+                  (async () => {
+                    try {
+                      let result;
+                      switch (fc.name) {
+                        case "addPrinter": result = await printEngine.addPrinter(fc.args); break;
+                        case "getPrinterStatus": result = await printEngine.getStatus(fc.args?.printerId); break;
+                        case "sliceSTL": result = await printEngine.slice(fc.args?.stlPath, fc.args); break;
+                        case "printStart": result = await printEngine.uploadAndPrint(fc.args?.printerId, fc.args?.gcodePath); break;
+                        case "printCancel": result = await printEngine.cancelPrint(fc.args?.printerId); break;
+                        case "printPause": result = await printEngine.pausePrint(fc.args?.printerId); break;
+                      }
+                      session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: result }, id: fc.id }] });
+                    } catch (err) { console.error(`${fc.name} error:`, err); session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: { error: err.message } }, id: fc.id }] }); }
+                  })();
+                } else if (["browseOpen", "browseClick", "browseType", "browseScreenshot", "browseSearch"].includes(fc.name)) {
+                  (async () => {
+                    try {
+                      if (!browserAgent.isActive) await browserAgent.start(true);
+                      let result;
+                      switch (fc.name) {
+                        case "browseOpen": result = await browserAgent.navigate(fc.args?.url); break;
+                        case "browseClick": result = await browserAgent.click(fc.args?.selector); break;
+                        case "browseType": result = await browserAgent.type(fc.args?.selector, fc.args?.text); break;
+                        case "browseScreenshot": result = await browserAgent.screenshot(); break;
+                        case "browseSearch": result = await browserAgent.searchGoogle(fc.args?.query); break;
+                      }
+                      session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: result }, id: fc.id }] });
+                    } catch (err) { console.error(`${fc.name} error:`, err); session.sendToolResponse({ functionResponses: [{ name: fc.name, response: { output: { error: err.message } }, id: fc.id }] }); }
+                  })();
                 } else {
                   clientWs.send(JSON.stringify({
                     type: "toolCall",
@@ -7307,7 +8056,6 @@ A fresh screenshot is attached. Analyze it and answer the spoken question direct
 
             if (classification.category === 'AUTH_FAILURE') {
               console.error("[Gemini Live] Session closed (Auth Failure):", details);
-              clearGeminiApiKey();
               try {
                 clientWs.send(JSON.stringify({
                   type: "error",
@@ -7511,6 +8259,7 @@ A fresh screenshot is attached. Analyze it and answer the spoken question direct
       };
       presenceTimer = setInterval(() => void runProactivePresenceCheck(), 1e3);
       presenceTimer.unref?.();
+      liveSupervisor.reconnectAttempts = 0;
       clientWs.send(JSON.stringify({ type: "status", status: "connected" }));
       clientWs.on("message", async (rawMsg) => {
         try {
@@ -7595,8 +8344,20 @@ A fresh screenshot is attached. Analyze it and answer the spoken question direct
               speechOrchestrator.observeUserResponse();
               clientWs.send(JSON.stringify({ type: "transcription", role: "user", text: trimmed }));
               dialogueHistory.push({ role: "user", text: trimmed });
-              recordTranscriptToDisk("User", trimmed);
               queueCognitiveUserText(trimmed, "typed");
+              try {
+                const unifiedRouter = require("./unified_capability_router.cjs");
+                const capRes = await unifiedRouter.dispatchCapability(trimmed);
+                if (capRes && capRes.handled) {
+                  clientWs.send(JSON.stringify({ type: "transcription", role: "model", text: capRes.reply }));
+                  clientWs.send(JSON.stringify({ type: "turnComplete" }));
+                  dialogueHistory.push({ role: "model", text: capRes.reply });
+                  recordTranscriptToDisk("MYRAA", capRes.reply);
+                  return;
+                }
+              } catch (capErr) {
+                console.warn("[UnifiedRouter] Error checking capability:", capErr.message);
+              }
               const isScreenRequest = detectScreenVisionIntent(trimmed);
               const screenFrame = screenVision && isScreenRequest ? await screenVision.capture("intent") : null;
               const recalled = await cognition.memories.retrieve({
@@ -7635,7 +8396,28 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
                     `Vision model delivery failed: ${error instanceof Error ? error.message : String(error)}`
                   );
                 }
-                throw error;
+                // --- REST FALLBACK: Live session unavailable, reply via gemini-2.5-flash REST ---
+                console.warn("[TypedText] Live session sendClientContent failed, using REST fallback:", error?.message || String(error));
+                try {
+                  const { GoogleGenAI: GoogleGenAIFallback } = require("@google/genai");
+                  const aiFallback = new GoogleGenAIFallback({ apiKey });
+                  const systemPromptFallback = "You are Myraa, an autonomous, warm, polite, and caring anime heroine AI companion. You speak sweetly, naturally, and helpfully. CRITICAL RULE: NEVER use emoji characters.";
+                  const memCtxFallback = recalled.map(m => m.content || m.text || "").filter(Boolean).join("\n");
+                  const fallbackResponse = await aiFallback.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: [{ role: "user", parts: [{ text: `${systemPromptFallback}\n\n[RECALLED MEMORIES]:\n${memCtxFallback || "None"}\n\nUser: ${trimmed}` }] }]
+                  });
+                  let fallbackReply = (fallbackResponse.text || "Main yahan hoon!").replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]/gu, "").trim();
+                  clientWs.send(JSON.stringify({ type: "transcription", role: "model", text: fallbackReply }));
+                  clientWs.send(JSON.stringify({ type: "turnComplete" }));
+                  dialogueHistory.push({ role: "model", text: fallbackReply });
+                  recordTranscriptToDisk("MYRAA", fallbackReply);
+                  console.log("[TypedText] REST fallback reply sent successfully.");
+                } catch (fallbackErr) {
+                  console.error("[TypedText] REST fallback also failed:", fallbackErr?.message || String(fallbackErr));
+                  clientWs.send(JSON.stringify({ type: "transcription", role: "model", text: "Network issue detected. Please check your connection and try again." }));
+                  clientWs.send(JSON.stringify({ type: "turnComplete" }));
+                }
               }
             }
           } else if (msg.type === "attachment" && Array.isArray(msg?.attachments)) {
@@ -7681,6 +8463,7 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
       });
       clientWs.on("close", () => {
         console.log("Client disconnected, closing Gemini session");
+        clearInterval(wsHeartbeatInterval);
         unsubscribeInitiative();
         screenVision?.dispose();
         forgetScreenVision();
@@ -7706,6 +8489,7 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
       });
     } catch (err) {
       console.error("Error connecting to Gemini Live API:", err);
+      clearInterval(wsHeartbeatInterval);
       const errMsg = err?.message || String(err);
       const keyValidation = await liveSupervisor.validateApiKey(apiKey);
       if (keyValidation.category === 'AUTH_FAILURE' || /api.?key|auth|credential|unauthenticated|400|403/i.test(errMsg)) {
@@ -7743,8 +8527,105 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
   const appAssetsDir = fs9.existsSync(import_path2.default.join(candidateDistPath, "..", "assets"))
     ? import_path2.default.join(candidateDistPath, "..", "assets")
     : import_path2.default.join(process.cwd(), "assets");
-  app.use("/assets", import_express.default.static(appAssetsDir));
   app.use("/assets", import_express.default.static(import_path2.default.join(candidateDistPath, "assets")));
+  app.use("/assets", import_express.default.static(appAssetsDir));
+  app.get("/api/health", (req, res) => {
+    let ver = "9.3.1";
+    try {
+      const p = import_path2.default.join(__dirname, "..", "version.json");
+      if (import_fs.default.existsSync(p)) ver = JSON.parse(import_fs.default.readFileSync(p, "utf8")).version || ver;
+    } catch (_) {}
+    res.json({ status: "ok", version: ver, timestamp: Date.now() });
+  });
+
+  app.post("/api/speak", (req, res) => {
+    try {
+      const raw = (req.body?.text || "").toString();
+      const text = raw.replace(/\[[^\]]*\]/g, " ").replace(/https?:\/\/\S+/g, " ").replace(/["`$\r\n]/g, " ").slice(0, 500).trim();
+      if (text) {
+        const cp = require("child_process");
+        const safe = text.replace(/'/g, "''");
+        cp.spawn("powershell", ["-NoProfile", "-NonInteractive", "-Command", `Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; try { $s.SelectVoiceByHints([System.Speech.Synthesis.VoiceGender]::Female) } catch {}; $s.Speak('${safe}')`], { stdio: "ignore", windowsHide: true, detached: true });
+      }
+      return res.json({ ok: true, spoken: true });
+    } catch (e) {
+      return res.json({ ok: false, error: e.message });
+    }
+  });
+
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const userMessage = (req.body?.message || req.body?.text || req.body?.prompt || "").trim();
+      if (!userMessage) {
+        return res.status(400).json({ ok: false, error: "Empty message" });
+      }
+
+      void processCognitiveEvent({
+        type: "conversation.user_input",
+        source: "chat_api",
+        importance: 0.6,
+        metadata: { text: userMessage }
+      });
+
+      let memoryContext = "";
+      try {
+        const recalled = await cognition.memories.retrieve({
+          text: userMessage,
+          projectId: cognition.situation.getSnapshot().currentProject,
+          limit: 8,
+          minConfidence: 0.35
+        });
+        memoryContext = recalled.map(m => m.content).join("\n");
+      } catch (_) {}
+
+      const apiKey = getGeminiApiKey();
+      if (!apiKey) {
+        return res.json({
+          ok: true,
+          reply: "I can hear you, but my Gemini API key is not configured. Please add your key in Settings so we can chat!",
+          source: "offline_fallback"
+        });
+      }
+
+      const ai = new import_genai2.GoogleGenAI({ apiKey });
+      const systemPrompt = "You are Myraa, an autonomous, warm, polite, and caring anime heroine AI companion (age 18-22). You speak sweetly, naturally, and helpfully with deep general intelligence and technical reasoning. CRITICAL RULE: NEVER use emoji characters. Use only text, words, and clear language.";
+      
+      const contents = [
+        {
+          role: "user",
+          parts: [{ text: `${systemPrompt}\n\n[RECALLED MEMORIES]:\n${memoryContext || "None"}\n\nUser: ${userMessage}` }]
+        }
+      ];
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents,
+      });
+
+      let replyText = response.text || "I'm right here with you!";
+      replyText = replyText.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '').trim();
+
+      try {
+        await cognition.memories.add({
+          kind: "preference",
+          content: `User: "${userMessage}" -> Myraa: "${replyText.slice(0, 200)}"`,
+          tags: ["conversation", "chat"],
+          entities: ["User", "Myraa"],
+          confidence: 0.7
+        });
+      } catch (_) {}
+
+      res.json({
+        ok: true,
+        reply: replyText,
+        role: "model",
+        timestamp: Date.now()
+      });
+    } catch (err) {
+      console.error("[/api/chat Error]", err);
+      res.status(500).json({ ok: false, error: err.message || "Failed to process chat" });
+    }
+  });
   app.use(import_express.default.static(candidateDistPath));
   try { const apexRoutes = require("./apex_v5_routes.cjs"); app.use(apexRoutes); } catch(e){ console.warn(e); }
   try {
@@ -7784,7 +8665,7 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
     process.exit(1);
   });
   server.listen(PORT, "0.0.0.0", () => {
-    logStartup(`MYRAA V2 server started on http://0.0.0.0:${PORT}`);
+    logStartup(`MYRAA v9.2.0 server started on http://0.0.0.0:${PORT}`);
     console.log(`[Server] Running on http://0.0.0.0:${PORT} (LAN & Mobile Remote Enabled)`);
     ensureDesktopAgent().then(async () => {
       await ensureDesktopObserver();

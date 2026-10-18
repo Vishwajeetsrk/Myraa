@@ -213,7 +213,7 @@ class WebFetchService {
         dependencies: packageJson ? Object.keys(packageJson.dependencies || {}) : [],
         devDependencies: packageJson ? Object.keys(packageJson.devDependencies || {}) : [],
         readmeExcerpt: readme ? readme.slice(0, 2000) : 'README not found',
-        summary: `GitHub Repository: ${owner}/${repo} (${repoData.stargazers_count || 0}★)\nDescription: ${repoData.description || 'N/A'}\nKey Dependencies: ${packageJson ? Object.keys(packageJson.dependencies || {}).slice(0, 10).join(', ') : 'None detected'}`
+        summary: `GitHub Repository: ${owner}/${repo} (${repoData.stargazers_count || 0}*)\nDescription: ${repoData.description || 'N/A'}\nKey Dependencies: ${packageJson ? Object.keys(packageJson.dependencies || {}).slice(0, 10).join(', ') : 'None detected'}`
       };
     } catch (err) {
       return { ok: false, owner, repo, error: `GitHub fetch error: ${err.message}` };

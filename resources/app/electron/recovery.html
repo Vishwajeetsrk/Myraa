@@ -44,7 +44,20 @@
       </div>
     </div>
     <script>
-      const { ipcRenderer } = require('electron');
+      const api = window.recoveryAPI || (() => {
+        try {
+          const { ipcRenderer } = require('electron');
+          return {
+            onUpdate: (cb) => ipcRenderer.on('myraa:recovery-update', (_ev, d) => cb(d)),
+            retry: () => ipcRenderer.invoke('myraa:recovery-retry'),
+            browse: () => ipcRenderer.invoke('myraa:recovery-browse'),
+            repair: () => ipcRenderer.invoke('myraa:recovery-repair')
+          };
+        } catch (e) {
+          return { onUpdate: () => {}, retry: () => {}, browse: () => {}, repair: () => {} };
+        }
+      })();
+
       const stepsEl = document.getElementById('recovery-steps');
       const titleEl = document.getElementById('recovery-title');
       const subEl = document.getElementById('recovery-subtitle');
@@ -52,6 +65,7 @@
       const actionsEl = document.getElementById('recovery-actions');
 
       function renderSteps(steps) {
+        if (!steps || !stepsEl) return;
         stepsEl.innerHTML = steps.map(s => {
           let cls = 'pending';
           if (s.startsWith('\u2713') || s.includes('✓')) cls = 'done';
@@ -62,17 +76,18 @@
         }).join('');
       }
 
-      ipcRenderer.on('myraa:recovery-update', (_ev, data) => {
-        if (data.title) titleEl.textContent = data.title;
-        if (data.subtitle) subEl.textContent = data.subtitle;
-        if (data.steps) renderSteps(data.steps);
-        if (data.detail) detailEl.textContent = data.detail;
-        if (data.showActions) actionsEl.style.display = 'flex';
+      api.onUpdate((data) => {
+        if (!data) return;
+        if (data.title && titleEl) titleEl.textContent = data.title;
+        if (data.subtitle && subEl) subEl.textContent = data.subtitle;
+        if (data.steps && stepsEl) renderSteps(data.steps);
+        if (data.detail && detailEl) detailEl.textContent = data.detail;
+        if (data.showActions && actionsEl) actionsEl.style.display = 'flex';
       });
 
-      document.getElementById('btn-retry').addEventListener('click', () => ipcRenderer.invoke('myraa:recovery-retry'));
-      document.getElementById('btn-browse').addEventListener('click', () => ipcRenderer.invoke('myraa:recovery-browse'));
-      document.getElementById('btn-repair').addEventListener('click', () => ipcRenderer.invoke('myraa:recovery-repair'));
+      document.getElementById('btn-retry')?.addEventListener('click', () => api.retry());
+      document.getElementById('btn-browse')?.addEventListener('click', () => api.browse());
+      document.getElementById('btn-repair')?.addEventListener('click', () => api.repair());
     </script>
   </body>
 </html>

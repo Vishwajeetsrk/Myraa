@@ -440,9 +440,53 @@ class SystemVerificationService {
   connectWifi(ssid, key = null) {
     return new Promise(resolve => {
       if (!ssid) return resolve({ success: false, error: 'SSID is required' });
-      exec(`netsh wlan connect name="${ssid.replace(/"/g, '')}"`, (err, stdout) => {
-        if (err) return resolve({ success: false, error: err.message });
-        resolve({ success: true, message: stdout.trim() || `Connection request sent for ${ssid}` });
+      const clean = String(ssid).replace(/["<>&]/g, '');
+      const esc = (s) => String(s).replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+      const attemptConnect = () => {
+        exec(`netsh wlan connect name="${clean}"`, (err, stdout) => {
+          if (err) return resolve({ success: false, error: err.message });
+          resolve({ success: true, message: stdout.trim() || `Connection request sent for ${clean}` });
+        });
+      };
+      // With a password: install a WLAN profile first so secured networks can join.
+      if (key && String(key).length >= 8) {
+        const xml =
+          '<?xml version="1.0"?>' +
+          '<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">' +
+          `<name>${esc(clean)}</name>` +
+          `<SSIDConfig><SSID><name>${esc(clean)}</name></SSID></SSIDConfig>` +
+          '<connectionType>ESS</connectionType><connectionMode>auto</connectionMode>' +
+          '<MSM><authEncryption><auth>WPA2PSK</auth><encryption>AES</encryption><useOneX>false</useOneX></authEncryption>' +
+          `<sharedKey><keyType>passPhrase</keyType><protected>false</protected><keyMaterial>${esc(key)}</keyMaterial></sharedKey>` +
+          '</MSM></WLANProfile>';
+        const profilePath = require('os').tmpdir() + `\\myraa-wifi-${Date.now()}.xml`;
+        try { require('fs').writeFileSync(profilePath, xml, 'utf8'); }
+        catch (e) { return resolve({ success: false, error: 'Could not write WLAN profile: ' + e.message }); }
+        exec(`netsh wlan add profile filename="${profilePath}"`, (addErr) => {
+          try { require('fs').unlinkSync(profilePath); } catch (e) {}
+          if (addErr) return resolve({ success: false, error: 'Profile install failed: ' + addErr.message });
+          attemptConnect();
+        });
+      } else {
+        attemptConnect();
+      }
+    });
+  }
+
+  setWifiRadio(enabled = true) {
+    return new Promise(resolve => {
+      if (process.platform !== 'win32') return resolve({ success: false, error: 'unsupported' });
+      const cmd = enabled ? 'Enable-NetAdapter' : 'Disable-NetAdapter';
+      const script =
+        `$i=Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.NdisPhysicalMedium -eq 80211 -or $_.Name -match 'Wi-?Fi|WLAN|Wireless' } | Select-Object -First 1; ` +
+        `if($i){ try { ${cmd} -Name $i.Name -Confirm:$false -ErrorAction Stop; 'RADIO_CHANGED:' + $i.Name } catch { 'RADIO_ERROR:' + $_.Exception.Message } } else { 'NO_WIFI_ADAPTER' }`;
+      exec(`powershell -NoProfile -Command "${script}"`, { timeout: 8000 }, (err, stdout) => {
+        const out = String(stdout || '').trim();
+        if (err && !out) return resolve({ success: false, error: err.message });
+        if (out.includes('NO_WIFI_ADAPTER')) return resolve({ success: false, error: 'No Wi-Fi adapter found' });
+        if (out.includes('RADIO_ERROR')) return resolve({ success: false, error: out.split('RADIO_ERROR:')[1].trim() });
+        if (out.includes('RADIO_CHANGED')) return resolve({ success: true, enabled, message: `Wi-Fi radio ${enabled ? 'enabled' : 'disabled'} on ${out.split('RADIO_CHANGED:')[1].trim()}` });
+        resolve({ success: false, error: out || 'no output' });
       });
     });
   }

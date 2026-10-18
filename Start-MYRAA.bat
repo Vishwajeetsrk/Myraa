@@ -1,48 +1,51 @@
 @echo off
-setlocal EnableExtensions EnableDelayedExpansion
+setlocal enabledelayedexpansion
+title MYRAA AI OS - Desktop Launcher (v9.3.0)
 
-title MYRAA AI OS (v7.5.0 APEX Master) - Autonomous Companion & Neural Core
-cd /d "%~dp0"
-
-cls
-echo ===============================================================================
-echo.
-echo        MM      MM  YY      YY  RRRRRR      AAAA      AAAA
-echo        MMMM  MMMM   YY    YY   RR   RR    AA  AA    AA  AA
-echo        MM  MM  MM    YYYYYY    RRRRRR    AAAAAA    AAAAAA
-echo        MM      MM      YY      RR  RR   AA    AA  AA    AA
-echo        MM      MM      YY      RR   RR  AA    AA  AA    AA
-echo.
-echo                   MYRAA AI OPERATING SYSTEM  ^|  v7.5.0 APEX Master
-echo            Autonomous 3D Companion  ^|  Operator Voice Biometrics
-echo                Dynamic Skills Engine  ^|  Original 3D Model Core
-echo ===============================================================================
+echo =====================================================================
+echo   MYRAA AI OS - Autonomous Native Windows Desktop System (v9.3.0)
+echo =====================================================================
 echo.
 
-if exist "C:\Users\Vishwajeet\Music\Myraa\MYRAA.exe" (
-    echo [*] Starting installed MYRAA AI OS native application...
-    start "" "C:\Users\Vishwajeet\Music\Myraa\MYRAA.exe"
-    exit /b 0
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+set "APP_DIR=%LOCALAPPDATA%\Programs\MYRAA"
+if not exist "%APP_DIR%\MYRAA.exe" (
+    set "APP_DIR=%USERPROFILE%\Desktop\MYRAA-Portable\MYRAA-Portable-8.3.4"
 )
 
-if exist "%LOCALAPPDATA%\Programs\MYRAA-AI-OS\MYRAA.exe" (
-    echo [*] Starting installed MYRAA AI OS native window application...
-    start "" "%LOCALAPPDATA%\Programs\MYRAA-AI-OS\MYRAA.exe"
-    exit /b 0
+echo [*] Initializing MYRAA AI OS runtime environment...
+set "NODE_ENV=production"
+set "MYRAA_DATA_DIR=%APPDATA%\MYRAA AI OS"
+set "MYRAA_APP_ROOT=%SCRIPT_DIR%\resources\app"
+
+if exist "%APP_DIR%\MYRAA.exe" (
+    echo [*] Launching MYRAA Windows Application from: "%APP_DIR%"
+    start "" "%APP_DIR%\MYRAA.exe"
+    echo [OK] MYRAA desktop application dispatched successfully.
+    goto end
 )
 
-if exist "%~dp0MYRAA.exe" (
-    echo [*] Launching MYRAA Native Desktop Runtime...
-    start "" "%~dp0MYRAA.exe"
-    exit /b 0
+if exist "%APP_DIR%\MYRAA AI.exe" (
+    echo [*] Launching MYRAA Portable Application from: "%APP_DIR%"
+    start "" "%APP_DIR%\MYRAA AI.exe"
+    echo [OK] MYRAA desktop application dispatched successfully.
+    goto end
 )
 
-if exist "%~dp0resources\app\dist\server.cjs" (
-    echo [*] Launching MYRAA Backend Engine...
-    node "%~dp0resources\app\dist\server.cjs"
-    exit /b 0
+if exist "%SCRIPT_DIR%\resources\app\node_modules\electron\dist\electron.exe" (
+    echo [*] Launching via local Electron binary...
+    cd /d "%SCRIPT_DIR%\resources\app"
+    start "" "node_modules\electron\dist\electron.exe" .
+    echo [OK] MYRAA desktop process dispatched successfully.
+    goto end
 )
 
-echo [*] Launching MYRAA AI OS Web Interface...
-start http://localhost:3000
-npm run dev
+echo [!] Launching backend server...
+start "" node "%SCRIPT_DIR%\resources\app\dist\server.cjs"
+echo [OK] Backend server started on http://127.0.0.1:3000
+
+:end
+timeout /t 2 >nul
+exit /b 0

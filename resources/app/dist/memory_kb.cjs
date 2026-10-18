@@ -335,6 +335,23 @@ const kb = {
 const router = express.Router();
 
 router.get('/api/memory/stats', (req, res) => { res.json({ ok: true, ...kb.stats() }); });
+router.get('/api/memory/recalls', (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 10, 50);
+  const list = memoryCore ? memoryCore.getAll(null) : [];
+  const recalls = list
+    .slice()
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0))
+    .slice(0, limit)
+    .map((m) => ({
+      id: m.key || m.id,
+      text: m.text,
+      content: m.text,
+      category: m.category,
+      createdAt: m.createdAt,
+      updatedAt: m.updatedAt,
+    }));
+  res.json({ ok: true, total: recalls.length, recalls });
+});
 router.get('/api/memory/taxonomy', (req, res) => { res.json({ ok: true, taxonomy: TAXONOMY, categories: KB_CATEGORIES }); });
 router.get('/api/memory', (req, res) => {
   const list = memoryCore ? memoryCore.getAll(req.query.category || null) : [];

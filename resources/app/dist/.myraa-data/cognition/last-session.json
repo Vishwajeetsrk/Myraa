@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "savedAt": "2026-10-18T12:25:34.232Z",
+  "situation": {
+    "state": "OBSERVING",
+    "currentActivity": "cognitive runtime online",
+    "activeApp": null,
+    "activeWindow": null,
+    "currentProject": "dist",
+    "conversationTopic": null,
+    "currentGoalId": null,
+    "currentTaskId": null,
+    "userActivity": "idle",
+    "userSpeaking": false,
+    "myraaSpeaking": false,
+    "myraaWasInterrupted": false,
+    "silenceStartedAt": null,
+    "silenceSeconds": 0,
+    "openApplications": [],
+    "relevantFiles": [],
+    "recentImportantEvents": [
+      {
+        "id": "cfda8e82-ff2b-41bf-b77e-952d3e30f6d1",
+        "type": "system.cognition_started",
+        "timestamp": "2026-10-18T12:25:32.221Z",
+        "importance": 0.52,
+        "source": "system"
+      }
+    ],
+    "recentFailures": [],
+    "recentSuccesses": [],
+    "pendingRisk": null,
+    "autonomyPaused": false,
+    "updatedAt": "2026-10-18T12:25:32.531Z"
+  },
+  "unfinishedGoals": []
+}

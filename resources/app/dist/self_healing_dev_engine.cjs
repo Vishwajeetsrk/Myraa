@@ -202,7 +202,7 @@ Return ONLY the raw updated code of the file. Do not include markdown blocks or 
 
   /**
    * Full Brahma-style Dev Loop:
-   * Plan -> Write Files -> Open VSCode -> Run Entrypoint -> Catch Error -> Fix -> Retry
+   * Plan -> Write Files -> npm install -> Open VSCode -> Run Entrypoint -> Catch Error -> Fix -> Retry -> Test
    */
   async buildAndSelfHeal(goal, options = {}) {
     const maxAttempts = options.maxAttempts || 4;
@@ -232,30 +232,43 @@ Return ONLY the raw updated code of the file. Do not include markdown blocks or 
 
     const entryPath = path.join(projectDir, plan.entryPoint || 'index.js');
     const logs = [];
+
+    // 3. npm install if package.json exists
+    const pkgJsonPath = path.join(projectDir, 'package.json');
+    if (fs.existsSync(pkgJsonPath)) {
+      logs.push('[Install] Running npm install...');
+      try {
+        execSync('npm install', { cwd: projectDir, timeout: 180000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+        logs.push('[OK] npm install completed successfully.');
+      } catch (installErr) {
+        logs.push(`[!] npm install failed: ${(installErr.stderr || installErr.message || '').slice(0, 300)}`);
+      }
+    }
+
     let currentAttempt = 1;
     let success = false;
 
-    // 3. Self-healing loop
+    // 4. Self-healing loop
     while (currentAttempt <= maxAttempts) {
       logs.push(`Attempt ${currentAttempt}/${maxAttempts}: Executing ${plan.entryPoint}...`);
       const runResult = await this.executeFile(entryPath, projectDir);
 
       if (runResult.ok && !this.hasError(runResult.output)) {
-        logs.push(`✅ Execution verified with 0 errors on attempt ${currentAttempt}! Output:\n${runResult.output}`);
+        logs.push(`[OK] Execution verified with 0 errors on attempt ${currentAttempt}! Output:\n${runResult.output}`);
         success = true;
         break;
       }
 
-      logs.push(`⚠️ Error encountered on attempt ${currentAttempt}:\n${runResult.output.slice(0, 400)}`);
+      logs.push(`[!] Error encountered on attempt ${currentAttempt}:\n${runResult.output.slice(0, 400)}`);
 
       if (currentAttempt === maxAttempts) {
-        logs.push(`❌ Reached maximum repair attempts (${maxAttempts}).`);
+        logs.push(`[X] Reached maximum repair attempts (${maxAttempts}).`);
         break;
       }
 
       // Identify which file broke
       const culpritPath = this.identifyErrorFile(runResult.output, writtenFiles) || entryPath;
-      logs.push(`🔍 Isolated culprit file: ${path.basename(culpritPath)}. Applying AI self-healing fix...`);
+      logs.push(`[Search] Isolated culprit file: ${path.basename(culpritPath)}. Applying AI self-healing fix...`);
 
       let culpritContent = '';
       try { culpritContent = fs.readFileSync(culpritPath, 'utf8'); } catch (e) {}
@@ -274,9 +287,25 @@ Return ONLY the raw updated code of the file. Do not include markdown blocks or 
 
       const repairedCode = await this.fixBrokenFile(culpritPath, culpritContent, runResult.output, blastContext);
       fs.writeFileSync(culpritPath, repairedCode, 'utf8');
-      logs.push(`🔧 Applied repair to ${path.basename(culpritPath)}. Re-running...`);
+      logs.push(`[Fix] Applied repair to ${path.basename(culpritPath)}. Re-running...`);
 
       currentAttempt++;
+    }
+
+    // 5. Run tests if available
+    if (success && fs.existsSync(pkgJsonPath)) {
+      try {
+        const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+        if (pkgJson.scripts && pkgJson.scripts.test) {
+          logs.push('[Test] Running tests...');
+          try {
+            execSync('npm test', { cwd: projectDir, timeout: 120000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+            logs.push('[OK] Tests passed.');
+          } catch (testErr) {
+            logs.push(`[!] Tests failed: ${(testErr.stderr || testErr.message || '').slice(0, 300)}`);
+          }
+        }
+      } catch (e) {}
     }
 
     return {

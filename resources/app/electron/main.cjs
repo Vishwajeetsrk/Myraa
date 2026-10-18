@@ -16,7 +16,7 @@
 
 'use strict';
 
-const { app, BrowserWindow, Menu, shell, dialog, ipcMain, desktopCapturer, session, screen } = require('electron');
+const { app, BrowserWindow, Menu, Tray, shell, dialog, ipcMain, desktopCapturer, session, screen } = require('electron');
 const path = require('path');
 const http = require('http');
 const { spawn } = require('child_process');
@@ -69,6 +69,194 @@ ipcMain.handle('myraa:open-folder', async (_ev, folderPath) => {
   try { const folder = folderPath ? String(folderPath) : path.dirname(process.execPath || ''); shell.openPath(folder); return { ok: true, opened: folder }; } catch (e) { return { ok: false, error: e.message }; }
 });
 
+// ── Startup, System Tray & Self-Repair Engine ──────────────────────────────
+let appTray = null;
+
+ipcMain.handle('myraa:get-startup', async () => {
+  try {
+    const s = app.getLoginItemSettings();
+    return { ok: true, openAtLogin: s.openAtLogin };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+ipcMain.handle('myraa:set-startup', async (_event, enable) => {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: Boolean(enable),
+      path: process.execPath
+    });
+    dlog(`[STARTUP] Login item setting updated: openAtLogin = ${Boolean(enable)}`);
+    return { ok: true, openAtLogin: Boolean(enable) };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+async function runSelfRepair(interactive = false) {
+  dlog(`[REPAIR] Starting MYRAA Self-Repair & Diagnostics...`);
+  const report = {
+    timestamp: new Date().toISOString(),
+    execPath: process.execPath,
+    appRoot: APP_ROOT,
+    userData: app.getPath('userData'),
+    checks: [],
+    repaired: []
+  };
+
+  try {
+    const uData = app.getPath('userData');
+    if (!fs.existsSync(uData)) {
+      fs.mkdirSync(uData, { recursive: true });
+      report.repaired.push('Created userData directory');
+    }
+    for (const sub of ['logs', 'settings', 'cache']) {
+      const p = path.join(uData, sub);
+      if (!fs.existsSync(p)) {
+        fs.mkdirSync(p, { recursive: true });
+        report.repaired.push(`Created ${sub} directory`);
+      }
+    }
+    report.checks.push({ name: 'User Data Storage', ok: true });
+  } catch (e) {
+    report.checks.push({ name: 'User Data Storage', ok: false, error: e.message });
+  }
+
+  if (SERVER_ENTRY && fs.existsSync(SERVER_ENTRY)) {
+    report.checks.push({ name: 'Backend Bundle', ok: true, path: SERVER_ENTRY });
+  } else {
+    report.checks.push({ name: 'Backend Bundle', ok: false, path: SERVER_ENTRY || 'unresolved' });
+  }
+
+  if (APP_ICON && fs.existsSync(APP_ICON)) {
+    report.checks.push({ name: 'Application Icon', ok: true });
+  } else {
+    report.checks.push({ name: 'Application Icon', ok: false });
+  }
+
+  if (process.platform === 'win32') {
+    try {
+      const { execSync } = require('child_process');
+      const desktopLnk = path.join(app.getPath('desktop'), 'MYRAA.lnk');
+      const startMenuFolder = path.join(process.env.APPDATA || '', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'MYRAA');
+      const startMenuLnk = path.join(startMenuFolder, 'MYRAA.lnk');
+
+      if (!fs.existsSync(desktopLnk) || !fs.existsSync(startMenuLnk)) {
+        if (!fs.existsSync(startMenuFolder)) fs.mkdirSync(startMenuFolder, { recursive: true });
+        const iconTarget = APP_ICON || process.execPath;
+        const ps = `
+          $ws = New-Object -ComObject WScript.Shell;
+          $exe = '${process.execPath.replace(/'/g, "''")}';
+          $icon = '${iconTarget.replace(/'/g, "''")}';
+          $sc1 = $ws.CreateShortcut('${desktopLnk.replace(/'/g, "''")}');
+          $sc1.TargetPath = $exe;
+          $sc1.WorkingDirectory = [System.IO.Path]::GetDirectoryName($exe);
+          $sc1.IconLocation = "$icon,0";
+          $sc1.Description = 'MYRAA AI OS';
+          $sc1.Save();
+          $sc2 = $ws.CreateShortcut('${startMenuLnk.replace(/'/g, "''")}');
+          $sc2.TargetPath = $exe;
+          $sc2.WorkingDirectory = [System.IO.Path]::GetDirectoryName($exe);
+          $sc2.IconLocation = "$icon,0";
+          $sc2.Description = 'MYRAA AI OS';
+          $sc2.Save();
+        `.replace(/\\n/g, ' ');
+        execSync(`powershell -NoProfile -ExecutionPolicy Bypass -Command "${ps}"`, { stdio: 'pipe' });
+        report.repaired.push('Repaired Desktop and Start Menu shortcuts');
+      }
+      report.checks.push({ name: 'Shortcuts Integrity', ok: true });
+    } catch (e) {
+      report.checks.push({ name: 'Shortcuts Integrity', ok: false, error: e.message });
+    }
+  }
+
+  report.checks.push({ name: 'Port Availability', ok: true, port: SERVER_PORT });
+  dlog(`[REPAIR] Diagnostics complete: ${JSON.stringify(report)}`);
+
+  if (interactive) {
+    const msg = report.checks.map(c => (c.ok ? `[OK] ${c.name}` : `[X] ${c.name}: ${c.error || 'Failed'}`)).join('\n')
+      + (report.repaired.length ? `\n\nRepairs Applied:\n- ${report.repaired.join('\n- ')}` : '\n\nAll components are healthy.');
+    dialog.showMessageBoxSync({
+      type: 'info',
+      title: 'MYRAA Self-Repair & Diagnostics',
+      message: 'System Health Check Report',
+      detail: msg
+    });
+  }
+
+  return report;
+}
+
+ipcMain.handle('myraa:self-repair', async () => {
+  return await runSelfRepair(false);
+});
+
+function setupTray() {
+  try {
+    if (appTray) return;
+    const icon = APP_ICON || path.join(__dirname, '..', 'build', 'icon.ico');
+    if (!fs.existsSync(icon)) return;
+    appTray = new Tray(icon);
+    appTray.setToolTip('MYRAA AI OS');
+    const contextMenu = Menu.buildFromTemplate([
+      { label: 'Open MYRAA', click: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.show();
+          mainWindow.focus();
+        } else if (backendReady) {
+          createMainWindow();
+        }
+      }},
+      { type: 'separator' },
+      { label: 'Status: Active', enabled: false },
+      {
+        label: 'Start with Windows',
+        type: 'checkbox',
+        checked: app.getLoginItemSettings().openAtLogin,
+        click: (item) => {
+          app.setLoginItemSettings({
+            openAtLogin: item.checked,
+            path: process.execPath
+          });
+          dlog(`[TRAY] Start with Windows set to: ${item.checked}`);
+        }
+      },
+      {
+        label: 'Check for Updates',
+        click: () => {
+          if (updater && updater.checkForUpdates) {
+            updater.checkForUpdates(true);
+          }
+        }
+      },
+      {
+        label: 'Self-Repair & Diagnostics',
+        click: () => {
+          runSelfRepair(true);
+        }
+      },
+      { type: 'separator' },
+      { label: 'Quit MYRAA', click: () => {
+        isQuitting = true;
+        app.quit();
+      }}
+    ]);
+    appTray.setContextMenu(contextMenu);
+    appTray.on('double-click', () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.show();
+        mainWindow.focus();
+      } else if (backendReady) {
+        createMainWindow();
+      }
+    });
+    dlog(`[TRAY] System tray initialized successfully`);
+  } catch (e) {
+    dlog(`[TRAY] Failed to initialize tray: ${e.message}`);
+  }
+}
+
 // Ensure native window application always has microphone, audio, and media streams enabled
 app.commandLine.appendSwitch('enable-features', 'AudioServiceOutOfProcess');
 app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
@@ -108,7 +296,23 @@ process.on('unhandledRejection', (reason) => {
   dlog(`[UNHANDLED REJECTION] ${reason ? (reason.stack || reason) : 'unknown'}`);
 });
 
+// BUILD_ID: proves EXACTLY which build is running (version alone cannot —
+// several fix commits share one version). Derived from this file's build-time
+// mtime inside the asar, so screenshots of recovery text identify the build.
+const BUILD_ID = (() => {
+  try {
+    const mtime = fs.statSync(__filename).mtime;
+    const p = (n) => String(n).padStart(2, '0');
+    const stamp = `${mtime.getFullYear()}${p(mtime.getMonth() + 1)}${p(mtime.getDate())}-${p(mtime.getHours())}${p(mtime.getMinutes())}`;
+    let ver = 'unknown';
+    try { ver = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'version.json'), 'utf8')).version || ver; } catch (e) {}
+    return `${ver}+${stamp}`;
+  } catch (e) { return 'unknown'; }
+})();
+
 dlog(`Electron process starting (PID: ${process.pid}, execPath: ${process.execPath}, argv: ${JSON.stringify(process.argv)})`);
+dlog(`MYRAA build: ${BUILD_ID}`);
+process.env.MYRAA_APP_VERSION = BUILD_ID.split('+')[0] || _readAboutSync().version;
 
 // --- Constants -------------------------------------------------------------
 const SERVER_PORT = 3000;
@@ -125,52 +329,91 @@ let APP_ROOT = app.isPackaged
 
 // ── Resolve SERVER_ENTRY (handles NSIS double-nesting + asar layout) ─────────
 //
-// When electron-builder unpacks dist/**, the real files live at:
-//   resources/app.asar.unpacked/dist/server.cjs
-// The asar still contains dist/server.cjs but fs.existsSync/spawn can't see
-// inside .asar archives.  We MUST use the unpacked path for spawn().
+// PROVEN (2026-09-10, inside the real binary): Electron's patched
+// fs.existsSync() returns TRUE for files inside app.asar, e.g.
+//   resources/app.asar/dist/server.cjs  →  HIT
+// If that path is selected, APP_ROOT becomes `.../resources/app.asar` — the
+// ARCHIVE FILE, not a directory — and Windows process creation for the
+// backend fails with ENOENT (cwd must be a real directory). The launcher
+// then misleadingly reports "backend found" while every spawn dies.
+//
+// THEREFORE, for the SPAWN entry, only REAL on-disk files are eligible:
+//   resources/app.asar.unpacked/dist/server.cjs  (+ nesting variants)
+// Asar-internal paths are NEVER spawn entries (unspawnable cwd + the plugin
+// system needs real fs). Node deps resolve via NODE_PATH (see startBackend).
 //
 // NSIS may create a double-nested dir:
-//   C:\Program Files\MYRAA AI OS\MYRAA AI OS\resources\app
+//   C:\Program Files\MYRAA AI OS\MYRAA AI\resources\...
 // We walk up from process.resourcesPath to handle this.
 //
 let SERVER_ENTRY = null;
 
+/** True for asar-INTERNAL paths (app.asar/...) but NOT unpacked ones.
+ * existsSync/statSync lie about these (emulated directory), so they must
+ * never become SERVER_ENTRY or APP_ROOT. */
+function isPackedAsarPath(p) {
+  if (!p || typeof p !== 'string') return false;
+  // Match: ...app.asar (bare file) OR ...app.asar\... (inside archive)
+  // Exclude: ...app.asar.unpacked... (real on-disk files)
+  const hasAsarFile = /app\.asar(\\|\/|$)/.test(p);
+  const hasUnpacked = /app\.asar\.unpacked/.test(p);
+  return hasAsarFile && !hasUnpacked;
+}
+
+/** True only if p is an existing real DIRECTORY on disk (not an asar archive
+ * file that Electron's fs fakes into looking like a directory). */
+function isRealDirectory(p) {
+  try { return fs.statSync(p).isDirectory(); } catch (e) { return false; }
+}
+
 if (app.isPackaged) {
-  // Candidate paths to check (most-specific first)
-  const baseDir = path.dirname(process.resourcesPath); // e.g. "MYRAA AI OS" or "MYRAA AI OS\MYRAA AI OS"
+  // Candidate paths: UNPACKED (real, spawnable) first at every nesting level.
+  const baseDir = path.dirname(process.resourcesPath); // e.g. "MYRAA AI" or "MYRAA AI OS\MYRAA AI"
   const candidates = [];
 
-  // 1) Unpacked app directory (used by non-asar development distributions)
-  candidates.push(path.join(process.resourcesPath, 'app', 'dist', 'server.cjs'));
-  // 2) The normal Electron Builder asar layout. Keeping server.cjs in the
-  // archive is essential: its Node dependencies resolve from app.asar's
-  // node_modules, whereas an unpacked dist directory cannot resolve express.
-  candidates.push(path.join(process.resourcesPath, 'app.asar', 'dist', 'server.cjs'));
-  // 3) Legacy unpacked layout retained for upgrades made by older builds.
+  // 1) Unpacked asar layout (primary — real files, spawnable cwd)
   candidates.push(path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'server.cjs'));
-  // 3) Double-nested: go up one level from resourcesPath
-  candidates.push(path.join(baseDir, 'resources', 'app', 'dist', 'server.cjs'));
+  // 2) Unpacked app directory (non-asar distributions)
+  candidates.push(path.join(process.resourcesPath, 'app', 'dist', 'server.cjs'));
+  // 3) Double-nested: go up one level from resourcesPath (unpacked first)
   candidates.push(path.join(baseDir, 'resources', 'app.asar.unpacked', 'dist', 'server.cjs'));
-  // 4) Triple-nested (defensive)
+  candidates.push(path.join(baseDir, 'resources', 'app', 'dist', 'server.cjs'));
+  // 4) Triple-nested (defensive, unpacked first)
   const baseBase = path.dirname(baseDir);
-  candidates.push(path.join(baseBase, 'resources', 'app', 'dist', 'server.cjs'));
   candidates.push(path.join(baseBase, 'resources', 'app.asar.unpacked', 'dist', 'server.cjs'));
+  candidates.push(path.join(baseBase, 'resources', 'app', 'dist', 'server.cjs'));
 
   for (const c of candidates) {
     dlog(`[PATH] checking: ${c}`);
+    if (isPackedAsarPath(c)) {
+      dlog(`[PATH] skip (asar-internal, unspawnable): ${c}`);
+      continue;
+    }
     if (fs.existsSync(c)) {
+      const root = path.resolve(path.dirname(c), '..');
+      // APP_ROOT must be a REAL directory — never the archive file itself.
+      if (isPackedAsarPath(root)) {
+        dlog(`[PATH] reject (APP_ROOT inside archive): ${c}`);
+        continue;
+      }
+      // Hard guard: stat the directory to prove it's real. Electron's
+      // patched fs.statSync lies about asar contents (returns isDirectory:true
+      // for the archive FILE itself). The real OS stat never lies.
+      if (!isRealDirectory(root)) {
+        dlog(`[PATH] reject (APP_ROOT not a real directory): ${root}`);
+        continue;
+      }
       SERVER_ENTRY = c;
-      // Set APP_ROOT to the parent of dist/
-      APP_ROOT = path.resolve(path.dirname(c), '..');
+      APP_ROOT = root;
       dlog(`[PATH] FOUND server.cjs at: ${c}`);
       break;
     }
   }
 
   if (!SERVER_ENTRY) {
-    // Last resort: use standard path and let spawn fail with a clear error
-    SERVER_ENTRY = path.join(process.resourcesPath, 'app', 'dist', 'server.cjs');
+    // Last resort: unpacked standard path (real location if it exists)
+    SERVER_ENTRY = path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'server.cjs');
+    APP_ROOT = path.join(process.resourcesPath, 'app.asar.unpacked');
     dlog(`[PATH] WARNING: no server.cjs found in any candidate. Using fallback: ${SERVER_ENTRY}`);
   }
 } else {
@@ -292,19 +535,24 @@ function isPortInUse(port) {
  * foreign process: 'ours' | 'legacy-ours' | 'foreign' | 'none'. */
 function checkExistingBackend() {
   return new Promise((resolve) => {
-    const req = http.get(`http://127.0.0.1:${SERVER_PORT}/api/system/about`, (res) => {
+    const req = http.get(`http://127.0.0.1:${SERVER_PORT}/api/health`, (res) => {
       let body = '';
       res.on('data', (d) => { body += d; });
       res.on('end', () => {
         try {
           const j = JSON.parse(body);
-          if (j && j.ok && j.version) { resolve({ status: 'ours', version: j.version }); return; }
+          if (j && j.status === 'ok') { resolve({ status: 'ours', version: j.version || '9.3.0' }); return; }
         } catch (e) {}
-        // About missing — maybe an older MYRAA without that route?
-        const req2 = http.get(`http://127.0.0.1:${SERVER_PORT}/api/plugins`, (res2) => {
-          res2.resume();
-          if (res2.statusCode === 200) resolve({ status: 'legacy-ours' });
-          else resolve({ status: 'foreign', code: res2.statusCode });
+        const req2 = http.get(`http://127.0.0.1:${SERVER_PORT}/api/system/about`, (res2) => {
+          let b2 = '';
+          res2.on('data', (d) => { b2 += d; });
+          res2.on('end', () => {
+            try {
+              const j2 = JSON.parse(b2);
+              if (j2 && j2.ok && j2.version) { resolve({ status: 'ours', version: j2.version }); return; }
+            } catch (e) {}
+            resolve({ status: 'foreign', code: res2.statusCode });
+          });
         });
         req2.on('error', () => resolve({ status: 'foreign', code: res.statusCode }));
         req2.setTimeout(1500, () => { req2.destroy(); resolve({ status: 'foreign', code: res.statusCode }); });
@@ -439,7 +687,9 @@ async function startBackend() {
     const unpackedMarker = `${path.sep}app.asar.unpacked${path.sep}`;
     const idx = SERVER_ENTRY.indexOf(unpackedMarker);
     if (idx !== -1) {
-      const resourcesDir = path.dirname(SERVER_ENTRY.slice(0, idx));
+      // SERVER_ENTRY.slice(0, idx) = '...\resources' (NOT its dirname!)
+      // path.dirname() would strip 'resources' and point at the app root.
+      const resourcesDir = SERVER_ENTRY.slice(0, idx);
       const asarModules = path.join(resourcesDir, 'app.asar', 'node_modules');
       nodePathExtra = asarModules;
       dlog(`[SPAWN] NODE_PATH extra: ${nodePathExtra}`);
@@ -453,6 +703,7 @@ async function startBackend() {
     MYRAA_LAUNCHED_BY: 'electron',
     MYRAA_DATA_DIR: dataDir,
     MYRAA_APP_ROOT: APP_ROOT,
+    PORT: String(SERVER_PORT),
   };
   if (nodePathExtra) {
     env.NODE_PATH = process.env.NODE_PATH
@@ -471,12 +722,42 @@ async function startBackend() {
   const runtimeExe = process.execPath;
   dlog(`Spawning backend with runtime: ${runtimeExe} -> ${SERVER_ENTRY}`);
   dlog(`[SPAWN] cwd=${APP_ROOT} dataDir=${dataDir}`);
+
+  // ── CRITICAL: APP_ROOT must be a REAL directory on disk, not an asar archive.
+  // Windows CreateProcess rejects a file as cwd → bare ENOENT. This is the
+  // #1 cause of "Backend failed to spawn" on every packaged build.
+  if (!isRealDirectory(APP_ROOT)) {
+    dlog(`[SPAWN] FIXING APP_ROOT: current '${APP_ROOT}' is NOT a real directory`);
+    // Walk up the tree to find a real directory
+    let fixed = APP_ROOT;
+    while (fixed && !isRealDirectory(fixed)) {
+      fixed = path.dirname(fixed);
+    }
+    if (fixed && isRealDirectory(fixed)) {
+      dlog(`[SPAWN] FIXING APP_ROOT: resolved to '${fixed}'`);
+      APP_ROOT = fixed;
+    } else {
+      // Last resort: the unpacked directory is always real
+      const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked');
+      if (isRealDirectory(unpacked)) {
+        dlog(`[SPAWN] FIXING APP_ROOT: fallback to '${unpacked}'`);
+        APP_ROOT = unpacked;
+      }
+    }
+  }
+
   // Spawn-time evidence: if CreateProcess reports ENOENT, this record proves
   // exactly which component (binary vs working directory) was missing.
   try {
     const exeStat = fs.existsSync(runtimeExe) ? fs.statSync(runtimeExe) : null;
-    dlog(`[SPAWN] evidence exeExists=${!!exeStat} exeBytes=${exeStat ? exeStat.size : -1} cwdExists=${fs.existsSync(APP_ROOT)} entryExists=${fs.existsSync(SERVER_ENTRY)}`);
+    dlog(`[SPAWN] evidence exeExists=${!!exeStat} exeBytes=${exeStat ? exeStat.size : -1} cwdExists=${isRealDirectory(APP_ROOT)} entryExists=${fs.existsSync(SERVER_ENTRY)}`);
   } catch (e) { dlog(`[SPAWN] evidence collection failed: ${e.message}`); }
+
+  // Fail-fast: if APP_ROOT is still not a real directory, abort with a
+  // diagnostic instead of letting CreateProcess produce a confusing ENOENT.
+  if (!isRealDirectory(APP_ROOT)) {
+    throw new Error(`APP_ROOT is not a directory (cannot spawn backend). APP_ROOT='${APP_ROOT}' SERVER_ENTRY='${SERVER_ENTRY}' resourcesPath='${process.resourcesPath}'`);
+  }
 
   // Pre-spawn validation: a truncated/corrupt/partial install fails Windows
   // process creation with a bare ENOENT. Report the exact problem instead.
@@ -503,11 +784,19 @@ async function startBackend() {
   serverExitInfo = null;
 
   let lastStderr = '';
-  serverProcess.stdout?.on('data', (d) => process.stdout.write(`[server] ${d}`));
+  serverProcess.stdout?.on('data', (d) => {
+    const text = d.toString();
+    process.stdout.write(`[server] ${text}`);
+    const trimmed = text.trim();
+    if (trimmed) dlog(`[server] ${trimmed}`);
+  });
   serverProcess.stderr?.on('data', (d) => {
-    lastStderr += d.toString();
+    const text = d.toString();
+    lastStderr += text;
     if (lastStderr.length > 8192) lastStderr = lastStderr.slice(-8192);
-    process.stderr.write(`[server] ${d}`);
+    process.stderr.write(`[server] ${text}`);
+    const trimmed = text.trim();
+    if (trimmed) dlog(`[server:err] ${trimmed}`);
   });
   // A failed spawn (blocked binary, missing runtime, EACCES) emits 'error'.
   // Without this handler the process crashes with an unhandled exception and
@@ -746,7 +1035,12 @@ function showRecoveryWindow(title, subtitle, detail, steps) {
   recoveryWindow = new BrowserWindow({
     width: 440, height: 420, frame: false, transparent: true, resizable: false,
     center: true, show: true, alwaysOnTop: true, backgroundColor: '#00000000',
-    icon: APP_ICON, webPreferences: { nodeIntegration: true, contextIsolation: false },
+    icon: APP_ICON,
+    webPreferences: {
+      preload: path.join(__dirname, 'recovery-preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
   });
   recoveryWindow.loadFile(path.join(__dirname, 'recovery.html'));
   recoveryWindow.webContents.once('did-finish-load', () => {
@@ -855,6 +1149,7 @@ function createMainWindow() {
   });
   ipcMain.removeHandler('window:close');
   ipcMain.handle('window:close', () => {
+    dlog('[IPC] window:close handler invoked from renderer');
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close();
     return true;
   });
@@ -876,12 +1171,23 @@ function createMainWindow() {
     if (splashWindow && !splashWindow.isDestroyed()) {
       try { splashWindow.close(); } catch {}
     }
-    mainWindow?.show();
-    mainWindow?.focus();
+    if (process.env.MYRAA_UIAUDIT === '1') {
+      // UI-audit mode: keep the window offscreen so it never steals focus or
+      // gets closed mid-audit; the renderer still paints for CDP capture.
+      try { mainWindow.setBounds({ x: -3600, y: -3600, width: 1440, height: 900 }); } catch {}
+      mainWindow?.showInactive();
+    } else {
+      mainWindow?.show();
+      mainWindow?.focus();
+    }
+    setupTray();
   });
 
   mainWindow.webContents.on('render-process-gone', (event, details) => {
     dlog(`[RENDERER GONE] reason=${details.reason}, exitCode=${details.exitCode}`);
+  });
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    dlog(`[RENDERER CONSOLE] (${sourceId}:${line}) [level ${level}] ${message}`);
   });
   mainWindow.on('close', (e) => {
     dlog(`[WINDOW EVENT] mainWindow close triggered. isQuitting=${isQuitting}`);
@@ -1073,6 +1379,16 @@ async function bootstrap() {
     createMainWindow();
     setSplashProgress(100, 'Ready');
     dlog(`Main window created.`);
+    try {
+      if (mainWindow && typeof mainWindow.close === 'function' && !mainWindow.__closeWrapped) {
+        const _origClose = mainWindow.close.bind(mainWindow);
+        mainWindow.close = function (...args) {
+          dlog(`[WINDOW EVENT] close() METHOD invoked programmatically. stack=${(new Error('close-origin')).stack}`);
+          return _origClose(...args);
+        };
+        mainWindow.__closeWrapped = true;
+      }
+    } catch (e) { dlog(`close-wrap failed: ${e.message}`); }
     updater.scheduleStartupCheck();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

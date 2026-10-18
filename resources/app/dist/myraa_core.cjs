@@ -89,7 +89,7 @@ function buildChain(taskType, mode) {
 
 // Current flash model is env-overridable; 'gemini-2.0-flash' is RETIRED (404).
 const CHAT_MODEL = process.env.MYRAA_FAST_MODEL || process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash';
-const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'groq/compound-mini'];
+const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
 let openrouterFreeModel = null;
 
 // ─── Provider callers (proof-tested patterns from myraa_v6_real_routes) ────
@@ -129,7 +129,7 @@ async function callGroq({ turns, system, keys }) {
       ...turns.map((t) => ({ role: t.role, content: t.content })),
     ],
     temperature: 0.8,
-    max_tokens: 1024,
+    max_tokens: 4096,
   };
   let lastErr;
   for (const model of GROQ_MODELS) {

@@ -17,11 +17,12 @@ class DynamicSkillEngine {
     this.appData = process.env.APPDATA || (process.platform === 'darwin' ? path.join(process.env.HOME, 'Library/Application Support') : path.join(process.env.HOME, '.config'));
     this.myraaDataDir = path.join(this.appData, 'MYRAA');
     this.userSkillsDir = path.join(this.myraaDataDir, 'skills');
-    this.workspaceSkillsDir = fs.existsSync('D:\\Team of Vishwajeet\\.agents\\skills') 
-      ? 'D:\\Team of Vishwajeet\\.agents\\skills'
+    const defaultWorkspace = path.join(process.env.USERPROFILE || require('os').homedir(), '.agents', 'skills');
+    this.workspaceSkillsDir = fs.existsSync(defaultWorkspace)
+      ? defaultWorkspace
       : path.resolve(__dirname, '..', '..', '..', '..', '.agents', 'skills');
-    this.universalSkillsDir = 'C:\\Users\\Vishwajeet\\Downloads\\Skills';
-    this.myraaNativeSkillsDir = 'D:\\Team of Vishwajeet\\MYRAA\\skills';
+    this.universalSkillsDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Downloads', 'Skills');
+    this.myraaNativeSkillsDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'skills');
 
     if (!fs.existsSync(this.userSkillsDir)) {
       try { fs.mkdirSync(this.userSkillsDir, { recursive: true }); } catch (e) {}
@@ -105,7 +106,7 @@ class DynamicSkillEngine {
       }
     }
 
-    console.log(`[Skill Engine] ✅ Ingested ${this.skillsMap.size} skills into active MYRAA cognitive registry.`);
+    console.log(`[Skill Engine] [OK] Ingested ${this.skillsMap.size} skills into active MYRAA cognitive registry.`);
     return Array.from(this.skillsMap.values());
   }
 

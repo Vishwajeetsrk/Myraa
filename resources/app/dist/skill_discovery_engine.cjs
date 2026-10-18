@@ -14,11 +14,11 @@ const modelRouter = require('./model_router.cjs');
 
 class SkillDiscoveryEngine {
   constructor() {
-    this.primarySkillsDir = 'C:\\Users\\Vishwajeet\\Downloads\\Skills';
-    this.workspaceSkillsDir = 'D:\\Team of Vishwajeet\\.agents\\skills';
+    this.primarySkillsDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Downloads', 'Skills');
+    this.workspaceSkillsDir = path.join(process.env.USERPROFILE || require('os').homedir(), '.agents', 'skills');
     this.appData = process.env.APPDATA || (process.platform === 'darwin' ? path.join(process.env.HOME, 'Library/Application Support') : path.join(process.env.HOME, '.config'));
     this.userSkillsDir = path.join(this.appData, 'MYRAA', 'skills');
-    this.globalSkillsDir = path.join(process.env.USERPROFILE || 'C:\\Users\\Vishwajeet', '.gemini', 'config', 'skills');
+    this.globalSkillsDir = path.join(process.env.USERPROFILE || require('os').homedir(), '.gemini', 'config', 'skills');
 
     this.skillRegistry = new Map();
     this.categoryIndex = new Map();
@@ -35,8 +35,8 @@ class SkillDiscoveryEngine {
     this.categoryIndex.clear();
 
     const scanLocations = [
-      { path: 'D:\\Team of Vishwajeet\\MYRAA\\skills', source: 'MYRAA Native Workspace' },
-      { path: 'C:\\Users\\Vishwajeet\\Downloads\\MYRAA_ASTRA_SKILLS_PACK\\MYRAA_ASTRA_SKILLS_PACK\\skills', source: 'MYRAA Astra Skills Pack' },
+      { path: path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'skills'), source: 'MYRAA Native Workspace' },
+      { path: path.join(process.env.USERPROFILE || require('os').homedir(), 'Downloads', 'MYRAA_ASTRA_SKILLS_PACK', 'skills'), source: 'MYRAA Astra Skills Pack' },
       { path: this.primarySkillsDir, source: 'Universal Downloads Library' },
       { path: this.workspaceSkillsDir, source: 'Workspace Agents' },
       { path: this.userSkillsDir, source: 'User Custom' },
@@ -60,7 +60,7 @@ class SkillDiscoveryEngine {
     }
 
     this.lastScanTime = new Date().toISOString();
-    console.log(`[Skill Discovery] ✅ SKILL_REGISTRY initialized with ${this.skillRegistry.size} universal skills.`);
+    console.log(`[Skill Discovery] [OK] SKILL_REGISTRY initialized with ${this.skillRegistry.size} universal skills.`);
     return this.getRegistrySummary();
   }
 

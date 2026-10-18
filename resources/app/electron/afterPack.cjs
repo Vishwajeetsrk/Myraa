@@ -8,15 +8,13 @@ module.exports = async function afterPack(context) {
 
   const productName = context.packager.appInfo.productFilename;
   const primaryExe = path.join(context.appOutDir, productName + '.exe');
-  const runtimeExe = path.join(context.appOutDir, productName + '-runtime.exe');
-  const launcherExe = path.join(__dirname, '..', 'build', 'MYRAA-launcher.exe');
-
-  if (!fs.existsSync(primaryExe)) throw new Error('Packaged Electron runtime is missing: ' + primaryExe);
-  if (!fs.existsSync(launcherExe)) {
-    console.warn('[afterPack] MYRAA-launcher.exe not found — keeping the stock Electron exe.');
-    return;
+  if (!fs.existsSync(primaryExe)) {
+    throw new Error('Packaged Electron application executable is missing: ' + primaryExe);
   }
 
-  await fs.promises.copyFile(primaryExe, runtimeExe);
-  await fs.promises.copyFile(launcherExe, primaryExe);
+  // MYRAA used to replace the Electron executable with a second launcher and
+  // rename the actual runtime to "MYRAA AI-runtime.exe". That indirection was
+  // the source of the missing-file failures in the portable distribution.
+  // Keep the real Electron executable as the single, stable launch target.
+  console.log('[afterPack] Verified application executable: ' + primaryExe);
 };

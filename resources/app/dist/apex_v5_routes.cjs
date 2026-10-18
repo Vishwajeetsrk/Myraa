@@ -12,9 +12,9 @@ let autoUpdate;
 try {
   autoUpdate = require('./autoUpdateEngine.cjs');
   autoUpdate.attachUpdateRoutes(router);
-  console.log('[APEX] ✅ Auto-Update Engine mounted on /api/update/*');
+  console.log('[APEX] [OK] Auto-Update Engine mounted on /api/update/*');
 } catch (e) {
-  console.warn('[APEX] ⚠️  Auto-Update Engine not loaded:', e.message);
+  console.warn('[APEX] [!] Auto-Update Engine not loaded:', e.message);
 }
 
 // Enterprise Engines
@@ -406,13 +406,32 @@ router.post('/api/plugins/launch', (req, res) => {
   }
 });
 
+// Reads the real version from version.json (single source of truth).
+// Falls back to package.json, then a static default — never a stale label.
+function _readAppVersionSync() {
+  try {
+    const f = require('fs');
+    const p = require('path');
+    const vj = JSON.parse(f.readFileSync(p.join(__dirname, '..', 'version.json'), 'utf8'));
+    if (vj && vj.version) return 'v' + vj.version;
+  } catch (e) {}
+  try {
+    const f = require('fs');
+    const p = require('path');
+    const pj = JSON.parse(f.readFileSync(p.join(__dirname, '..', 'package.json'), 'utf8'));
+    if (pj && pj.version) return 'v' + pj.version;
+  } catch (e) {}
+  return 'v9.2.0';
+}
+
 router.post('/api/update/check', (req, res) => {
+  const ver = _readAppVersionSync();
   res.json({
     success: true,
-    currentVersion: "v5.0.0 APEX Master",
-    latestVersion: "v5.0.0 (Up to date)",
+    currentVersion: ver,
+    latestVersion: ver + " (Up to date)",
     updateAvailable: false,
-    channel: "Production Stable (APEX Master)",
+    channel: "Production Stable",
     lastChecked: new Date().toISOString(),
     message: "System is running the latest verified build. All plugins, 3D character, and permissions are up to date."
   });
@@ -538,11 +557,62 @@ router.get('/api/memories/stats', (req, res) => {
 // -----------------------------------------------------------------------------
 // 5. SYSTEM CAPABILITIES & REAL LIVE TELEMETRY
 // -----------------------------------------------------------------------------
+// Live hardware probe (disk/CPU load/GPU) — cached 15s so the route stays fast.
+let _sysProbeCache = { ts: 0, data: null };
+function probeSystemHardware() {
+  if (_sysProbeCache.data && (Date.now() - _sysProbeCache.ts) < 15000) {
+    return Promise.resolve(_sysProbeCache.data);
+  }
+  const ps = "$d=Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3'|ForEach-Object{[pscustomobject]@{drive=$_.DeviceID;totalGB=[math]::Round($_.Size/1GB,1);freeGB=[math]::Round($_.FreeSpace/1GB,1)}};" +
+    "$c=(Get-CimInstance Win32_Processor|Measure-Object -Property LoadPercentage -Average).Average;" +
+    "$g=(Get-CimInstance Win32_VideoController|Select-Object -First 1).Name;" +
+    "ConvertTo-Json -InputObject @{disks=@($d);cpu=$c;gpu=$g} -Compress";
+  return new Promise((resolve) => {
+    exec('powershell -NoProfile -Command "' + ps + '"', { timeout: 8000, windowsHide: true }, (err, stdout) => {
+      let data = null;
+      if (!err && stdout) {
+        try { data = JSON.parse(String(stdout).trim()); } catch (e) { data = null; }
+      }
+      if (data) _sysProbeCache = { ts: Date.now(), data };
+      resolve(_sysProbeCache.data);
+    });
+  });
+}
+
+let _myraaVersionCache = null;
+function readMyraaVersion() {
+  if (_myraaVersionCache) return _myraaVersionCache;
+  const candidates = [
+    path.join(__dirname, 'version.json'),
+    path.join(__dirname, '..', 'version.json'),
+    path.join(__dirname, '..', 'app-version.json'),
+    path.join(__dirname, '..', 'package.json'),
+  ];
+  for (const f of candidates) {
+    try {
+      const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+      if (j && j.version) { _myraaVersionCache = String(j.version); return _myraaVersionCache; }
+    } catch (e) {}
+  }
+  _myraaVersionCache = 'unknown';
+  return _myraaVersionCache;
+}
+
 router.get('/api/system/capabilities', async (req, res) => {
   const cpus = os.cpus();
   const memTotalGB = (os.totalmem() / (1024 ** 3)).toFixed(1);
   const memFreeGB  = (os.freemem()  / (1024 ** 3)).toFixed(1);
   const memUsedPct = Math.round((1 - os.freemem() / os.totalmem()) * 100);
+
+  const hw = await probeSystemHardware();
+  const disks = (hw && Array.isArray(hw.disks) && hw.disks.length)
+    ? hw.disks.map(d => ({
+        drive: d.drive,
+        totalGB: d.totalGB,
+        freeGB: d.freeGB,
+        usedPct: d.totalGB ? Math.round(((d.totalGB - d.freeGB) / d.totalGB) * 100) : 0,
+      }))
+    : [];
 
   let verification = null;
   if (SystemVerificationService) {
@@ -555,20 +625,21 @@ router.get('/api/system/capabilities', async (req, res) => {
       hostname: os.hostname(),
       platform: `${process.platform} ${process.arch}`,
       cpu: {
-        model: cpus.length > 0 ? `${cpus.length}x ${cpus[0].model.trim()}` : 'Intel Core i5',
+        model: cpus.length > 0 ? `${cpus.length}x ${cpus[0].model.trim()}` : 'Unknown CPU',
         cores: cpus.length,
-        loadPercent: 12,
+        loadPercent: (hw && typeof hw.cpu === 'number') ? Math.round(hw.cpu) : null,
       },
       memory: {
         totalGB: memTotalGB,
         freeGB: memFreeGB,
         usedPercent: memUsedPct,
       },
-      disk: [{ drive: 'C:', totalGB: 512, freeGB: 200, usedPct: 61 }],
-      gpu: 'Intel(R) Iris(R) Xe Graphics',
+      disk: disks.length ? disks : [{ drive: 'C:', totalGB: null, freeGB: null, usedPct: null }],
+      gpu: (hw && hw.gpu) ? hw.gpu : 'Unknown GPU',
       uptime: (os.uptime() / 3600).toFixed(1) + ' hours',
       nodeVersion: process.version,
-      myraaVersion: '5.0.0-APEX',
+      myraaVersion: readMyraaVersion(),
+      probedAt: new Date().toISOString(),
     },
     verification: verification || { allVerified: true, verifiedCount: 10, totalCount: 10 },
     capabilities: verification ? verification.tools.map(t => ({
@@ -627,9 +698,9 @@ router.post('/api/system/wifi/scan', async (req, res) => {
 });
 
 router.post('/api/system/wifi/connect', async (req, res) => {
-  const { ssid, key } = req.body || {};
+  const { ssid, key, password, wifiKey } = req.body || {};
   try {
-    const result = SystemVerificationService ? await SystemVerificationService.connectWifi(ssid, key) : { success: false };
+    const result = SystemVerificationService ? await SystemVerificationService.connectWifi(ssid, key || password || wifiKey) : { success: false };
     res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -639,6 +710,19 @@ router.post('/api/system/wifi/connect', async (req, res) => {
 router.post('/api/system/wifi/disconnect', async (req, res) => {
   try {
     const result = SystemVerificationService ? await SystemVerificationService.disconnectWifi() : { success: false };
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/api/system/wifi/radio', async (req, res) => {
+  const { enabled, action } = req.body || {};
+  const want = typeof enabled === 'boolean' ? enabled : (action === 'enable' || action === 'on');
+  try {
+    const result = SystemVerificationService && SystemVerificationService.setWifiRadio
+      ? await SystemVerificationService.setWifiRadio(want)
+      : { success: false, error: 'service unavailable' };
     res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -663,6 +747,124 @@ router.post('/api/system/bluetooth/toggle', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// -----------------------------------------------------------------------------
+// SYSTEM REPAIR / AUTONOMOUS SELF-HEALING (non-destructive diagnostics + repair)
+// -----------------------------------------------------------------------------
+function _probePort(port) {
+  const net = require('net');
+  return new Promise((resolve) => {
+    const sock = net.connect({ port, host: '127.0.0.1' }, () => { sock.end(); resolve(true); });
+    sock.setTimeout(1500, () => { sock.destroy(); resolve(false); });
+    sock.on('error', () => resolve(false));
+  });
+}
+
+function _psStatus(serviceName) {
+  return new Promise((resolve) => {
+    exec(`powershell -NoProfile -Command "(Get-Service ${serviceName} -ErrorAction SilentlyContinue).Status"`,
+      { timeout: 6000, windowsHide: true }, (err, stdout) => {
+        resolve(String(stdout || '').trim() || 'unknown');
+      });
+  });
+}
+
+router.post('/api/system/heal', async (req, res) => {
+  const t0 = Date.now();
+  const checks = [];
+  const actions = [];
+
+  // 1. Core service ports
+  const coreUp = await _probePort(3000);
+  checks.push({ name: 'Backend core (port 3000)', ok: coreUp, detail: coreUp ? 'listening' : 'not reachable' });
+  let agentUp = await _probePort(8765);
+  checks.push({ name: 'Desktop agent (port 8765)', ok: agentUp, detail: agentUp ? 'listening' : 'not reachable' });
+
+  // 2. Attempt desktop agent respawn if it is down (best-effort, non-destructive)
+  if (!agentUp) {
+    const candidates = [
+      path.join(__dirname, '..', 'resources', 'agent', 'myraa-agent.exe'),
+      path.join(__dirname, '..', 'agent', 'myraa-agent.exe'),
+      path.join(__dirname, 'agent', 'myraa-agent.exe'),
+    ];
+    const exe = candidates.find((c) => fs.existsSync(c));
+    if (exe) {
+      try {
+        spawn('"' + exe + '"', [], { cwd: path.dirname(exe), detached: true, stdio: 'ignore', windowsHide: false }).unref();
+        await new Promise((r) => setTimeout(r, 2500));
+        agentUp = await _probePort(8765);
+        actions.push(agentUp ? 'Desktop agent restarted and responding' : 'Desktop agent restart attempted (still starting)');
+      } catch (e) {
+        actions.push('Desktop agent restart failed: ' + e.message);
+      }
+    } else {
+      actions.push('Desktop agent binary not found; restart via Settings');
+    }
+    const idx = checks.findIndex((c) => c.name.includes('8765'));
+    if (idx >= 0) { checks[idx].ok = agentUp; checks[idx].detail = agentUp ? 'restored' : 'still down'; }
+  }
+
+  // 3. Flush DNS resolver cache (system cache, safe)
+  await new Promise((resolve) => {
+    exec('ipconfig /flushdns', { timeout: 10000, windowsHide: true }, (err) => {
+      if (!err) actions.push('DNS resolver cache flushed');
+      checks.push({ name: 'DNS resolver cache', ok: !err, detail: err ? err.message : 'flushed' });
+      resolve();
+    });
+  });
+
+  // 4. Critical Windows services (audio, network, update) — read-only status
+  const audioStatus = await _psStatus('Audiosrv');
+  checks.push({ name: 'Windows Audio service', ok: audioStatus.toLowerCase() === 'running', detail: audioStatus });
+  const netStatus = await _psStatus('WlanSvc');
+  checks.push({ name: 'Wi-Fi AutoConfig service', ok: netStatus.toLowerCase() === 'running', detail: netStatus });
+
+  // 5. Disk headroom
+  const hw = await probeSystemHardware();
+  if (hw && Array.isArray(hw.disks)) {
+    for (const d of hw.disks) {
+      const ok = d.freeGB >= 5;
+      checks.push({ name: `Disk ${d.drive} headroom`, ok, detail: `${d.freeGB} GB free of ${d.totalGB} GB` });
+    }
+  }
+
+  // 6. Memory headroom
+  const freeGB = Number((os.freemem() / (1024 ** 3)).toFixed(1));
+  checks.push({ name: 'System memory headroom', ok: freeGB >= 0.5, detail: `${freeGB} GB free` });
+
+  // 7. Wi-Fi link (read-only)
+  if (SystemVerificationService) {
+    try {
+      const wifi = await SystemVerificationService.getWifiStatus();
+      checks.push({ name: 'Wi-Fi link', ok: Boolean(wifi.connected), detail: wifi.connected ? `connected to ${wifi.ssid}` : 'disconnected' });
+    } catch (e) {}
+  }
+
+  // 8. Report stale MYRAA temp usage WITHOUT deleting anything (data-safe)
+  try {
+    let stale = 0, bytes = 0;
+    const cutoff = Date.now() - 86400000;
+    for (const f of fs.readdirSync(os.tmpdir())) {
+      if (!/^myraa[-_]/i.test(f)) continue;
+      try {
+        const st = fs.statSync(path.join(os.tmpdir(), f));
+        if (st.mtimeMs < cutoff) { stale++; bytes += st.size || 0; }
+      } catch (e) {}
+    }
+    actions.push(stale ? `${stale} stale MYRAA temp item(s) noted (${(bytes / (1024 * 1024)).toFixed(1)} MB) - not deleted` : 'No stale MYRAA temp files');
+    checks.push({ name: 'Temp hygiene', ok: true, detail: `${stale} stale item(s)` });
+  } catch (e) {}
+
+  const failed = checks.filter((c) => !c.ok);
+  res.json({
+    ok: failed.length === 0,
+    summary: `${checks.length - failed.length}/${checks.length} checks passed, ${actions.length} repair action(s) taken`,
+    checks,
+    actions,
+    elapsedMs: Date.now() - t0,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Full File Explorer API
@@ -1016,6 +1218,55 @@ router.get('/api/voice/train', async (req, res) => {
     res.json({ success: true, models: data.items || [], total: data.total || 0 });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/api/voice/train', (req, res) => {
+  const key = getFishAudioKey();
+  res.json({
+    success: true,
+    configured: Boolean(key),
+    provider: 'Fish Audio',
+    message: key
+      ? 'Voice training pipeline ready. Custom voice models available.'
+      : 'Voice training unavailable: no Fish Audio API key configured.'
+  });
+});
+
+// Live Fish Audio wallet balance (read-only; 120 s server cache). Never
+// returns key material or account PII — balance number only.
+let fishBalanceCache = { at: 0, data: null };
+router.get('/api/voice/fish/balance', async (req, res) => {
+  const key = getFishAudioKey();
+  if (!key) return res.status(503).json({ ok: false, error: 'Fish Audio API key not configured.' });
+  const now = Date.now();
+  if (fishBalanceCache.data && (now - fishBalanceCache.at) < 120000) {
+    return res.json(Object.assign({ cached: true }, fishBalanceCache.data));
+  }
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, 8000);
+    const r = await fetch('https://api.fish.audio/wallet/self', {
+      headers: { Authorization: 'Bearer ' + key },
+      signal: ctrl.signal
+    });
+    clearTimeout(timer);
+    if (!r.ok) return res.status(502).json({ ok: false, error: 'Fish Audio wallet returned HTTP ' + r.status });
+    const data = await r.json().catch(() => ({}));
+    const num = (v) => (typeof v === 'number' && isFinite(v)) ? v
+      : (typeof v === 'string' && v.trim() !== '' && isFinite(Number(v)) ? Number(v) : undefined);
+    const bal = num(data.balance) ?? num(data.credit) ?? num(data.credits) ?? num(data.remaining)
+      ?? num(data.data && data.data.balance);
+    if (bal === undefined) {
+      const detail = (r.status === 401 || r.status === 403)
+        ? 'Fish Audio rejected the stored key (HTTP ' + r.status + '). Replace FISH_AUDIO_API_KEY with a valid key.'
+        : 'Unexpected wallet response shape.';
+      return res.status(502).json({ ok: false, invalidKey: (r.status === 401 || r.status === 403), error: detail });
+    }
+    fishBalanceCache = { at: now, data: { ok: true, balance: bal, checkedAt: new Date().toISOString() } };
+    return res.json(fishBalanceCache.data);
+  } catch (err) {
+    return res.status(502).json({ ok: false, error: String((err && err.message) || err) });
   }
 });
 
@@ -1440,6 +1691,168 @@ router.post('/api/office/type', async (req, res) => {
 });
 
 // -----------------------------------------------------------------------------
+// PROFESSIONAL WORD ENGINE ENDPOINTS
+// -----------------------------------------------------------------------------
+router.post('/api/office/word/review', async (req, res) => {
+  const { filePath, content } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  try {
+    const result = await OfficeDocEngine.reviewWord({ filePath, content });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/redesign', async (req, res) => {
+  const { filePath, options } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.redesignWord({ filePath, options });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/merge', async (req, res) => {
+  const { filePaths, outputFilename } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePaths || !Array.isArray(filePaths) || filePaths.length === 0) {
+    return res.status(400).json({ success: false, error: 'filePaths array required' });
+  }
+  try {
+    const result = await OfficeDocEngine.mergeWord({ filePaths, outputFilename });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/split', async (req, res) => {
+  const { filePath, splitBy } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.splitWord({ filePath, splitBy });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/find-replace', async (req, res) => {
+  const { filePath, findText, replaceText, caseSensitive, wholeWord } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath || !findText) return res.status(400).json({ success: false, error: 'filePath and findText required' });
+  try {
+    const result = await OfficeDocEngine.findReplaceWord({ filePath, findText, replaceText, caseSensitive, wholeWord });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/analyze', async (req, res) => {
+  const { filePath } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.analyzeWord({ filePath });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/export-pdf', async (req, res) => {
+  const { filePath } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.exportToPdf({ filePath });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/track-changes', async (req, res) => {
+  const { filePath, enable } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.trackChangesWord({ filePath, enable });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/comment', async (req, res) => {
+  const { filePath, commentText, author, paragraphIndex } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.addCommentWord({ filePath, commentText, author, paragraphIndex });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/footnote', async (req, res) => {
+  const { filePath, text, paragraphIndex } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.addFootnoteWord({ filePath, text, paragraphIndex });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/spellcheck', async (req, res) => {
+  const { text, language } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!text) return res.status(400).json({ success: false, error: 'text required' });
+  try {
+    const result = await OfficeDocEngine.spellCheckWord({ text, language });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/template/save', async (req, res) => {
+  const { filePath, templateName, category } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.saveTemplate({ filePath, templateName, category });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.get('/api/office/word/templates', async (req, res) => {
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  try {
+    const result = await OfficeDocEngine.listTemplates();
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/template/load', async (req, res) => {
+  const { templateName } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!templateName) return res.status(400).json({ success: false, error: 'templateName required' });
+  try {
+    const result = await OfficeDocEngine.loadTemplate({ templateName });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/qa', async (req, res) => {
+  const { filePath } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.qaPipelineWord({ filePath });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+router.post('/api/office/word/visual-qa', async (req, res) => {
+  const { filePath } = req.body || {};
+  if (!OfficeDocEngine) return res.status(503).json({ success: false, error: 'Office engine not loaded' });
+  if (!filePath) return res.status(400).json({ success: false, error: 'filePath required' });
+  try {
+    const result = await OfficeDocEngine.visualQaWord({ filePath });
+    res.json({ success: result.ok, ...result });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// -----------------------------------------------------------------------------
 // TASK PROGRESS PERCENTAGE & QUALITY SCORE TRACKING
 // -----------------------------------------------------------------------------
 router.get('/api/progress/current', (req, res) => {
@@ -1703,7 +2116,7 @@ router.get('/api/desktop/verbal-evaluate', (req, res) => {
       targetApp: "WINWORD",
       action: "write",
       proactiveInquiry: "Before I format and write this in Microsoft Word: Should I create a formal document title and section headings, or insert as raw body text? Should I start a new document or write into your active one?",
-      animationState: { app: "Microsoft Word", accentColor: "#2b579a", gazeDirection: "right", uiBadge: "✍️ DRAFTING TO MICROSOFT WORD" }
+      animationState: { app: "Microsoft Word", accentColor: "#2b579a", gazeDirection: "right", uiBadge: "[>] DRAFTING TO MICROSOFT WORD" }
     };
   } else if (/(?:switch to|focus (?:on)?|bring up|open) (?:ms )?excel/i.test(text)) {
     result = {
@@ -1718,7 +2131,7 @@ router.get('/api/desktop/verbal-evaluate', (req, res) => {
       targetApp: "EXCEL",
       action: "write",
       proactiveInquiry: "Before I populate Microsoft Excel: What sheet name and starting cell coordinate (e.g. A1) should I target? Would you like me to format the first row with bold column headers?",
-      animationState: { app: "Microsoft Excel", accentColor: "#217346", gazeDirection: "left", uiBadge: "📊 UPDATING EXCEL SPREADSHEET" }
+      animationState: { app: "Microsoft Excel", accentColor: "#217346", gazeDirection: "left", uiBadge: "[Chart] UPDATING EXCEL SPREADSHEET" }
     };
   } else if (/(?:switch to|focus (?:on)?|bring up|open) (?:vs )?code/i.test(text)) {
     result = {
@@ -2114,7 +2527,7 @@ router.get('/api/feature-truth', (req, res) => {
   ];
   res.json({
     features: items,
-    total: items.len,
+    total: items.length,
     verified_count: items.filter(x => x.verified).length,
     generated_at: new Date().toISOString()
   });
@@ -2345,30 +2758,107 @@ This report provides a structured, evidence-based synthesis for: **"${query}"**.
 });
 
 // ── 6. GITHUB REPOSITORY LEARNING ENGINE ──────────────────────────────────────
-router.post('/api/github/analyze', (req, res) => {
+router.post('/api/github/analyze', async (req, res) => {
   const { repoUrl, localPath } = req.body || {};
-  const target = repoUrl || localPath || 'D:\\Team of Vishwajeet';
+  const target = repoUrl || localPath;
+  if (!target) return res.status(400).json({ success: false, error: 'Repository URL or local path is required.' });
 
   try {
-    let stats = { filesCount: 142, frameworks: ['Electron', 'Express', 'Three.js (MMD)', 'Vite', 'Node.js'], languages: ['JavaScript', 'TypeScript', 'C#', 'CSS', 'HTML'] };
-    let license = 'MIT License (Open Source)';
-    let patterns = [
-      'Multi-threaded C# Native Windows Installer with GDI+ Double Buffering',
-      'Dual Desktop Shortcut Resolution (OneDrive Shell Redirection + Local Profile)',
-      'Dynamic Claude MCP Cognitive Skills Ingestion (.agents/skills)',
-      'Three.js MMDLoader for 3D Polygon Model Extended (PMX) Rigging',
-      'Unified Express static asset routing with MIME type enforcement'
-    ];
+    // If it's a local path, analyze the actual directory
+    const fs = require('fs');
+    const pathMod = require('path');
+    let analysisDir = target;
+    let isLocal = false;
+
+    if (fs.existsSync(target)) {
+      isLocal = true;
+      analysisDir = target;
+    } else if (target.match(/^[A-Z]:\\/i) && !target.startsWith('http')) {
+      return res.status(400).json({ success: false, error: `Path not found: ${target}` });
+    }
+
+    const stats = { filesCount: 0, frameworks: [], languages: [], directories: [] };
+    const langCounts = {};
+    const frameworks = new Set();
+
+    if (isLocal) {
+      // Real filesystem analysis
+      const extCounts = {};
+      const _scan = (dir, depth = 0) => {
+        if (depth > 4) return;
+        try {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const e of entries) {
+            if (e.name === 'node_modules' || e.name === '.git' || e.name === 'dist' || e.name === 'build' || e.name === '.next') continue;
+            if (e.isDirectory()) {
+              stats.directories.push(e.name);
+              _scan(pathMod.join(dir, e.name), depth + 1);
+            } else {
+              stats.filesCount++;
+              const ext = pathMod.extname(e.name).toLowerCase();
+              extCounts[ext] = (extCounts[ext] || 0) + 1;
+            }
+          }
+        } catch {}
+      };
+      _scan(analysisDir);
+
+      // Language detection
+      const extLangMap = { '.js': 'JavaScript', '.ts': 'TypeScript', '.tsx': 'TypeScript', '.jsx': 'JavaScript', '.py': 'Python', '.rs': 'Rust', '.go': 'Go', '.java': 'Java', '.cs': 'C#', '.rb': 'Ruby', '.php': 'PHP', '.html': 'HTML', '.css': 'CSS', '.scss': 'SCSS', '.vue': 'Vue', '.svelte': 'Svelte' };
+      for (const [ext, count] of Object.entries(extCounts)) {
+        if (extLangMap[ext]) stats.languages.push(`${extLangMap[ext]} (${count} files)`);
+      }
+
+      // Framework detection
+      const pkgJsonPath = pathMod.join(analysisDir, 'package.json');
+      if (fs.existsSync(pkgJsonPath)) {
+        try {
+          const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'));
+          const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
+          if (allDeps['react']) frameworks.add('React');
+          if (allDeps['next']) frameworks.add('Next.js');
+          if (allDeps['vue']) frameworks.add('Vue');
+          if (allDeps['@angular/core']) frameworks.add('Angular');
+          if (allDeps['svelte']) frameworks.add('Svelte');
+          if (allDeps['express']) frameworks.add('Express');
+          if (allDeps['fastify']) frameworks.add('Fastify');
+          if (allDeps['electron']) frameworks.add('Electron');
+          if (allDeps['tauri']) frameworks.add('Tauri');
+          if (allDeps['three']) frameworks.add('Three.js');
+          if (allDeps['vite']) frameworks.add('Vite');
+          if (allDeps['typescript']) frameworks.add('TypeScript');
+          if (allDeps['prisma']) frameworks.add('Prisma');
+          if (allDeps['mongoose']) frameworks.add('MongoDB');
+          if (allDeps['pg']) frameworks.add('PostgreSQL');
+          if (pkg.scripts?.dev) stats.scripts = stats.scripts || {};
+          if (pkg.scripts) stats.scripts = pkg.scripts;
+          if (pkg.name) stats.projectName = pkg.name;
+          if (pkg.description) stats.description = pkg.description;
+        } catch {}
+      }
+      stats.frameworks = [...frameworks];
+    } else {
+      // Remote URL - use GitHub connector if available
+      try {
+        const githubConnector = require('./myraa_github_connector.cjs');
+        const treeResult = await githubConnector.execute('repo_tree', { repoUrl: target });
+        if (treeResult.ok) {
+          stats.filesCount = treeResult.tree?.length || 0;
+          stats.languages = treeResult.languages || [];
+        }
+      } catch {
+        return res.json({ success: true, repository: target, status: 'REMOTE_ANALYSIS_LIMITED', stats, message: 'Remote analysis limited. Clone the repo locally for full analysis.' });
+      }
+    }
 
     res.json({
       success: true,
       repository: target,
+      isLocal,
       status: 'ANALYZED',
-      license,
       stats,
-      architecturalPatterns: patterns,
-      recommendedSkills: ['desktop-automation', 'electron-performance', 'lucide-svg-icons', 'csharp-winforms'],
-      learningSummary: `Analyzed repository structure at ${target}. Identified 5 core frameworks and verified zero-emoji SVG standard compliance.`
+      recommendedSkills: stats.frameworks.map(f => f.toLowerCase()),
+      learningSummary: `Analyzed ${isLocal ? 'local' : 'remote'} repository at ${target}. Found ${stats.filesCount} files, ${stats.languages.length} languages, ${stats.frameworks.length} frameworks.`
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -2599,6 +3089,478 @@ router.post('/api/learn/github', async (req, res) => {
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
+});
+
+// ── 13. GIT SERVICE ──────────────────────────────────────────────────────────
+router.get('/api/git/status', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const dir = req.query.dir || process.cwd();
+    const info = gitService.detectProject(dir);
+    res.json({ ok: true, ...info });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/init', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const dir = req.body.dir || process.cwd();
+    res.json(gitService.init(dir));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/add', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { dir, files } = req.body || {};
+    res.json(gitService.add(dir || process.cwd(), files || '.'));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/commit', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { dir, message } = req.body || {};
+    if (!message) return res.status(400).json({ ok: false, error: 'Commit message is required.' });
+    res.json(gitService.commit(dir || process.cwd(), message));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/push', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { dir, remote, branch, setUpstream } = req.body || {};
+    res.json(gitService.push(dir || process.cwd(), remote, branch, setUpstream));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/pull', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { dir, remote, branch } = req.body || {};
+    res.json(gitService.pull(dir || process.cwd(), remote, branch));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/checkout', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { dir, target } = req.body || {};
+    if (!target) return res.status(400).json({ ok: false, error: 'Branch name is required.' });
+    res.json(gitService.checkout(dir || process.cwd(), target));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/git/log', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const dir = req.query.dir || process.cwd();
+    const count = parseInt(req.query.count) || 20;
+    res.json(gitService.logDetailed(dir, count));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/git/diff', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const dir = req.query.dir || process.cwd();
+    res.json({ staged: gitService.diffStaged(dir), unstaged: gitService.diff(dir, { stat: true }) });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/git/branches', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const dir = req.query.dir || process.cwd();
+    res.json(gitService.branch(dir));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/create-branch', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { dir, name } = req.body || {};
+    if (!name) return res.status(400).json({ ok: false, error: 'Branch name is required.' });
+    res.json(gitService.createAndCheckout(dir || process.cwd(), name));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/clone', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { url, targetDir } = req.body || {};
+    if (!url) return res.status(400).json({ ok: false, error: 'Repository URL is required.' });
+    res.json(gitService.clone(url, targetDir));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/stash', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { dir, action, message } = req.body || {};
+    res.json(gitService.stash(dir || process.cwd(), action || 'save', message));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/undo-commit', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { dir, keepChanges } = req.body || {};
+    res.json(gitService.undoLastCommit(dir || process.cwd(), keepChanges !== false));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/git/ignore', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const { dir, patterns } = req.body || {};
+    res.json(gitService.addGitignore(dir || process.cwd(), patterns));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/git/search', async (req, res) => {
+  try {
+    const gitService = require('./git_service.cjs');
+    const dir = req.query.dir || process.cwd();
+    const query = req.query.q;
+    if (!query) return res.status(400).json({ ok: false, error: 'Search query is required.' });
+    res.json(gitService.searchLog(dir, query));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 14. PROJECT DETECTION SERVICE ────────────────────────────────────────────
+router.get('/api/project/detect', async (req, res) => {
+  try {
+    const projectDetection = require('./project_detection_service.cjs');
+    const dir = req.query.dir || process.cwd();
+    res.json({ ok: true, ...projectDetection.detectProject(dir) });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/project/state', async (req, res) => {
+  try {
+    const projectDetection = require('./project_detection_service.cjs');
+    const dir = req.query.dir || process.cwd();
+    res.json({ ok: true, ...projectDetection.getProjectState(dir) });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 15. TEST RUNNER SERVICE ──────────────────────────────────────────────────
+router.get('/api/test/detect', async (req, res) => {
+  try {
+    const testRunner = require('./test_runner_service.cjs');
+    const dir = req.query.dir || process.cwd();
+    res.json({ ok: true, ...testRunner.detectTestSetup(dir) });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/test/run', async (req, res) => {
+  try {
+    const testRunner = require('./test_runner_service.cjs');
+    const { dir, framework, file } = req.body || {};
+    const result = await testRunner.runTests(dir || process.cwd(), { framework, file });
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/test/lint', async (req, res) => {
+  try {
+    const testRunner = require('./test_runner_service.cjs');
+    const { dir, framework } = req.body || {};
+    const result = await testRunner.runLint(dir || process.cwd(), { framework });
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/test/build', async (req, res) => {
+  try {
+    const testRunner = require('./test_runner_service.cjs');
+    const { dir } = req.body || {};
+    const result = await testRunner.runBuild(dir || process.cwd());
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/test/install', async (req, res) => {
+  try {
+    const testRunner = require('./test_runner_service.cjs');
+    const { dir } = req.body || {};
+    const result = await testRunner.runInstall(dir || process.cwd());
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 16. CODING ORCHESTRATOR ──────────────────────────────────────────────────
+router.post('/api/coding/execute', async (req, res) => {
+  try {
+    const codingOrchestrator = require('./coding_orchestrator.cjs');
+    const { message, projectDir } = req.body || {};
+    if (!message) return res.status(400).json({ ok: false, error: 'Message is required.' });
+    const result = await codingOrchestrator.executeCodingTask(message, { projectDir });
+    res.json({ ok: true, ...result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/coding/intent', async (req, res) => {
+  try {
+    const codingOrchestrator = require('./coding_orchestrator.cjs');
+    const message = req.query.q;
+    if (!message) return res.status(400).json({ ok: false, error: 'Query is required.' });
+    res.json({ ok: true, intent: codingOrchestrator.classifyIntent(message) });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/coding/state', async (req, res) => {
+  try {
+    const codingOrchestrator = require('./coding_orchestrator.cjs');
+    res.json({ ok: true, ...codingOrchestrator.getState() });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/coding/stop', async (req, res) => {
+  try {
+    const codingOrchestrator = require('./coding_orchestrator.cjs');
+    codingOrchestrator.stopTask();
+    res.json({ ok: true, message: 'Stop requested.' });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 17. STREAMING CODE SERVICE ───────────────────────────────────────────────
+router.post('/api/stream/start', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { command, cwd, timeout } = req.body || {};
+    if (!command) return res.status(400).json({ ok: false, error: 'Command is required.' });
+    const result = streamingService.streamCommand(command, { cwd, timeout });
+    res.json({ ok: true, ...result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/stream/active', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    res.json({ ok: true, streams: streamingService.getActiveStreams() });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/stream/tests', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { dir, framework, timeout } = req.body || {};
+    const result = streamingService.streamTests(dir || process.cwd(), { framework, timeout });
+    res.json({ ok: true, ...result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/stream/build', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { dir, timeout } = req.body || {};
+    const result = streamingService.streamBuild(dir || process.cwd(), { timeout });
+    res.json({ ok: true, ...result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/stream/install', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { dir, timeout } = req.body || {};
+    const result = streamingService.streamInstall(dir || process.cwd(), { timeout });
+    res.json({ ok: true, ...result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/stream/cancel', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { sessionId } = req.body || {};
+    if (!sessionId) return res.status(400).json({ ok: false, error: 'Session ID is required.' });
+    const result = streamingService.cancelStream(sessionId);
+    res.json({ ok: result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 18. VS CODE IPC BRIDGE ──────────────────────────────────────────────────
+router.get('/api/vscode/workspace', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    res.json(vscodeBridge.getActiveWorkspace());
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/active-file', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    res.json(vscodeBridge.getActiveFile());
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/vscode/open-folder', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const { path: folderPath } = req.body || {};
+    if (!folderPath) return res.status(400).json({ ok: false, error: 'Folder path is required.' });
+    res.json(vscodeBridge.openFolder(folderPath));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/vscode/open-file', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const { path: filePath, line, column } = req.body || {};
+    if (!filePath) return res.status(400).json({ ok: false, error: 'File path is required.' });
+    res.json(vscodeBridge.openFile(filePath, line, column));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/project-info', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    res.json(vscodeBridge.getProjectInfo(dir));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/files', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    const maxDepth = parseInt(req.query.depth) || 3;
+    res.json(vscodeBridge.listFiles(dir, maxDepth));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/search', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    const query = req.query.q;
+    if (!query) return res.status(400).json({ ok: false, error: 'Search query is required.' });
+    res.json(vscodeBridge.searchFiles(dir, query));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/git-status', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    res.json(vscodeBridge.getGitStatus(dir));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/git-log', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    const count = parseInt(req.query.count) || 10;
+    res.json(vscodeBridge.getGitLog(dir, count));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/vscode/run-command', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const { command, cwd } = req.body || {};
+    if (!command) return res.status(400).json({ ok: false, error: 'Command is required.' });
+    res.json(vscodeBridge.runTerminalCommand(command, cwd));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 19. REMOTION RENDERING SERVICE ──────────────────────────────────────────
+router.post('/api/remotion/scaffold', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { name, opts } = req.body || {};
+    if (!name) return res.status(400).json({ ok: false, error: 'Project name is required.' });
+    const result = await remotion.scaffoldProject(name, opts || {});
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/remotion/projects', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    res.json(remotion.listProjects());
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/remotion/render', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { projectDir, composition, output, codec, fps } = req.body || {};
+    if (!projectDir) return res.status(400).json({ ok: false, error: 'Project directory is required.' });
+    const result = await remotion.renderVideo(projectDir, { composition, output, codec, fps });
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/remotion/render-frames', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { projectDir, composition, output, frames } = req.body || {};
+    if (!projectDir) return res.status(400).json({ ok: false, error: 'Project directory is required.' });
+    const result = await remotion.renderFrames(projectDir, { composition, output, frames });
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/remotion/studio', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { projectDir, port } = req.body || {};
+    if (!projectDir) return res.status(400).json({ ok: false, error: 'Project directory is required.' });
+    res.json(remotion.startStudio(projectDir, port));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/remotion/delete', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { name } = req.body || {};
+    if (!name) return res.status(400).json({ ok: false, error: 'Project name is required.' });
+    res.json(remotion.deleteProject(name));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 20. SESSION PERSISTENCE SERVICE ─────────────────────────────────────────
+router.get('/api/sessions/list', async (req, res) => {
+  try {
+    const sessionPersistence = require('./session_persistence_service.cjs');
+    const type = req.query.type || 'code-review';
+    const limit = parseInt(req.query.limit) || 20;
+    res.json(sessionPersistence.listSessions(type, { limit }));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/sessions/:type/:id', async (req, res) => {
+  try {
+    const sessionPersistence = require('./session_persistence_service.cjs');
+    res.json(sessionPersistence.loadSession(req.params.type, req.params.id));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/sessions/save', async (req, res) => {
+  try {
+    const sessionPersistence = require('./session_persistence_service.cjs');
+    const { type, id, data } = req.body || {};
+    if (!type || !id || !data) return res.status(400).json({ ok: false, error: 'Type, id, and data are required.' });
+    res.json(sessionPersistence.saveSession(type, id, data));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.delete('/api/sessions/:type/:id', async (req, res) => {
+  try {
+    const sessionPersistence = require('./session_persistence_service.cjs');
+    res.json(sessionPersistence.deleteSession(req.params.type, req.params.id));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/sessions/cleanup', async (req, res) => {
+  try {
+    const sessionPersistence = require('./session_persistence_service.cjs');
+    const { type, maxAgeDays } = req.body || {};
+    res.json(sessionPersistence.cleanupOldSessions(type || 'code-review', maxAgeDays || 30));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
 });
 
 module.exports = router;

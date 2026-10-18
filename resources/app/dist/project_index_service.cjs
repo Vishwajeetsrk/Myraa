@@ -127,7 +127,7 @@ const ProjectIndexService = {
     return { ok: true, name: safeName, projectDir: dir };
   },
 
-  resolveProjectDir(name, description, baseDir = 'C:\\Users\\Vishwajeet\\Projects') {
+  resolveProjectDir(name, description, baseDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Projects')) {
     const existing = this.findProject(name || description);
     if (existing && existing.projectDir) {
       if (fs.existsSync(existing.projectDir)) {
@@ -151,11 +151,11 @@ const ProjectIndexService = {
       return { ok: false, error: `Project '${nameOrDesc}' not found in project_index.` };
     }
     let pdir = match.projectDir;
+    const defaultProjectsDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Projects');
     if (!pdir || !fs.existsSync(pdir)) {
       const candidates = [
-        'D:\\Team of Vishwajeet',
-        'C:\\Users\\Vishwajeet\\Downloads\\Jarvis\\Automated-Agentic-AI-Web-Agency\\Automated-Agentic-AI-Web-Agency-main',
-        'C:\\Users\\Vishwajeet\\Projects\\' + match.name
+        path.join(defaultProjectsDir, match.name),
+        path.join(process.cwd(), 'Projects', match.name)
       ];
       for (const cand of candidates) {
         if (fs.existsSync(cand)) {
@@ -166,7 +166,7 @@ const ProjectIndexService = {
         }
       }
       if (!pdir || !fs.existsSync(pdir)) {
-        pdir = pdir || ('C:\\Users\\Vishwajeet\\Projects\\' + match.name);
+        pdir = path.join(defaultProjectsDir, match.name);
         try { fs.mkdirSync(pdir, { recursive: true }); } catch(e) {}
       }
     }

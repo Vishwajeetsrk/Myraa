@@ -9,8 +9,9 @@ artifactName: MYRAA-${version}-${os}-${arch}.${ext}
 
 # ── Directories ──────────────────────────────────────────────────────────────
 directories:
-  output: release
+  output: dist-release
   buildResources: build
+npmRebuild: false
 
 # ── Files to include in the app bundle ───────────────────────────────────────
 files:
@@ -37,7 +38,7 @@ win:
   artifactName: MYRAA-Setup-${version}.${ext}
   # Do not set `sign: false`: electron-builder will use CSC_LINK / CSC_KEY_PASSWORD
   # when a trusted Authenticode certificate is provided by the release environment.
-  executableName: MYRAA AI
+  executableName: MYRAA
   legalTrademarks: MYRAA is a trademark of Vishwajeet & Open Source Community
   signtoolOptions:
     publisherName: MYRAA
@@ -50,15 +51,15 @@ nsis:
   oneClick: false
   perMachine: false
   allowElevation: true
-  allowToChangeInstallationDirectory: false
+  allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: MYRAA AI OS
+  shortcutName: MYRAA
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
   installerHeaderIcon: build/icon.ico
   deleteAppDataOnUninstall: false
-  menuCategory: MYRAA AI OS
+  menuCategory: MYRAA
   # Keep installer logic in Electron Builder's tested NSIS template. The former
   # custom include caused silent installs to exit with code 2 before copying
   # files, and duplicated registry/uninstall behavior handled by the template.

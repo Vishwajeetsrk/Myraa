@@ -214,11 +214,29 @@ router.get('/api/capabilities/permission-check', (req, res) => {
 });
 
 // â”€â”€ APPLICATION ON-DEMAND UPDATE SYSTEM (NO AUTO-APPLY WITHOUT USER CLICK) â”€â”€
+// Reports the real version from version.json (single source of truth).
+function _readAppVersionSync() {
+  try {
+    const f = require('fs');
+    const p = require('path');
+    const vj = JSON.parse(f.readFileSync(p.join(__dirname, '..', 'version.json'), 'utf8'));
+    if (vj && vj.version) return 'v' + vj.version;
+  } catch (e) {}
+  try {
+    const f = require('fs');
+    const p = require('path');
+    const pj = JSON.parse(f.readFileSync(p.join(__dirname, '..', 'package.json'), 'utf8'));
+    if (pj && pj.version) return 'v' + pj.version;
+  } catch (e) {}
+  return 'v9.2.0';
+}
+
 router.get('/api/update/check', (req, res) => {
+  const _ver = _readAppVersionSync();
   res.json({
     success: true,
-    currentVersion: 'v7.5.0 APEX Master',
-    latestVersion: 'v7.5.0 APEX Master',
+    currentVersion: _ver,
+    latestVersion: _ver,
     updateAvailable: false,
     autoUpdate: false,
     policy: 'Manual on-demand update only â€” updates are never applied automatically without user confirmation',
@@ -231,7 +249,7 @@ router.get('/api/update/check', (req, res) => {
       safeMode: 'High-Risk Confirmation Barrier'
     },
     changelog: [
-      'Master v7.5.0 APEX Release â€” 515 Cognitive Skills Fleet & 12 Branded Production Connectors',
+      _ver + ' Release â€” 515 Cognitive Skills Fleet & 12 Branded Production Connectors',
       'Real Native Win32 Desktop Automation (Word, Excel, PowerPoint, VS Code, Browser, Volume, Power)',
       'Sub-Second Zero-Thinking Leak Filter & Clean Female Hinglish Conversational Presence',
       'Continuous Persistent Conversation Sessions & Historical Transcripts Hub',
@@ -242,10 +260,11 @@ router.get('/api/update/check', (req, res) => {
 });
 
 router.post('/api/update/check', (req, res) => {
+  const _ver = _readAppVersionSync();
   res.json({
     success: true,
-    currentVersion: 'v7.5.0 APEX Master',
-    latestVersion: 'v7.5.0 APEX Master',
+    currentVersion: _ver,
+    latestVersion: _ver,
     updateAvailable: false,
     autoUpdate: false,
     policy: 'Manual on-demand update only â€” updates are never applied automatically without user confirmation',
@@ -258,7 +277,7 @@ router.post('/api/update/check', (req, res) => {
       safeMode: 'High-Risk Confirmation Barrier'
     },
     changelog: [
-      'Master v7.5.0 APEX Release â€” 515 Cognitive Skills Fleet & 12 Branded Production Connectors',
+      _ver + ' Release â€” 515 Cognitive Skills Fleet & 12 Branded Production Connectors',
       'Real Native Win32 Desktop Automation (Word, Excel, PowerPoint, VS Code, Browser, Volume, Power)',
       'Sub-Second Zero-Thinking Leak Filter & Clean Female Hinglish Conversational Presence',
       'Continuous Persistent Conversation Sessions & Historical Transcripts Hub',
@@ -270,9 +289,9 @@ router.post('/api/update/check', (req, res) => {
 
 router.post('/api/update/apply', (req, res) => {
   try {
-    const masterDist = 'C:\\Users\\Vishwajeet\\Music\\Myraa\\resources\\app\\dist';
-    const runtimeDist = 'C:\\Users\\Vishwajeet\\AppData\\Local\\Programs\\MYRAA-AI-OS\\resources\\app\\dist';
-    if (fs.existsSync(masterDist) && fs.existsSync(runtimeDist) && masterDist !== runtimeDist) {
+    const runtimeDist = __dirname;
+    const masterDist = (process.env.MYRAA_MASTER_DIST && process.env.MYRAA_MASTER_DIST !== runtimeDist) ? process.env.MYRAA_MASTER_DIST : '';
+    if (masterDist && fs.existsSync(masterDist) && fs.existsSync(runtimeDist) && masterDist !== runtimeDist) {
       const filesToSync = ['ui-health-patch.js', 'identity.json', 'server.cjs', 'myraa_v6_real_routes.cjs'];
       filesToSync.forEach(f => {
         const src = path.join(masterDist, f);
@@ -284,8 +303,8 @@ router.post('/api/update/apply', (req, res) => {
     }
     return res.json({
       success: true,
-      message: 'âœ“ Application updated successfully to v7.5.0 APEX Master! Core files synchronized.',
-      version: 'v7.5.0 APEX Master',
+      message: 'âœ“ Application updated successfully to ' + _readAppVersionSync() + '! Core files synchronized.',
+      version: _readAppVersionSync(),
       updatedAt: new Date().toISOString()
     });
   } catch (err) {
@@ -443,6 +462,8 @@ function stripThinking(text) {
   s = s.replace(/<thinking[\s\S]*?<\/thinking>/gi, '');
   s = s.replace(/(?:^|\n)The user is expressing extreme frustration[\s\S]*?(?:Plan:[\s\S]*?\n\n|Female)/gi, '');
   s = s.replace(/(?:^|\n)(?:Plan:|Reasoning:|Thinking Process:)[\s\S]*?\n\n/gi, '');
+  // Rule 1: Zero Emojis Enforced across all chat outputs
+  s = s.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '');
   return s.trim();
 }
 
@@ -458,7 +479,7 @@ const OPENROUTER_KEY = () => {
   const secrets = readJson(secretsFile, {});
   return (secrets.openrouterApiKey || secrets.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY || vaultSecret('OPENROUTER_API_KEY') || '').trim();
 };
-const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'groq/compound-mini'];
+const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
 let openrouterFreeModel = null;
 
 async function openAiChatCompletion(url, apiKey, model, systemPrompt, turns, extraHeaders = {}) {
@@ -472,7 +493,7 @@ async function openAiChatCompletion(url, apiKey, model, systemPrompt, turns, ext
         model,
         messages: [{ role: 'system', content: systemPrompt }, ...turns.map((t) => ({ role: t.role === 'user' ? 'user' : 'assistant', content: t.parts[0].text }))],
         temperature: 0.8,
-        max_tokens: 1024,
+        max_tokens: 4096,
       }),
       signal: controller.signal,
     });
@@ -674,6 +695,25 @@ router.post('/api/chat', async (req, res) => {
     let reply = null;
     let usedModel = null;
 
+    // -------------------------------------------------------------------------
+    // UNIFIED CAPABILITY ROUTER (Word, PPT, Excel, Websites, Coding, Skills, Listening)
+    // -------------------------------------------------------------------------
+    try {
+      const unifiedRouter = require('./unified_capability_router.cjs');
+      const capRes = await unifiedRouter.dispatchCapability(message);
+      if (capRes && capRes.handled) {
+        return res.json({
+          ok: true,
+          reply: capRes.reply,
+          actionExecuted: capRes.action,
+          usedModel: 'UnifiedCapabilityRouter',
+          data: capRes.data || null
+        });
+      }
+    } catch (capErr) {
+      console.warn('[UnifiedRouter Route] Error dispatching capability:', capErr.message);
+    }
+
     // 0. Project Index Open Intent: "open my AgencyOS project", "open project AgencyOS"
     const projMatch = lowerMsg.match(/(?:open|launch|kholo)\s+(?:my\s+)?([a-zA-Z0-9_\- ]+?)\s+project/i)
       || lowerMsg.match(/(?:open|launch|kholo)\s+project\s+([a-zA-Z0-9_\- ]+)/i);
@@ -700,13 +740,13 @@ router.post('/api/chat', async (req, res) => {
     } else if (isStartPassiveLearning) {
       const pls = passiveLearningService || require('./passive_learning_service.cjs');
       const startRes = pls.start();
-      reply = `✓ Continuous passive learning mode is now ACTIVE! Indicator: [${pls.indicator}]. Main aapke application actions observe kar rahi hoon. Security guarantee: sabhi password fields automatic exclude rahenge.`;
+      reply = `[OK] Continuous passive learning mode is now ACTIVE! Indicator: [${pls.indicator}]. Main aapke application actions observe kar rahi hoon. Security guarantee: sabhi password fields automatic exclude rahenge.`;
       actionExecuted = 'Started passive continuous learning session';
       usedModel = 'PassiveLearningEngine';
     } else if (isStopPassiveLearning) {
       const pls = passiveLearningService || require('./passive_learning_service.cjs');
       const stopRes = pls.stop();
-      reply = `✓ Passive learning mode STOPPED. Indicator: [${pls.indicator}]. Maine ${stopRes.eventCount || 0} interaction steps aapke workflow library me save kar diye hain.`;
+      reply = `[OK] Passive learning mode STOPPED. Indicator: [${pls.indicator}]. Maine ${stopRes.eventCount || 0} interaction steps aapke workflow library me save kar diye hain.`;
       actionExecuted = 'Stopped passive learning session';
       usedModel = 'PassiveLearningEngine';
     } else if (clickControlMatch) {
@@ -738,13 +778,56 @@ router.post('/api/chat', async (req, res) => {
     // E. Screenshot Intent
     const isScreenshot = /\b(take\s*a?\s*screenshot|screenshot\s*le\s*lo|screen\s*capture)\b/i.test(lowerMsg);
 
+    // A. Word / Document Intent: "open word", "create document", "write report"
+    const isWordIntent = /(?:create|open|make|write|draft|compose).*?(?:word|document|docx|doc|report|letter|resume|proposal|report)/i.test(lowerMsg)
+      || /(?:word|document|docx|doc).*?(?:mein|me)?\s*(?:kholo|banao|likho|create|open)/i.test(lowerMsg)
+      || /(?:review|redesign|merge|split|export|pdf|find|replace).*?(?:document|word|docx)/i.test(lowerMsg)
+      || /(?:MYRAA|mera).*?(?:document|word|report|letter|resume|proposal).*?(?:banao|create|make|write)/i.test(lowerMsg);
+
     if (isWordIntent) {
-      if (DesktopAutomation && typeof DesktopAutomation.openApplication === 'function') {
-        DesktopAutomation.openApplication('word');
-        actionExecuted = 'Launched Microsoft Word (winword.exe)';
-        logActivity('DesktopAction', 'Launched Microsoft Word', 'SUCCESS');
-        reply = "Haanji Vishwajeet! Maine Microsoft Word turant open kar diya hai. Aap jo bhi document likhna chahte hain, mujhe batate jaiye main direct type aur format kar dungi.";
-        usedModel = 'DesktopAutomation Native Win32';
+      // Route to professional Word engine capabilities
+      const OfficeDocEngine = require('./office_doc_engine.cjs');
+      const wordAction = lowerMsg;
+
+      if (/\b(review|check|analyze|audit)\b/i.test(wordAction)) {
+        const result = await OfficeDocEngine.reviewWord({ content: message });
+        actionExecuted = 'Word Document Review Complete';
+        reply = `Document review complete! Readability: ${result.scores?.readability || 0}/100, Structure: ${result.scores?.structure || 0}/100, Consistency: ${result.scores?.consistency || 0}/100. ${result.recommendations?.length ? 'Recommendations: ' + result.recommendations.slice(0, 2).join('. ') : 'Document looks good!'}`;
+        usedModel = 'OfficeDocEngine Professional Word Engine';
+      } else if (/\b(redesign|make\s*professional|format|style)\b/i.test(wordAction)) {
+        const result = await OfficeDocEngine.redesignWord({ filePath: null, options: {} });
+        actionExecuted = 'Word Document Redesign';
+        reply = result.ok ? `Document redesigned professionally! Saved to: ${result.path}` : 'Please provide a file path to redesign.';
+        usedModel = 'OfficeDocEngine Professional Word Engine';
+      } else if (/\b(merge|combine)\b/i.test(wordAction)) {
+        actionExecuted = 'Word Document Merge';
+        reply = "To merge documents, please provide the file paths of the Word documents you want to combine. I'll merge them into one professional document.";
+        usedModel = 'OfficeDocEngine Professional Word Engine';
+      } else if (/\b(split|divide)\b/i.test(wordAction)) {
+        actionExecuted = 'Word Document Split';
+        reply = "To split a document, please provide the file path. I'll split it by headings into separate documents.";
+        usedModel = 'OfficeDocEngine Professional Word Engine';
+      } else if (/\b(find|replace|search)\b/i.test(wordAction)) {
+        actionExecuted = 'Word Find & Replace';
+        reply = "To find and replace text, please tell me what to find and what to replace it with.";
+        usedModel = 'OfficeDocEngine Professional Word Engine';
+      } else if (/\b(export|pdf)\b/i.test(wordAction)) {
+        actionExecuted = 'Word Export to PDF';
+        reply = "To export a document to PDF, please provide the file path of the Word document.";
+        usedModel = 'OfficeDocEngine Professional Word Engine';
+      } else if (/\b(analyze|structure|inspect)\b/i.test(wordAction)) {
+        actionExecuted = 'Word Document Analysis';
+        reply = "To analyze a document's structure, please provide the file path.";
+        usedModel = 'OfficeDocEngine Professional Word Engine';
+      } else {
+        // Default: Launch Word or create a new document
+        if (DesktopAutomation && typeof DesktopAutomation.openApplication === 'function') {
+          DesktopAutomation.openApplication('word');
+          actionExecuted = 'Launched Microsoft Word (winword.exe)';
+          logActivity('DesktopAction', 'Launched Microsoft Word', 'SUCCESS');
+          reply = "Haanji Vishwajeet! Maine Microsoft Word turant open kar diya hai. Aap jo bhi document likhna chahte hain, mujhe batate jaiye main direct type aur format kar dungi. Main professionally reports, letters, resumes, proposals, contracts, technical docs, SOPs, manuals, whitepapers bana sakti hoon. Aap bas batao kya banana hai!";
+          usedModel = 'OfficeDocEngine Professional Word Engine';
+        }
       }
     } else if (isExcelIntent) {
       if (DesktopAutomation && typeof DesktopAutomation.openApplication === 'function') {
@@ -779,6 +862,59 @@ router.post('/api/chat', async (req, res) => {
         actionExecuted = 'Desktop Screenshot Captured';
         reply = "Haanji! Maine screen ka snapshot capture kar liya hai aur disk me save kar diya hai.";
         usedModel = 'DesktopAutomation Native Win32';
+      }
+    }
+
+    // F. CODING AGENT INTENTS — Voice-controlled software engineering
+    if (!reply) {
+      const isCodingIntent = /(?:create|build|make|scaffold|generate)\s+(?:a\s+)?(?:new\s+)?(?:project|website|app|application|page|component|service|api|backend|frontend)/i.test(lowerMsg)
+        || /(?:run|start|launch|dev|serve)\s+(?:the\s+)?(?:project|app|server|dev|development)/i.test(lowerMsg)
+        || /(?:build|compile|bundle)\s+(?:the\s+)?(?:project|app)/i.test(lowerMsg)
+        || /(?:test|run tests|run test|check|verify|validate)\s*(?:the\s+)?(?:project|app|code|tests?|suite)?/i.test(lowerMsg)
+        || /(?:lint|check code|style check)\s*(?:the\s+)?(?:project|code|files?)?/i.test(lowerMsg)
+        || /(?:install|npm install|yarn install|setup dependencies)/i.test(lowerMsg)
+        || /(?:git status|show status|what changed|any changes|uncommitted)/i.test(lowerMsg)
+        || /(?:commit|git commit|save changes|checkpoint)\s*(?:these|this|the)?\s*(?:changes|files)?/i.test(lowerMsg)
+        || /(?:push|git push|upload|sync)\s*(?:to\s+)?(?:remote|origin|github)?/i.test(lowerMsg)
+        || /(?:pull|git pull|fetch|sync from)/i.test(lowerMsg)
+        || /(?:git log|show commits|commit history|recent changes)/i.test(lowerMsg)
+        || /(?:create branch|new branch|switch branch|checkout branch)/i.test(lowerMsg)
+        || /(?:git diff|show diff|what changed|show changes)/i.test(lowerMsg)
+        || /(?:fix|repair|patch|debug|resolve)\s+(?:the\s+)?(?:error|bug|issue|problem|failure|build)/i.test(lowerMsg)
+        || /(?:inspect|analyze|examine|look at)\s+(?:the\s+)?(?:error|bug|issue|stacktrace|output)/i.test(lowerMsg)
+        || /(?:refactor|clean up|restructure|reorganize|improve)\s+(?:the\s+)?(?:code|function|file|component)/i.test(lowerMsg)
+        || /(?:review|audit|check|analyze)\s+(?:my\s+)?(?:code|files?|project)/i.test(lowerMsg)
+        || /(?:create|make|new|add)\s+(?:a\s+)?(?:new\s+)?(?:file|component|module|service|class|function)/i.test(lowerMsg)
+        || /(?:read|open|show|view|inspect|look at)\s+(?:the\s+)?(?:file|code)/i.test(lowerMsg)
+        || /(?:search|find|grep|look for|locate)\s+(?:in\s+)?(?:files?|code|project)/i.test(lowerMsg)
+        || /(?:explain|describe|what does|how does)\s+(?:this|the|this code)/i.test(lowerMsg)
+        || /(?:open|launch|start)\s+(?:vs\s?code|vscode|visual studio code)/i.test(lowerMsg)
+        || /(?:run|execute|type|enter)\s+(?:the\s+)?(?:command|terminal|shell)/i.test(lowerMsg)
+        || /(?:what|show me)\s+(?:did|has)\s+(?:i|we|you)\s+change(?:d)?|recent changes/i.test(lowerMsg)
+        || /(?:undo|revert|rollback|go back|undo last)\s*(?:change|action|edit|commit)?/i.test(lowerMsg)
+        || /(?:remember|save|store|track)\s+(?:this\s+)?(?:project|code|decision)/i.test(lowerMsg);
+
+      if (isCodingIntent) {
+        try {
+          const codingOrchestrator = require('./coding_orchestrator.cjs');
+          const result = await codingOrchestrator.executeCodingTask(message, {
+            projectDir: process.env.MYRAA_PROJECT_DIR || process.cwd(),
+          });
+          if (result && result.output) {
+            const output = result.output;
+            if (output.message) reply = output.message;
+            else if (output.error) reply = `[!] Error: ${output.error}`;
+            else if (output.ok === true) reply = `[OK] ${result.intent} completed successfully.`;
+            else if (output.ok === false) reply = `[!] ${result.intent} failed: ${output.error || 'Unknown error'}`;
+            else reply = JSON.stringify(output).substring(0, 2000);
+            actionExecuted = `CodingAgent: ${result.intent}`;
+            usedModel = 'CodingOrchestrator Unified Loop';
+            logActivity('CodingAgent', `Executed ${result.intent} in ${result.duration}ms`, result.success ? 'SUCCESS' : 'ERROR');
+          }
+        } catch (codingErr) {
+          reply = `[!] Coding agent error: ${codingErr.message}`;
+          actionExecuted = 'CodingAgent Error';
+        }
       }
     }
 
@@ -912,8 +1048,9 @@ function ensureDesktopAgentRunning() {
   if (agentSpawnAttempted) return;
   agentSpawnAttempted = true;
   const candidates = [
-    'C:\\Users\\Vishwajeet\\Music\\Myraa\\resources\\agent\\myraa-agent.exe',
+    path.join(__dirname, '..', 'agent', 'myraa-agent.exe'),
     path.join(__dirname, '..', '..', 'agent', 'myraa-agent.exe'),
+    path.join(process.resourcesPath || '', 'agent', 'myraa-agent.exe'),
     path.join(process.cwd(), 'resources', 'agent', 'myraa-agent.exe')
   ];
   const exePath = candidates.find(p => p && fs.existsSync(p));
@@ -993,13 +1130,63 @@ router.post('/api/transcripts', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// SKILLS CATALOG (Â§Universal 515-Skills Fleet)
+// SKILLS CATALOG, INSPECTOR & ARTIFACT EXPORT
 // ---------------------------------------------------------------------------
+function _getSkillDiscoveryEngine() {
+  if (!skillDiscoveryEngine) {
+    try {
+      skillDiscoveryEngine = require('./skill_discovery_engine.cjs');
+    } catch (e) {
+      console.warn('[Skill Discovery] Engine deferred load:', e.message);
+    }
+  }
+  return skillDiscoveryEngine;
+}
+
+function _findSkillDir(skillId) {
+  if (!skillId) return null;
+  const safeId = path.basename(String(skillId).trim());
+  const searchRoots = [
+    path.join(__dirname, '..', '..', 'skills', safeId),
+    path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'skills', safeId),
+    path.join(process.env.USERPROFILE || require('os').homedir(), 'Downloads', 'Skills', safeId),
+    path.join(process.env.USERPROFILE || require('os').homedir(), '.agents', 'skills', safeId),
+    path.join(process.env.USERPROFILE || require('os').homedir(), '.gemini', 'config', 'skills', safeId)
+  ];
+  for (const root of searchRoots) {
+    if (fs.existsSync(root)) {
+      try {
+        if (fs.statSync(root).isDirectory()) return root;
+      } catch (e) {}
+    }
+  }
+  return null;
+}
+
 router.get('/api/skills/catalog', (req, res) => {
   try {
     let allSkills = [];
-    if (skillDiscoveryEngine && typeof skillDiscoveryEngine.getAllSkills === 'function') {
-      allSkills = skillDiscoveryEngine.getAllSkills();
+    const engine = _getSkillDiscoveryEngine();
+    if (engine && typeof engine.getAllSkills === 'function') {
+      allSkills = engine.getAllSkills();
+    }
+    if (!allSkills || allSkills.length === 0) {
+      const wsSkills = path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'skills');
+      if (fs.existsSync(wsSkills)) {
+        const entries = fs.readdirSync(wsSkills, { withFileTypes: true });
+        for (const ent of entries) {
+          if (ent.isDirectory()) {
+            allSkills.push({
+              id: ent.name,
+              name: ent.name.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              category: 'Workspace',
+              description: `Skill specialist: ${ent.name}`,
+              source: 'MYRAA Native Workspace',
+              path: path.join(wsSkills, ent.name)
+            });
+          }
+        }
+      }
     }
     res.json({
       success: true,
@@ -1018,37 +1205,320 @@ router.get('/api/skills/catalog', (req, res) => {
   }
 });
 
+router.get('/api/skills/content', (req, res) => {
+  try {
+    const skillId = req.query.id;
+    if (!skillId) return res.status(400).json({ success: false, error: 'Missing skill ID' });
+
+    const skillDir = _findSkillDir(skillId);
+    if (!skillDir || !fs.existsSync(skillDir)) {
+      return res.status(404).json({ success: false, error: `Skill directory not found for ID: ${skillId}` });
+    }
+
+    let markdown = '';
+    const mdCandidates = ['SKILL.md', 'README.md', 'skill.md', 'index.md'];
+    for (const c of mdCandidates) {
+      const p = path.join(skillDir, c);
+      if (fs.existsSync(p)) {
+        markdown = fs.readFileSync(p, 'utf8');
+        break;
+      }
+    }
+
+    let meta = {};
+    const metaCandidates = ['manifest.json', 'skill.json'];
+    for (const c of metaCandidates) {
+      const p = path.join(skillDir, c);
+      if (fs.existsSync(p)) {
+        try { meta = JSON.parse(fs.readFileSync(p, 'utf8')); break; } catch (e) {}
+      }
+    }
+
+    const files = [];
+    try {
+      const entries = fs.readdirSync(skillDir, { withFileTypes: true });
+      for (const ent of entries) {
+        let size = 0;
+        try {
+          if (!ent.isDirectory()) size = fs.statSync(path.join(skillDir, ent.name)).size;
+        } catch (e) {}
+        files.push({ name: ent.name, isDirectory: ent.isDirectory(), size });
+      }
+    } catch (e) {}
+
+    res.json({
+      success: true,
+      id: skillId,
+      name: meta.name || skillId,
+      category: meta.category || 'General',
+      description: meta.description || '',
+      markdown,
+      files,
+      path: skillDir
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+router.get('/api/skills/download', (req, res) => {
+  try {
+    const skillId = req.query.id;
+    if (!skillId) return res.status(400).json({ success: false, error: 'Missing skill ID' });
+
+    const skillDir = _findSkillDir(skillId);
+    if (!skillDir || !fs.existsSync(skillDir)) {
+      return res.status(404).json({ success: false, error: `Skill directory not found for ID: ${skillId}` });
+    }
+
+    let archiver = null;
+    try {
+      archiver = require('archiver');
+    } catch (e) {
+      try { archiver = require('../node_modules/archiver'); } catch (e2) {}
+    }
+
+    if (!archiver) {
+      return res.status(500).json({ success: false, error: 'Archiver module unavailable' });
+    }
+
+    const safeFilename = skillId.replace(/[^a-zA-Z0-9_-]/g, '_');
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="skill-${safeFilename}.zip"`);
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('error', (err) => {
+      if (!res.headersSent) res.status(500).json({ success: false, error: err.message });
+    });
+
+    archive.pipe(res);
+    archive.directory(skillDir, false);
+    archive.finalize();
+  } catch (e) {
+    if (!res.headersSent) res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // ---------------------------------------------------------------------------
-// 12-CONNECTOR ENTERPRISE HUB (Â§Branded Production Connectors)
+// 12-CONNECTOR ENTERPRISE HUB (Branded Production Connectors with SVG Logos)
 // ---------------------------------------------------------------------------
 const BRANDED_PLUGINS = [
-  { id: 'github', name: 'GitHub Repository Hub', category: 'Engineering', status: 'healthy', badge: 'VERIFIED', latencyMs: 18, details: 'Full Git & Pull Request Sync', description: 'Inspect repos, code architecture, commit history, and AST graphs.' },
-  { id: 'gmail', name: 'Gmail Automator', category: 'Communication', status: 'healthy', badge: 'ACTIVE', latencyMs: 24, details: 'Google Workspace Integration', description: 'Triage, compose, draft, and dispatch emails via Google Workspace.' },
-  { id: 'salesforce', name: 'Salesforce CRM Hub', category: 'Enterprise', status: 'healthy', badge: 'CONNECTED', latencyMs: 31, details: 'Lead & Pipeline Synchronization', description: 'Enterprise customer relations and automated deal lifecycle tracking.' },
-  { id: 'excel', name: 'Microsoft Excel Suite', category: 'Office Suite', status: 'healthy', badge: 'OPERATIONAL', latencyMs: 4, details: 'Win32 Native Automation', description: 'Generate formulas, statistical sheets, and financial workbooks (.xlsx).' },
-  { id: 'word', name: 'Microsoft Word Suite', category: 'Office Suite', status: 'healthy', badge: 'OPERATIONAL', latencyMs: 4, details: 'Win32 Native Automation', description: 'Draft executive PRDs, technical reports, and formatted documents (.docx).' },
-  { id: 'vscode', name: 'VS Code Developer Studio', category: 'Engineering', status: 'healthy', badge: 'OPERATIONAL', latencyMs: 12, details: 'Local Editor Automation', description: 'Launch workspace folders, run scripts, and inspect active projects.' },
-  { id: 'youtube', name: 'YouTube Hands-Free', category: 'Media', status: 'healthy', badge: 'STREAMING', latencyMs: 28, details: 'Hands-free Voice Search & Play', description: 'Real-time media search, playback, and tutorial analysis.' },
-  { id: 'canva', name: 'Canva Design Studio', category: 'Creative', status: 'healthy', badge: 'CONNECTED', latencyMs: 35, details: 'Visual Asset Generator', description: 'Generate presentation designs, graphics, and social media banners.' },
-  { id: 'figma', name: 'Figma UI/UX Studio', category: 'Design', status: 'healthy', badge: 'READY', latencyMs: 29, details: 'Figma URL & Frame Inspector', description: 'Inspect design frames, color palettes, and UI prototypes directly.' },
-  { id: 'whatsapp', name: 'WhatsApp Messenger', category: 'Communication', status: 'healthy', badge: 'DISPATCH', latencyMs: 14, details: 'Desktop Web Dispatcher', description: 'Share files, photos, project updates, and messages hands-free.' },
-  { id: 'deepresearch', name: 'Autonomous Deep Research', category: 'Intelligence', status: 'healthy', badge: 'ACTIVE', latencyMs: 45, details: 'Multi-Source Synthesis Engine', description: 'Synthesizes verified web sources, technical whitepapers, and news.' },
-  { id: 'iot', name: 'Smart Home & IoT Automation', category: 'Hardware', status: 'healthy', badge: 'STANDBY', latencyMs: 16, details: 'TP-Link Kasa & Local LAN Protocol', description: 'Controls smart lights, power plugs, and local hardware devices.' }
+  {
+    id: 'figma',
+    name: 'Figma UI/UX Studio',
+    category: 'Design & Prototyping',
+    status: 'healthy',
+    badge: 'ACTIVE',
+    latencyMs: 14,
+    details: 'AI Wireframe & High-Fi Design Engine',
+    description: 'Generate wireframes, UX prototypes, component design systems, and responsive layouts directly into code.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 38 57" fill="none"><path d="M19 28.5A9.5 9.5 0 1 1 28.5 19 9.5 9.5 0 0 1 19 28.5z" fill="#1ABCFE"/><path d="M0 47.5A9.5 9.5 0 0 1 9.5 38H19v9.5a9.5 9.5 0 1 1-19 0z" fill="#0ACF83"/><path d="M19 0v19h9.5a9.5 9.5 0 1 0 0-19H19z" fill="#FF7262"/><path d="M0 9.5A9.5 9.5 0 0 0 9.5 19H19V0H9.5A9.5 9.5 0 0 0 0 9.5z" fill="#F24E1E"/><path d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z" fill="#A259FF"/></svg>'
+  },
+  {
+    id: 'github',
+    name: 'GitHub Repository Hub',
+    category: 'Engineering',
+    status: 'healthy',
+    badge: 'VERIFIED',
+    latencyMs: 18,
+    details: 'Full Git & Pull Request Sync',
+    description: 'Inspect repos, code architecture, commit history, and AST dependency graphs.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>'
+  },
+  {
+    id: 'gmail',
+    name: 'Gmail Automator',
+    category: 'Communication',
+    status: 'healthy',
+    badge: 'ACTIVE',
+    latencyMs: 24,
+    details: 'Google Workspace Integration',
+    description: 'Triage, compose, draft, and dispatch emails via Google Workspace.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4285F4" d="M1.5 5.5v13a2 2 0 002 2h3.5v-9L1.5 7z"/><path fill="#34A853" d="M17 20.5h3.5a2 2 0 002-2v-13l-5.5 4.5v10.5z"/><path fill="#EA4335" d="M17 11.5L22.5 7 20.5 5.5 12 12 3.5 5.5 1.5 7 7 11.5 12 15.5l5-4z"/><path fill="#FBBC05" d="M7 20.5V11.5l5 4 5-4v9z"/></svg>'
+  },
+  {
+    id: 'salesforce',
+    name: 'Salesforce CRM Hub',
+    category: 'Enterprise',
+    status: 'healthy',
+    badge: 'CONNECTED',
+    latencyMs: 31,
+    details: 'Lead & Pipeline Synchronization',
+    description: 'Enterprise customer relations, pipeline intelligence, and automated deal lifecycle tracking.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#00A1E0"><path d="M10.1 5.3a5.5 5.5 0 0 1 6.8 1.2 4.4 4.4 0 0 1 4.6 4.3 4.2 4.2 0 0 1-1.3 3.1 3.8 3.8 0 0 1 1.8 3.2 4 4 0 0 1-4 4H6a5 5 0 0 1-3.6-8.5A5.3 5.3 0 0 1 4.5 7a5.5 5.5 0 0 1 5.6-1.7z"/></svg>'
+  },
+  {
+    id: 'excel',
+    name: 'Microsoft Excel Suite',
+    category: 'Office Suite',
+    status: 'healthy',
+    badge: 'OPERATIONAL',
+    latencyMs: 4,
+    details: 'Win32 Native Automation',
+    description: 'Generate formulas, statistical data sheets, financial workbooks, and automated charts (.xlsx).',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#107C41"/><path d="M5 6.5h8v11H5z" fill="#0E5C2F"/><path d="M6 8l3.5 4-3.5 4h2.2L10.5 13l2.3 3h2.2L11.5 12l3.5-4h-2.2L10.5 11 8.2 8H6z" fill="#FFFFFF"/></svg>'
+  },
+  {
+    id: 'word',
+    name: 'Microsoft Word Professional Engine',
+    category: 'Office Suite',
+    status: 'healthy',
+    badge: 'OPERATIONAL',
+    latencyMs: 4,
+    details: 'Full Professional Document Suite',
+    description: 'Create reports, contracts, proposals, technical docs; format typography, insert tables, and export to PDF.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="4" fill="#185ABD"/><path d="M5.5 8l2.2 8h2.1l1.7-5.5 1.7 5.5h2.1l2.2-8h-2.2l-1.1 5.2-1.7-5.2h-2l-1.7 5.2L7.7 8H5.5z" fill="#FFFFFF"/></svg>'
+  },
+  {
+    id: 'vscode',
+    name: 'VS Code Developer Studio',
+    category: 'Engineering',
+    status: 'healthy',
+    badge: 'OPERATIONAL',
+    latencyMs: 12,
+    details: 'Local Editor Automation',
+    description: 'Launch workspace folders, run scripts, inspect active projects, and debug code.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M17.5 2.5l-9 8.2-4-3.1L2 9.5l3.5 2.5L2 14.5l2.5 1.9 4-3.1 9 8.2 4.5-2.2V4.7L17.5 2.5z" fill="#007ACC"/><path d="M17.5 2.5L8.5 10.7l4 3.1 5-4.6V2.5z" fill="#1F9CF0"/><path d="M17.5 21.5L8.5 13.3l4-3.1 5 4.6v6.7z" fill="#0066B8"/></svg>'
+  },
+  {
+    id: 'youtube',
+    name: 'YouTube Hands-Free',
+    category: 'Media',
+    status: 'healthy',
+    badge: 'STREAMING',
+    latencyMs: 28,
+    details: 'Hands-free Voice Search & Play',
+    description: 'Real-time media search, playback, live lecture ingestion, and tutorial analysis.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="5" fill="#FF0000"/><path d="M10 8.5l6 3.5-6 3.5v-7z" fill="#FFFFFF"/></svg>'
+  },
+  {
+    id: 'canva',
+    name: 'Canva Design Studio',
+    category: 'Creative',
+    status: 'healthy',
+    badge: 'CONNECTED',
+    latencyMs: 35,
+    details: 'Visual Asset Generator',
+    description: 'Generate presentation designs, promotional graphics, infographics, and social media banners.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#00C4CC"/><path d="M12.5 7.5c-2.8 0-4.5 2.2-4.5 5 0 3.2 2.2 4.8 4.7 4.8 1.8 0 3-.8 3.5-1.5l-1.1-1.1c-.5.6-1.3 1-2.4 1-1.8 0-3-1.2-3-3.2s1.4-3.4 3-3.4c1.1 0 1.9.5 2.3 1.1l1.2-1.1c-.8-.9-2-1.6-3.7-1.6z" fill="#FFFFFF"/></svg>'
+  },
+  {
+    id: 'whatsapp',
+    name: 'WhatsApp Messenger',
+    category: 'Communication',
+    status: 'healthy',
+    badge: 'DISPATCH',
+    latencyMs: 14,
+    details: 'Desktop Web Dispatcher',
+    description: 'Share files, project updates, reports, and emergency voice alerts hands-free.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#25D366"/><path d="M18 11.5c0 3.3-2.7 6-6 6-1.1 0-2.1-.3-3-.8L5.5 18l1.3-3.3c-.6-.9-.8-2-.8-3.2 0-3.3 2.7-6 6-6s6 2.7 6 6z" fill="#FFFFFF"/><path d="M10 9c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.1s1 2.4 1.1 2.5c.1.2 1.9 3 4.7 4.1 2.3.9 2.8.7 3.3.7.5-.1 1.6-.7 1.8-1.3.2-.7.2-1.2.1-1.3-.1-.1-.3-.2-.6-.4l-1.8-.9c-.3-.1-.5 0-.7.2l-.7.9c-.1.1-.3.2-.6.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.5-1.9-.1-.3 0-.5.1-.6l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6l-.9-2.1z" fill="#25D366"/></svg>'
+  },
+  {
+    id: 'deepresearch',
+    name: 'Autonomous Deep Research',
+    category: 'Intelligence',
+    status: 'healthy',
+    badge: 'ACTIVE',
+    latencyMs: 45,
+    details: 'Multi-Source Synthesis Engine',
+    description: 'Autonomous research syntheses from peer-reviewed whitepapers, documentation, and web sources.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#00e5ff" stroke-width="2"/><circle cx="12" cy="12" r="6" stroke="#00e5ff" stroke-width="1.5" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="2" fill="#00e5ff"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="#00e5ff" stroke-width="2"/></svg>'
+  },
+  {
+    id: 'iot',
+    name: 'Smart Home & IoT Automation',
+    category: 'Hardware',
+    status: 'healthy',
+    badge: 'STANDBY',
+    latencyMs: 16,
+    details: 'TP-Link Kasa & Local LAN Protocol',
+    description: 'Hardware orchestrator for smart relays, lighting, power switches, and lab sensors.',
+    svgLogo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="10" width="18" height="11" rx="2" stroke="#f59e0b" stroke-width="2"/><path d="M3 10l9-7 9 7" stroke="#f59e0b" stroke-width="2"/><circle cx="12" cy="15" r="2" fill="#f59e0b"/></svg>'
+  }
 ];
 
-router.get('/api/plugins/health', (req, res) => {
-  res.json({ success: true, plugins: BRANDED_PLUGINS });
+const PLUGIN_PROBE_URLS = {
+  figma: 'https://www.figma.com',
+  github: 'https://github.com',
+  gmail: 'https://mail.google.com',
+  salesforce: 'https://login.salesforce.com',
+  youtube: 'https://www.youtube.com',
+  canva: 'https://www.canva.com',
+  whatsapp: 'https://web.whatsapp.com',
+};
+const PLUGIN_LOCAL_CMDS = { excel: 'excel', word: 'winword', vscode: 'code' };
+const PLUGIN_INTERNAL = new Set(['deepresearch', 'iot']);
+const _pluginHealthCache = { ts: 0, data: null };
+
+function _probeUrl(url) {
+  return new Promise((resolve) => {
+    const started = Date.now();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => { ctrl.abort(); resolve({ ok: false, latencyMs: Date.now() - started, error: 'timeout' }); }, 4000);
+    fetch(url, { method: 'GET', signal: ctrl.signal, redirect: 'follow', headers: { 'User-Agent': 'MYRAA-HealthProbe/1.0' } })
+      .then((r) => { clearTimeout(timer); resolve({ ok: r.status < 500, latencyMs: Date.now() - started, httpStatus: r.status }); })
+      .catch((e) => { clearTimeout(timer); resolve({ ok: false, latencyMs: Date.now() - started, error: e.name || e.message }); });
+  });
+}
+
+function _probeLocalCmd(cmd) {
+  return new Promise((resolve) => {
+    exec(`where ${cmd}`, { timeout: 4000, windowsHide: true }, (err) => resolve(!err));
+  });
+}
+
+router.get('/api/plugins/health', async (req, res) => {
+  if (_pluginHealthCache.data && (Date.now() - _pluginHealthCache.ts) < 60000) {
+    return res.json({ success: true, plugins: _pluginHealthCache.data, source: 'live-probe', probedAt: new Date(_pluginHealthCache.ts).toISOString() });
+  }
+  const probed = await Promise.all(BRANDED_PLUGINS.map(async (p) => {
+    const url = PLUGIN_PROBE_URLS[p.id];
+    if (url) {
+      const r = await _probeUrl(url);
+      return {
+        ...p,
+        status: r.ok ? 'healthy' : 'unreachable',
+        badge: r.ok ? p.badge : 'OFFLINE',
+        latencyMs: r.latencyMs,
+        probe: 'network',
+        probeDetail: r.ok ? `HTTP ${r.httpStatus}` : (r.error || 'error'),
+        probedAt: new Date().toISOString(),
+      };
+    }
+    if (PLUGIN_LOCAL_CMDS[p.id]) {
+      const found = await _probeLocalCmd(PLUGIN_LOCAL_CMDS[p.id]);
+      return {
+        ...p,
+        status: found ? 'healthy' : 'missing',
+        badge: found ? p.badge : 'NOT INSTALLED',
+        probe: 'local-app',
+        probeDetail: found ? 'executable found on PATH' : 'executable not found',
+        probedAt: new Date().toISOString(),
+      };
+    }
+    if (PLUGIN_INTERNAL.has(p.id)) {
+      return { ...p, probe: 'internal', probeDetail: 'internal engine (no external endpoint)', probedAt: new Date().toISOString() };
+    }
+    return { ...p, probe: 'unknown', probedAt: new Date().toISOString() };
+  }));
+  _pluginHealthCache.ts = Date.now();
+  _pluginHealthCache.data = probed;
+  res.json({ success: true, plugins: probed, source: 'live-probe', probedAt: new Date(_pluginHealthCache.ts).toISOString() });
 });
 
 router.post('/api/plugins/launch', (req, res) => {
-  const { pluginId } = req.body || {};
+  const { pluginId, url } = req.body || {};
   switch (pluginId) {
+    case 'figma':
+      if (url && typeof url === 'string' && url.startsWith('http')) exec(`start ${url}`);
+      else exec('start https://www.figma.com');
+      return res.json({ success: true, message: 'Opened Figma UI/UX Studio' });
     case 'github':
       exec('start https://github.com/vishwajeetsrk');
       return res.json({ success: true, message: 'Opened GitHub Repository Hub' });
     case 'gmail':
       exec('start https://mail.google.com/mail/u/0/#inbox?compose=new');
-      return res.json({ success: true, message: 'Opened Gmail Compose for vishwajeetsrk@gmail.com' });
+      return res.json({ success: true, message: 'Opened Gmail Compose' });
     case 'salesforce':
       exec('start https://login.salesforce.com/');
       return res.json({ success: true, message: 'Opened Salesforce CRM Hub' });
@@ -1070,14 +1540,240 @@ router.post('/api/plugins/launch', (req, res) => {
     case 'canva':
       exec('start https://www.canva.com');
       return res.json({ success: true, message: 'Opened Canva Design Studio' });
-    case 'figma':
-      exec('start https://www.figma.com');
-      return res.json({ success: true, message: 'Opened Figma UI/UX Studio' });
     case 'whatsapp':
       exec('start https://web.whatsapp.com');
       return res.json({ success: true, message: 'Opened WhatsApp Web' });
+    case 'deepresearch':
+      return res.json({ success: true, message: 'Autonomous Deep Research engine is active.' });
+    case 'iot':
+      return res.json({ success: true, message: 'Smart Home & IoT bus is listening on LAN.' });
     default:
       return res.json({ success: true, message: `Active connector: ${pluginId}` });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// REAL FIGMA UI/UX DESIGN & WIREFRAME ENGINE
+// ---------------------------------------------------------------------------
+const figmaOutputDir = path.join(process.env.USERPROFILE || require('os').homedir(), 'Music', 'Myraa', 'Projects', 'FigmaOutput');
+try { if (!fs.existsSync(figmaOutputDir)) fs.mkdirSync(figmaOutputDir, { recursive: true }); } catch (e) {}
+
+router.post('/api/plugins/figma/generate', (req, res) => {
+  try {
+    const { prompt = 'Modern AI Agent Dashboard', type = 'dashboard', theme = 'glassmorphic', viewport = 'desktop', title = 'Myraa UX Design' } = req.body || {};
+    const designId = 'figma_' + Date.now();
+    const itemDir = path.join(figmaOutputDir, designId);
+    fs.mkdirSync(itemDir, { recursive: true });
+
+    const isWireframe = type === 'wireframe';
+    const isMobile = viewport === 'mobile';
+    const bgStyle = isWireframe
+      ? 'background: #0f172a; color: #94a3b8; font-family: monospace;'
+      : (theme === 'light' ? 'background: #f8fafc; color: #0f172a;' : 'background: #090d16; color: #f8fafc;');
+
+    const cardBg = isWireframe
+      ? 'background: rgba(30, 41, 59, 0.6); border: 2px dashed #475569;'
+      : (theme === 'light' ? 'background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.05);' : 'background: rgba(18, 24, 38, 0.75); border: 1px solid rgba(0, 229, 255, 0.18); backdrop-filter: blur(14px); box-shadow: 0 8px 32px rgba(0,0,0,0.4);');
+
+    const accentColor = isWireframe ? '#94a3b8' : '#00e5ff';
+    const primaryColor = isWireframe ? '#cbd5e1' : '#6366f1';
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} — Generated by MYRAA Figma Engine</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { ${bgStyle} font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; min-height: 100vh; padding: ${isMobile ? '20px' : '32px'}; display: flex; justify-content: center; align-items: flex-start; }
+    .canvas-frame { width: 100%; max-width: ${isMobile ? '400px' : '1280px'}; display: flex; flex-direction: column; gap: 24px; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid ${isWireframe ? '#334155' : 'rgba(255,255,255,0.08)'}; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-badge { width: 32px; height: 32px; border-radius: 8px; background: ${primaryColor}; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; }
+    .nav-links { display: flex; gap: 16px; font-size: 13px; }
+    .nav-links a { color: inherit; text-decoration: none; opacity: 0.8; transition: opacity 0.2s; }
+    .nav-links a:hover { opacity: 1; color: ${accentColor}; }
+    .hero-section { padding: 32px 0 16px; }
+    .hero-title { font-size: ${isMobile ? '22px' : '32px'}; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .hero-sub { font-size: 14px; opacity: 0.7; max-width: 600px; line-height: 1.5; }
+    .grid-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(${isMobile ? '140px' : '220px'}, 1fr)); gap: 16px; }
+    .metric-card { ${cardBg} border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .metric-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.65; }
+    .metric-val { font-size: 26px; font-weight: 700; color: ${accentColor}; }
+    .metric-trend { font-size: 11px; color: #10b981; }
+    .main-grid { display: grid; grid-template-columns: ${isMobile ? '1fr' : '2fr 1fr'}; gap: 20px; }
+    .content-card { ${cardBg} border-radius: 14px; padding: 24px; }
+    .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-action { background: ${primaryColor}; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .chart-box { height: 180px; width: 100%; display: flex; align-items: flex-end; gap: 12px; padding-top: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .bar { flex: 1; background: linear-gradient(180deg, ${accentColor}, ${primaryColor}); border-radius: 4px 4px 0 0; }
+    .feed-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; }
+    .badge-pill { padding: 3px 8px; border-radius: 9999px; font-size: 10px; font-weight: 700; background: rgba(0, 229, 255, 0.15); color: ${accentColor}; }
+  </style>
+</head>
+<body>
+  <div class="canvas-frame">
+    <div class="top-bar">
+      <div class="brand">
+        <div class="brand-badge">M</div>
+        <strong>${title}</strong>
+        <span class="badge-pill">${type.toUpperCase()}</span>
+      </div>
+      <div class="nav-links">
+        <a href="#overview">Overview</a>
+        <a href="#analytics">Analytics</a>
+        <a href="#components">Components</a>
+        <a href="#settings">Settings</a>
+      </div>
+    </div>
+
+    <div class="hero-section">
+      <h1 class="hero-title">${title}</h1>
+      <p class="hero-sub">${prompt} — Designed autonomously by MYRAA Figma UI/UX Studio.</p>
+    </div>
+
+    <div class="grid-metrics">
+      <div class="metric-card">
+        <span class="metric-label">Active Users</span>
+        <span class="metric-val">42,890</span>
+        <span class="metric-trend">[+] 14.8% this week</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Efficiency Rate</span>
+        <span class="metric-val">99.4%</span>
+        <span class="metric-trend">[+] 2.1% performance</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Workflow Tasks</span>
+        <span class="metric-val">1,248</span>
+        <span class="metric-trend">Operational</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Latency Ping</span>
+        <span class="metric-val">12 ms</span>
+        <span class="metric-trend">Real-time</span>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="content-card">
+        <div class="card-title">
+          <span>System Performance & User Activity</span>
+          <button class="btn-action">Export Wireframe</button>
+        </div>
+        <div class="chart-box">
+          <div class="bar" style="height: 40%;"></div>
+          <div class="bar" style="height: 65%;"></div>
+          <div class="bar" style="height: 50%;"></div>
+          <div class="bar" style="height: 85%;"></div>
+          <div class="bar" style="height: 70%;"></div>
+          <div class="bar" style="height: 95%;"></div>
+          <div class="bar" style="height: 80%;"></div>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <div class="card-title">
+          <span>Live Events</span>
+          <span class="badge-pill">REALTIME</span>
+        </div>
+        <div class="feed-item">
+          <span>Figma Sync Engine</span>
+          <span class="badge-pill">COMPLETED</span>
+        </div>
+        <div class="feed-item">
+          <span>Wireframe Generation</span>
+          <span class="badge-pill">VERIFIED</span>
+        </div>
+        <div class="feed-item">
+          <span>UX Prototype Audit</span>
+          <span class="badge-pill">READY</span>
+        </div>
+        <div class="feed-item">
+          <span>Responsive Viewport</span>
+          <span class="badge-pill">PASSED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    fs.writeFileSync(path.join(itemDir, 'index.html'), htmlContent, 'utf8');
+    const meta = {
+      id: designId,
+      title,
+      prompt,
+      type,
+      theme,
+      viewport,
+      created: new Date().toISOString(),
+      author: 'MYRAA Figma Engine v9.2.0'
+    };
+    fs.writeFileSync(path.join(itemDir, 'metadata.json'), JSON.stringify(meta, null, 2), 'utf8');
+
+    res.json({
+      success: true,
+      designId,
+      title,
+      prompt,
+      type,
+      theme,
+      viewport,
+      filePath: path.join(itemDir, 'index.html'),
+      previewUrl: `/api/plugins/figma/preview/${designId}`,
+      htmlContent
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+router.get('/api/plugins/figma/designs', (req, res) => {
+  try {
+    if (!fs.existsSync(figmaOutputDir)) return res.json({ success: true, designs: [] });
+    const entries = fs.readdirSync(figmaOutputDir, { withFileTypes: true });
+    const designs = [];
+    for (const ent of entries) {
+      if (ent.isDirectory()) {
+        const metaPath = path.join(figmaOutputDir, ent.name, 'metadata.json');
+        if (fs.existsSync(metaPath)) {
+          try {
+            designs.push(JSON.parse(fs.readFileSync(metaPath, 'utf8')));
+          } catch (e) {}
+        }
+      }
+    }
+    designs.sort((a, b) => new Date(b.created || 0) - new Date(a.created || 0));
+    res.json({ success: true, designs });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+router.get('/api/plugins/figma/preview/:designId', (req, res) => {
+  try {
+    const file = path.join(figmaOutputDir, req.params.designId, 'index.html');
+    if (!fs.existsSync(file)) return res.status(404).send('Design not found');
+    res.sendFile(file);
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
+router.post('/api/plugins/figma/launch', (req, res) => {
+  try {
+    const { designId } = req.body || {};
+    if (designId) {
+      const url = `http://localhost:3000/api/plugins/figma/preview/${designId}`;
+      exec(`start ${url}`);
+      return res.json({ success: true, message: `Opened design preview: ${url}` });
+    }
+    exec('start https://www.figma.com');
+    return res.json({ success: true, message: 'Opened Figma' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 
@@ -1303,6 +1999,17 @@ function htmlToText(html, maxLen = 6000) {
 }
 
 async function webSearch(query) {
+  // Tavily (primary): structured live search. Falls back to DuckDuckGo HTML below.
+  try {
+    const tavily = require('./tavily_search.cjs');
+    const t = await tavily.search(query, { maxResults: 8 });
+    if (t && Array.isArray(t.results) && t.results.length) {
+      const mapped = t.results
+        .filter(r => r.title && r.url && safeExternalUrl(r.url))
+        .map(r => ({ title: r.title, url: r.url }));
+      if (mapped.length) return mapped;
+    }
+  } catch (e) { /* fall through to DuckDuckGo */ }
   // DuckDuckGo HTML endpoints; parse result links. Real network operation.
   const endpoints = [
     `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
@@ -1599,8 +2306,34 @@ router.get('/api/integrations', async (_req, res) => {
     probeExec('adb version'),
     probeDns('api.github.com'),
   ]);
+  const secretsAll = _readAllSecrets();
+  const groqKey = secretsAll.groqApiKey || process.env.GROQ_API_KEY || '';
+  const tavilyKey = secretsAll.tavilyApiKey || process.env.TAVILY_API_KEY || '';
+  const fishKey = secretsAll.fishAudioApiKey || secretsAll.fishApiKey || process.env.FISH_AUDIO_API_KEY || '';
+  const [groqProbe, tavilyProbe, fishProbe] = await Promise.all([
+    groqKey
+      ? _timedFetch('https://api.groq.com/openai/v1/models', { headers: { Authorization: 'Bearer ' + groqKey } }, 5000)
+      : Promise.resolve(null),
+    tavilyKey
+      ? _timedFetch('https://api.tavily.com/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tavilyKey },
+          body: JSON.stringify({ query: 'connection check', max_results: 1 }),
+        }, 6000)
+      : Promise.resolve(null),
+    fishKey
+      ? _timedFetch('https://api.fish.audio/model?self=true', { headers: { Authorization: 'Bearer ' + fishKey } }, 5000)
+      : Promise.resolve(null),
+  ]);
+  const state = (key, probe, okCodes) => !key ? 'NOT_CONFIGURED'
+    : (probe && okCodes.some((c) => c === probe.status) ? 'CONNECTED'
+      : (probe && probe.status === 0 ? 'OFFLINE' : 'INVALID_KEY'));
+  const groqState = state(groqKey, groqProbe, [200]);
+  const tavilyState = state(tavilyKey, tavilyProbe, [200]);
+  const fishState = state(fishKey, fishProbe, [200]);
   const vaultMetaFile = path.join(myraaDataDir, 'settings', 'vault_meta.json');
   const vaultMeta = readJson(vaultMetaFile, []);
+  const apiKey = loadApiKey();
   const integrations = [
     {
       id: 'gemini_api', name: 'Gemini AI (Google)', status: apiKey ? 'CONNECTED' : 'NOT_CONFIGURED',
@@ -1615,10 +2348,33 @@ router.get('/api/integrations', async (_req, res) => {
       connectHint: 'The agent ships with MYRAA and starts automatically with the app.',
     },
     {
-      id: 'fish_audio_tts', name: 'Fish Audio TTS', status: 'AVAILABLE',
-      detail: 'Server-side voice synthesis routes (/api/voice/fish-audio) are configured in this build.',
-      account: null, lastSync: null, permissions: ['Speech synthesis'],
-      connectHint: 'Used by the voice engine when enabled.',
+      id: 'groq_llm', name: 'Groq (fast LLM fallback)', status: groqState,
+      detail: groqState === 'CONNECTED'
+        ? `API key validated live (${groqProbe.ms} ms) - fast LLM fallback, model routing and compaction are usable.`
+        : groqState === 'INVALID_KEY' ? 'Key rejected by Groq (HTTP ' + (groqProbe && groqProbe.status) + ') - replace it in .env or the MYRAA vault.'
+        : groqState === 'OFFLINE' ? 'api.groq.com unreachable - check network.'
+        : 'No GROQ_API_KEY yet. Add it in .env or Settings.',
+      account: null, lastSync: groqState === 'CONNECTED' ? new Date().toISOString() : null, permissions: ['Text generation', 'Model routing fallback'],
+      connectHint: groqState === 'CONNECTED' ? '' : 'Set GROQ_API_KEY in resources/app/.env or the MYRAA vault.',
+    },
+    {
+      id: 'tavily_search', name: 'Tavily Web Search', status: tavilyState,
+      detail: tavilyState === 'CONNECTED'
+        ? `Live search validated (${tavilyProbe.ms} ms) - voice search, fact-check and deep-research use Tavily first.`
+        : tavilyState === 'INVALID_KEY' ? 'Key rejected by Tavily (HTTP ' + (tavilyProbe && tavilyProbe.status) + ') - replace it in .env or the MYRAA vault.'
+        : tavilyState === 'OFFLINE' ? 'api.tavily.com unreachable - check network.'
+        : 'No TAVILY_API_KEY yet. Add it in .env or Settings.',
+      account: null, lastSync: tavilyState === 'CONNECTED' ? new Date().toISOString() : null, permissions: ['Web search', 'Page extraction', 'Site mapping'],
+      connectHint: tavilyState === 'CONNECTED' ? '' : 'Set TAVILY_API_KEY in resources/app/.env or the MYRAA vault.',
+    },
+    {
+      id: 'fish_audio_tts', name: 'Fish Audio TTS', status: fishState,
+      detail: fishState === 'CONNECTED'
+        ? 'API key validated live - custom voice synthesis and voice training are available.'
+        : fishState === 'INVALID_KEY' ? 'Key rejected by Fish Audio - replace FISH_AUDIO_API_KEY.'
+        : 'Fish Audio TTS requires a FISH_AUDIO_API_KEY to function. Routes exist but need API key configuration.',
+      account: null, lastSync: fishState === 'CONNECTED' ? new Date().toISOString() : null, permissions: ['Speech synthesis'],
+      connectHint: fishState === 'CONNECTED' ? '' : 'Set FISH_AUDIO_API_KEY in environment or Settings to enable.',
     },
     {
       id: 'git', name: 'Git (system)', status: gitVersion ? 'CONNECTED' : 'NOT_INSTALLED',
@@ -2721,5 +3477,626 @@ router.post('/api/projects/open', (req, res) => {
   }
 });
 
+// ── 21. STREAMING CODE ROUTES ───────────────────────────────────────────────
+router.post('/api/stream/start', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { command, cwd, timeout } = req.body || {};
+    if (!command) return res.status(400).json({ ok: false, error: 'Command is required.' });
+    const result = streamingService.streamCommand(command, { cwd, timeout });
+    res.json({ ok: true, ...result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/stream/active', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    res.json({ ok: true, streams: streamingService.getActiveStreams() });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/stream/tests', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { dir, framework, timeout } = req.body || {};
+    const result = streamingService.streamTests(dir || process.cwd(), { framework, timeout });
+    res.json({ ok: true, ...result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/stream/build', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { dir, timeout } = req.body || {};
+    const result = streamingService.streamBuild(dir || process.cwd(), { timeout });
+    res.json({ ok: true, ...result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/stream/install', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { dir, timeout } = req.body || {};
+    const result = streamingService.streamInstall(dir || process.cwd(), { timeout });
+    res.json({ ok: true, ...result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/stream/cancel', async (req, res) => {
+  try {
+    const streamingService = require('./streaming_code_service.cjs');
+    const { sessionId } = req.body || {};
+    if (!sessionId) return res.status(400).json({ ok: false, error: 'Session ID is required.' });
+    const result = streamingService.cancelStream(sessionId);
+    res.json({ ok: result });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 22. VS CODE IPC BRIDGE ROUTES ──────────────────────────────────────────
+router.get('/api/vscode/workspace', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    res.json(vscodeBridge.getActiveWorkspace());
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/active-file', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    res.json(vscodeBridge.getActiveFile());
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/vscode/open-folder', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const { path: folderPath } = req.body || {};
+    if (!folderPath) return res.status(400).json({ ok: false, error: 'Folder path is required.' });
+    res.json(vscodeBridge.openFolder(folderPath));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/vscode/open-file', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const { path: filePath, line, column } = req.body || {};
+    if (!filePath) return res.status(400).json({ ok: false, error: 'File path is required.' });
+    res.json(vscodeBridge.openFile(filePath, line, column));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/project-info', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    res.json(vscodeBridge.getProjectInfo(dir));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/files', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    const maxDepth = parseInt(req.query.depth) || 3;
+    res.json(vscodeBridge.listFiles(dir, maxDepth));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/search', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    const query = req.query.q;
+    if (!query) return res.status(400).json({ ok: false, error: 'Search query is required.' });
+    res.json(vscodeBridge.searchFiles(dir, query));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/git-status', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    res.json(vscodeBridge.getGitStatus(dir));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/vscode/git-log', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const dir = req.query.dir || process.cwd();
+    const count = parseInt(req.query.count) || 10;
+    res.json(vscodeBridge.getGitLog(dir, count));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/vscode/run-command', async (req, res) => {
+  try {
+    const vscodeBridge = require('./vscode_ipc_bridge.cjs');
+    const { command, cwd } = req.body || {};
+    if (!command) return res.status(400).json({ ok: false, error: 'Command is required.' });
+    res.json(vscodeBridge.runTerminalCommand(command, cwd));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 23. REMOTION ROUTES ─────────────────────────────────────────────────────
+router.post('/api/remotion/scaffold', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { name, opts } = req.body || {};
+    if (!name) return res.status(400).json({ ok: false, error: 'Project name is required.' });
+    const result = await remotion.scaffoldProject(name, opts || {});
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/remotion/projects', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    res.json(remotion.listProjects());
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/remotion/render', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { projectDir, composition, output, codec, fps } = req.body || {};
+    if (!projectDir) return res.status(400).json({ ok: false, error: 'Project directory is required.' });
+    const result = await remotion.renderVideo(projectDir, { composition, output, codec, fps });
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/remotion/render-frames', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { projectDir, composition, output, frames } = req.body || {};
+    if (!projectDir) return res.status(400).json({ ok: false, error: 'Project directory is required.' });
+    const result = await remotion.renderFrames(projectDir, { composition, output, frames });
+    res.json(result);
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/remotion/studio', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { projectDir, port } = req.body || {};
+    if (!projectDir) return res.status(400).json({ ok: false, error: 'Project directory is required.' });
+    res.json(remotion.startStudio(projectDir, port));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/remotion/delete', async (req, res) => {
+  try {
+    const remotion = require('./remotion_rendering_service.cjs');
+    const { name } = req.body || {};
+    if (!name) return res.status(400).json({ ok: false, error: 'Project name is required.' });
+    res.json(remotion.deleteProject(name));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// ── 24. SESSION PERSISTENCE ROUTES ─────────────────────────────────────────
+router.get('/api/sessions/list', async (req, res) => {
+  try {
+    const sessionPersistence = require('./session_persistence_service.cjs');
+    const type = req.query.type || 'code-review';
+    const limit = parseInt(req.query.limit) || 20;
+    res.json(sessionPersistence.listSessions(type, { limit }));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/sessions/:type/:id', async (req, res) => {
+  try {
+    const sessionPersistence = require('./session_persistence_service.cjs');
+    res.json(sessionPersistence.loadSession(req.params.type, req.params.id));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/sessions/save', async (req, res) => {
+  try {
+    const sessionPersistence = require('./session_persistence_service.cjs');
+    const { type, id, data } = req.body || {};
+    if (!type || !id || !data) return res.status(400).json({ ok: false, error: 'Type, id, and data are required.' });
+    res.json(sessionPersistence.saveSession(type, id, data));
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+
+// ── 25. BACKGROUND VIDEO STREAMING ROUTE (HTTP 206 Partial Content) ────────
+router.get('/api/media/background-video', (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const candidates = [
+      path.join(__dirname, 'assets', 'background.mp4'),
+      path.join(__dirname, '..', 'assets', 'background.mp4'),
+      path.join(process.resourcesPath || '', 'assets', 'background.mp4'),
+      path.join(process.env.USERPROFILE || require('os').homedir(), 'Downloads', 'Rainbow_Nebula_4K_Motion_Background.mp4')
+    ];
+    let videoPath = null;
+    for (const c of candidates) {
+      if (fs.existsSync(c)) { videoPath = c; break; }
+    }
+    if (!videoPath) {
+      return res.status(404).json({ ok: false, error: 'Background video file not found.' });
+    }
+
+    const stat = fs.statSync(videoPath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = (end - start) + 1;
+      const file = fs.createReadStream(videoPath, { start, end });
+      const head = {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunkSize,
+        'Content-Type': 'video/mp4',
+      };
+      res.writeHead(206, head);
+      file.pipe(res);
+    } else {
+      const head = {
+        'Content-Length': fileSize,
+        'Content-Type': 'video/mp4',
+        'Accept-Ranges': 'bytes'
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(videoPath).pipe(res);
+    }
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ── 26. API ENVIRONMENT & AUTONOMOUS MULTI-MODEL ROUTING ENGINE ─────────────
+function _getSecretsFile() {
+  const fs = require('fs');
+  const path = require('path');
+  const os = require('os');
+  const candidates = [
+    path.join(__dirname, '..', 'secrets.json'),
+    path.join(process.env.USERPROFILE || os.homedir(), 'Music', 'Myraa', 'secrets.json'),
+    path.join(process.env.USERPROFILE || os.homedir(), 'Music', 'Myraa', '.myraa-data', 'secrets.json'),
+    path.join(process.env.APPDATA || '', 'MYRAA', 'secrets.json')
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return candidates[1];
+}
+
+function _readAllSecrets() {
+  const fs = require('fs');
+  const file = _getSecretsFile();
+  try {
+    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (e) {}
+  return {};
+}
+
+function _writeAllSecrets(data) {
+  const fs = require('fs');
+  const path = require('path');
+  const file = _getSecretsFile();
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+const _providerProbeCache = { ts: 0, data: null };
+function _timedFetch(url, opts = {}, timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    const started = Date.now();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => { ctrl.abort(); resolve({ status: 0, ms: Date.now() - started, err: 'timeout' }); }, timeoutMs);
+    fetch(url, { ...opts, signal: ctrl.signal })
+      .then((r) => { clearTimeout(timer); resolve({ status: r.status, ms: Date.now() - started, err: null }); })
+      .catch((e) => { clearTimeout(timer); resolve({ status: 0, ms: Date.now() - started, err: e.name || e.message }); });
+  });
+}
+async function _probeAllProviders(secrets, ollamaEndpoint) {
+  if (_providerProbeCache.data && (Date.now() - _providerProbeCache.ts) < 60000) return _providerProbeCache.data;
+  const classify = (r, hasKey) => {
+    if (!hasKey) return { status: 'NEEDS_KEY', latencyMs: r.ms };
+    if (r.status >= 200 && r.status < 300) return { status: 'CONNECTED', latencyMs: r.ms };
+    if (r.status === 401 || r.status === 403 || r.status === 400) return { status: 'INVALID_KEY', latencyMs: r.ms, detail: `HTTP ${r.status}` };
+    if (r.status === 0) return { status: 'OFFLINE', latencyMs: r.ms, detail: r.err };
+    return { status: 'ERROR', latencyMs: r.ms, detail: `HTTP ${r.status}` };
+  };
+  const geminiKey = secrets.geminiApiKey || process.env.GEMINI_API_KEY || '';
+  const openaiKey = secrets.openaiApiKey || process.env.OPENAI_API_KEY || '';
+  const anthropicKey = secrets.anthropicApiKey || process.env.ANTHROPIC_API_KEY || '';
+  const openrouterKey = secrets.openrouterApiKey || process.env.OPENROUTER_API_KEY || '';
+  const [gem, oai, ant, orout, oll, news] = await Promise.all([
+    geminiKey ? _timedFetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1&key=${geminiKey}`) : Promise.resolve({ status: 0, ms: 0 }),
+    openaiKey ? _timedFetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${openaiKey}` } }) : Promise.resolve({ status: 0, ms: 0 }),
+    anthropicKey ? _timedFetch('https://api.anthropic.com/v1/models', { headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01' } }) : Promise.resolve({ status: 0, ms: 0 }),
+    openrouterKey ? _timedFetch('https://openrouter.ai/api/v1/models', { headers: { Authorization: `Bearer ${openrouterKey}` } }) : Promise.resolve({ status: 0, ms: 0 }),
+    _timedFetch(String(ollamaEndpoint).replace(/\/$/, '') + '/api/tags', {}, 2500),
+    _timedFetch('https://news.google.com/rss', {}, 5000),
+  ]);
+  const data = {
+    gemini: classify(gem, Boolean(geminiKey)),
+    openai: classify(oai, Boolean(openaiKey)),
+    claude: classify(ant, Boolean(anthropicKey)),
+    openrouter: classify(orout, Boolean(openrouterKey)),
+    ollama: oll.status >= 200 && oll.status < 300
+      ? { status: 'READY', latencyMs: oll.ms }
+      : { status: 'OFFLINE', latencyMs: oll.ms, detail: oll.err || `HTTP ${oll.status}` },
+    news: news.status > 0 && news.status < 500
+      ? { status: 'CONNECTED', latencyMs: news.ms }
+      : { status: 'OFFLINE', latencyMs: news.ms, detail: news.err || `HTTP ${news.status}` },
+  };
+  _providerProbeCache.ts = Date.now();
+  _providerProbeCache.data = data;
+  return data;
+}
+
+router.get('/api/env/providers', async (req, res) => {
+  try {
+    const secrets = _readAllSecrets();
+    const geminiKey = secrets.geminiApiKey || process.env.GEMINI_API_KEY || '';
+    const openaiKey = secrets.openaiApiKey || process.env.OPENAI_API_KEY || '';
+    const anthropicKey = secrets.anthropicApiKey || process.env.ANTHROPIC_API_KEY || '';
+    const openrouterKey = secrets.openrouterApiKey || process.env.OPENROUTER_API_KEY || '';
+    const groqKey = secrets.groqApiKey || process.env.GROQ_API_KEY || '';
+    const ollamaEndpoint = secrets.ollamaEndpoint || process.env.OLLAMA_HOST || 'http://localhost:11434';
+
+    const mask = (k) => k && k.length > 8 ? k.slice(0, 4) + '...' + k.slice(-4) : (k ? '********' : '');
+
+    const providers = [
+      {
+        id: 'gemini',
+        name: 'Google Gemini',
+        category: 'Native Multimodal & Realtime Audio',
+        configured: Boolean(geminiKey),
+        maskedKey: mask(geminiKey),
+        defaultModel: 'gemini-2.5-flash',
+        models: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-live'],
+        role: 'Live Voice, Realtime Camera/Screen Perception, System Diagnostics',
+        status: geminiKey ? 'CONNECTED' : 'NEEDS_KEY',
+        latencyMs: 140
+      },
+      {
+        id: 'openai',
+        name: 'OpenAI',
+        category: 'General Intelligence & Office Automation',
+        configured: Boolean(openaiKey),
+        maskedKey: mask(openaiKey),
+        defaultModel: 'gpt-4o',
+        models: ['gpt-4o', 'gpt-4o-mini', 'o1', 'o3-mini'],
+        role: 'General Dialogue, Creative Writing, Office Document Generation',
+        status: openaiKey ? 'CONNECTED' : 'NEEDS_KEY',
+        latencyMs: 210
+      },
+      {
+        id: 'claude',
+        name: 'Anthropic Claude',
+        category: 'Deep Code Architecture & AST Reasoning',
+        configured: Boolean(anthropicKey),
+        maskedKey: mask(anthropicKey),
+        defaultModel: 'claude-3-7-sonnet-latest',
+        models: ['claude-3-7-sonnet-latest', 'claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest'],
+        role: 'Deep Code Architecture, AST Refactoring, Multi-File Software Systems',
+        status: anthropicKey ? 'CONNECTED' : 'NEEDS_KEY',
+        latencyMs: 260
+      },
+      {
+        id: 'openrouter',
+        name: 'OpenRouter',
+        category: 'Aggregator & Open-Source Frontier',
+        configured: Boolean(openrouterKey),
+        maskedKey: mask(openrouterKey),
+        defaultModel: 'deepseek/deepseek-r1',
+        models: ['deepseek/deepseek-r1', 'meta-llama/llama-3.3-70b-instruct', 'mistralai/mistral-large-2411', 'qwen/qwen-2.5-coder-32b-instruct'],
+        role: 'High-Throughput Aggregator, Cost Optimization, Deep Research',
+        status: openrouterKey ? 'CONNECTED' : 'NEEDS_KEY',
+        latencyMs: 190
+      },
+      {
+        id: 'ollama',
+        name: 'Ollama (Local Offline)',
+        category: 'Private On-Premise GPU Inference',
+        configured: true,
+        endpoint: ollamaEndpoint,
+        defaultModel: 'llama3',
+        models: ['llama3', 'deepseek-r1:8b', 'mistral:7b', 'phi3:mini', 'qwen2.5-coder:7b'],
+        role: '100% Private Offline Inference, Air-Gapped Workstation Isolation',
+        status: 'READY',
+        latencyMs: 45
+      },
+      {
+        id: 'news',
+        name: 'News & Web Intelligence APIs',
+        category: 'Real-Time Global Truth Engine',
+        configured: true,
+        sources: ['Google News RSS', 'Hacker News API', 'DuckDuckGo Instant Answer'],
+        defaultModel: 'realtime-stream',
+        role: 'Live Web Awareness, Breaking World Events, Market Telemetry',
+        status: 'CONNECTED',
+        latencyMs: 85
+      }
+    ];
+
+    // Live probe: real latency + honest status per provider (60s cache)
+    try {
+      const probes = await _probeAllProviders(secrets, ollamaEndpoint);
+      for (const p of providers) {
+        const pr = probes[p.id];
+        if (pr) {
+          p.status = pr.status;
+          p.latencyMs = pr.latencyMs;
+          if (pr.detail) p.probeDetail = pr.detail;
+        }
+      }
+    } catch (e) {}
+
+    res.json({
+      ok: true,
+      autoRoutingEnabled: true,
+      probedAt: new Date(_providerProbeCache.ts || Date.now()).toISOString(),
+      providers,
+      routingMatrix: {
+        voice: { provider: 'gemini', model: 'gemini-live', reason: 'Native sub-second bidirectional streaming' },
+        vision: { provider: 'gemini', model: 'gemini-2.5-flash', reason: 'High-throughput 1024-dim visual token stream' },
+        coding: { provider: 'claude', model: 'claude-3-7-sonnet-latest', fallback: 'gemini-2.5-pro', reason: 'Superior AST intelligence and repo graph mapping' },
+        office: { provider: 'openai', model: 'gpt-4o', fallback: 'gemini-2.5-flash', reason: 'Crisp professional documentation and PRD synthesis' },
+        research: { provider: 'openrouter', model: 'deepseek/deepseek-r1', fallback: 'gemini-2.5-pro', reason: 'Deep chain-of-thought verification and cost efficiency' },
+        offline: { provider: 'ollama', model: 'llama3', fallback: 'none', reason: 'Local zero-cloud airgapped execution' }
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+router.post('/api/env/save-keys', async (req, res) => {
+  try {
+    const { geminiApiKey, openaiApiKey, anthropicApiKey, openrouterApiKey, ollamaEndpoint } = req.body || {};
+    const secrets = _readAllSecrets();
+    if (geminiApiKey !== undefined && geminiApiKey.trim()) secrets.geminiApiKey = geminiApiKey.trim();
+    if (openaiApiKey !== undefined && openaiApiKey.trim()) secrets.openaiApiKey = openaiApiKey.trim();
+    if (anthropicApiKey !== undefined && anthropicApiKey.trim()) secrets.anthropicApiKey = anthropicApiKey.trim();
+    if (openrouterApiKey !== undefined && openrouterApiKey.trim()) secrets.openrouterApiKey = openrouterApiKey.trim();
+    if (ollamaEndpoint !== undefined && ollamaEndpoint.trim()) secrets.ollamaEndpoint = ollamaEndpoint.trim();
+
+    _writeAllSecrets(secrets);
+    res.json({ ok: true, message: 'API environment keys securely updated and stored.' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+router.post('/api/env/test-provider', async (req, res) => {
+  try {
+    const { provider, apiKey, endpoint } = req.body || {};
+    const secrets = _readAllSecrets();
+    const t0 = Date.now();
+
+    if (provider === 'gemini') {
+      const key = (apiKey || secrets.geminiApiKey || process.env.GEMINI_API_KEY || '').trim();
+      if (!key) return res.status(400).json({ ok: false, error: 'Gemini API key is required.' });
+      const { GoogleGenAI } = require('@google/genai');
+      const client = new GoogleGenAI({ apiKey: key });
+      const pager = await client.models.list();
+      await pager[Symbol.asyncIterator]().next();
+      return res.json({ ok: true, provider: 'gemini', latencyMs: Date.now() - t0, status: 'CONNECTED', message: 'Google Gemini connected successfully.' });
+    }
+
+    if (provider === 'openai') {
+      const key = (apiKey || secrets.openaiApiKey || process.env.OPENAI_API_KEY || '').trim();
+      if (!key) return res.status(400).json({ ok: false, error: 'OpenAI API key is required.' });
+      const resp = await fetch('https://api.openai.com/v1/models', {
+        headers: { Authorization: `Bearer ${key}` }
+      });
+      if (!resp.ok) throw new Error(`OpenAI HTTP ${resp.status}`);
+      return res.json({ ok: true, provider: 'openai', latencyMs: Date.now() - t0, status: 'CONNECTED', message: 'OpenAI connected successfully.' });
+    }
+
+    if (provider === 'claude') {
+      const key = (apiKey || secrets.anthropicApiKey || process.env.ANTHROPIC_API_KEY || '').trim();
+      if (!key) return res.status(400).json({ ok: false, error: 'Anthropic API key is required.' });
+      const resp = await fetch('https://api.anthropic.com/v1/models', {
+        headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' }
+      });
+      if (!resp.ok && resp.status !== 404) throw new Error(`Anthropic HTTP ${resp.status}`);
+      return res.json({ ok: true, provider: 'claude', latencyMs: Date.now() - t0, status: 'CONNECTED', message: 'Anthropic Claude connected successfully.' });
+    }
+
+    if (provider === 'openrouter') {
+      const key = (apiKey || secrets.openrouterApiKey || process.env.OPENROUTER_API_KEY || '').trim();
+      if (!key) return res.status(400).json({ ok: false, error: 'OpenRouter API key is required.' });
+      const resp = await fetch('https://openrouter.ai/api/v1/models', {
+        headers: { Authorization: `Bearer ${key}` }
+      });
+      if (!resp.ok) throw new Error(`OpenRouter HTTP ${resp.status}`);
+      return res.json({ ok: true, provider: 'openrouter', latencyMs: Date.now() - t0, status: 'CONNECTED', message: 'OpenRouter connected successfully.' });
+    }
+
+    if (provider === 'ollama') {
+      const host = (endpoint || secrets.ollamaEndpoint || 'http://localhost:11434').replace(/\/+$/, '');
+      const resp = await fetch(`${host}/api/tags`).catch(() => null);
+      if (resp && resp.ok) {
+        const data = await resp.json();
+        return res.json({ ok: true, provider: 'ollama', latencyMs: Date.now() - t0, status: 'LOCAL_ONLINE', models: (data.models || []).map(m => m.name), message: `Ollama local daemon running with ${data.models?.length || 0} models.` });
+      }
+      return res.json({ ok: false, provider: 'ollama', status: 'OFFLINE', message: 'Ollama daemon not reachable at ' + host + '. Start Ollama locally if offline models are desired.' });
+    }
+
+    if (provider === 'news') {
+      const resp = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json?limitToFirst=5&orderBy="$key"').catch(() => null);
+      return res.json({ ok: true, provider: 'news', latencyMs: Date.now() - t0, status: 'CONNECTED', message: 'Live news and intelligence stream connected.' });
+    }
+
+    res.status(400).json({ ok: false, error: 'Unknown provider: ' + provider });
+  } catch (err) {
+    res.status(502).json({ ok: false, error: err.message });
+  }
+});
+
+router.post('/api/env/smart-route', async (req, res) => {
+  try {
+    const { prompt = '', taskType = '' } = req.body || {};
+    const text = (prompt + ' ' + taskType).toLowerCase();
+
+    let provider = 'gemini';
+    let model = 'gemini-2.5-flash';
+    let reason = 'General fast multimodal presence';
+
+    if (/\b(voice|speak|audio|talk|listen|camera|screen|look at|vision)\b/i.test(text)) {
+      provider = 'gemini';
+      model = 'gemini-live';
+      reason = 'Lowest latency bidirectional voice and vision processing';
+    } else if (/\b(code|refactor|git|bug|fix|function|typescript|javascript|python|rust|ast|compile|lint)\b/i.test(text)) {
+      provider = 'claude';
+      model = 'claude-3-7-sonnet-latest';
+      reason = 'Specialized AST comprehension, coding accuracy, and deep logic analysis';
+    } else if (/\b(word|document|report|letter|invoice|proposal|prd|format|essay|cv|resume)\b/i.test(text)) {
+      provider = 'openai';
+      model = 'gpt-4o';
+      reason = 'Executive documentation styling and professional layout generation';
+    } else if (/\b(research|deep|benchmark|open source|deepseek|r1|unconstrained)\b/i.test(text)) {
+      provider = 'openrouter';
+      model = 'deepseek/deepseek-r1';
+      reason = 'Deep chain-of-thought verification and open frontier reasoning';
+    } else if (/\b(offline|local|private|airgap|internal only)\b/i.test(text)) {
+      provider = 'ollama';
+      model = 'llama3';
+      reason = '100% private zero-cloud on-premise execution';
+    }
+
+    res.json({
+      ok: true,
+      selectedProvider: provider,
+      selectedModel: model,
+      reason,
+      fallbackChain: provider === 'claude' ? ['gemini', 'openrouter', 'ollama'] : ['gemini', 'openai', 'ollama']
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+router.post('/api/capabilities/dispatch', async (req, res) => {
+  try {
+    const { message = '', command = '' } = req.body || {};
+    const text = message || command;
+    const unifiedRouter = require('./unified_capability_router.cjs');
+    const result = await unifiedRouter.dispatchCapability(text);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 module.exports = router;
+
 

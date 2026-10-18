@@ -33,7 +33,7 @@ class ModelRouter {
             async chat(messages, options = {}) {
                 const key = process.env.GROQ_API_KEY;
                 if (!key) throw new Error('GROQ_API_KEY is not set');
-                const model = options.modelId || 'llama-3.3-70b-versatile';
+                const model = options.modelId || 'openai/gpt-oss-120b';
                 const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
@@ -168,7 +168,7 @@ class ModelRouter {
                 provider: 'aws_bedrock',
                 modelId: 'amazon.nova-pro-v1:0',
                 fallback: [
-                    { provider: 'groq', modelId: 'llama-3.3-70b-versatile' },
+                    { provider: 'groq', modelId: 'openai/gpt-oss-120b' },
                     { provider: 'gemini', modelId: process.env.MYRAA_FAST_MODEL || 'gemini-3.5-flash' }
                 ]
             };
@@ -180,7 +180,7 @@ class ModelRouter {
                 provider: 'aws_bedrock',
                 modelId: 'amazon.nova-pro-v1:0',
                 fallback: [
-                    { provider: 'groq', modelId: 'llama-3.3-70b-versatile' },
+                    { provider: 'groq', modelId: 'openai/gpt-oss-120b' },
                     { provider: 'gemini', modelId: process.env.MYRAA_FAST_MODEL || 'gemini-3.5-flash' }
                 ]
             };
@@ -192,7 +192,7 @@ class ModelRouter {
                 provider: 'aws_bedrock',
                 modelId: 'amazon.nova-lite-v1:0',
                 fallback: [
-                    { provider: 'groq', modelId: 'llama-3.1-8b-instant' },
+                    { provider: 'groq', modelId: 'openai/gpt-oss-20b' },
                     { provider: 'aws_bedrock', modelId: 'amazon.nova-micro-v1:0' }
                 ]
             };
@@ -215,7 +215,7 @@ class ModelRouter {
             modelId: 'amazon.nova-pro-v1:0',
             fallback: [
                 { provider: 'aws_bedrock', modelId: 'amazon.nova-lite-v1:0' },
-                { provider: 'groq', modelId: 'llama-3.3-70b-versatile' },
+                { provider: 'groq', modelId: 'openai/gpt-oss-120b' },
                 { provider: 'gemini', modelId: process.env.MYRAA_FAST_MODEL || 'gemini-3.5-flash' }
             ]
         };

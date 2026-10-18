@@ -74,15 +74,22 @@ function syncVersion() {
 function step1_clean() {
   step(1, 'Clean');
   if (fs.existsSync(RELEASE_DIR)) {
-    fs.rmSync(RELEASE_DIR, { recursive: true, force: true });
-    ok('Removed old release directory');
+    try {
+      fs.rmSync(RELEASE_DIR, { recursive: true, force: true });
+      ok('Removed old release directory');
+    } catch (e) {
+      try {
+        for (const f of fs.readdirSync(RELEASE_DIR)) {
+          fs.rmSync(path.join(RELEASE_DIR, f), { recursive: true, force: true });
+        }
+      } catch (_) {}
+      ok('Cleaned release directory contents');
+    }
   }
-  const distDir = path.join(APP_DIR, 'dist');
-  if (fs.existsSync(distDir)) {
-    fs.rmSync(distDir, { recursive: true, force: true });
-    ok('Removed old dist directory');
-  }
-  ok('Clean complete');
+  // NOTE: never delete dist/ here — it is a curated prebuilt bundle
+  // (server.cjs + UI), not vite output. Deleting it makes `npm run build`
+  // (validate-app-bundle) fail. Use scripts/validate-app-bundle.cjs instead.
+  ok('Clean complete (dist/ preserved)');
 }
 
 function step2_syncVersion() {

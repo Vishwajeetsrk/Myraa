@@ -17,10 +17,10 @@ const memoryCore = require('./memory_core_service.cjs');
 
 // WMO Weather interpretation codes
 const WEATHER_CODES = {
-  0: 'Clear sky ☀️',
+  0: 'Clear sky [Sun]',
   1: 'Mainly clear 🌤️',
-  2: 'Partly cloudy ⛅',
-  3: 'Overcast ☁️',
+  2: 'Partly cloudy [Cloud]',
+  3: 'Overcast [Cloud]',
   45: 'Fog 🌫️',
   48: 'Depositing rime fog 🌫️',
   51: 'Light drizzle 🌦️',
@@ -31,13 +31,13 @@ const WEATHER_CODES = {
   65: 'Heavy rain 🌧️',
   71: 'Slight snow fall 🌨️',
   73: 'Moderate snow fall 🌨️',
-  75: 'Heavy snow fall ❄️',
+  75: 'Heavy snow fall [Snow]',
   80: 'Slight rain showers 🌦️',
   81: 'Moderate rain showers 🌧️',
-  82: 'Violent rain showers ⛈️',
-  95: 'Thunderstorm ⚡',
-  96: 'Thunderstorm with slight hail ⛈️',
-  99: 'Thunderstorm with heavy hail ⛈️'
+  82: 'Violent rain showers [Storm]',
+  95: 'Thunderstorm [Bolt]',
+  96: 'Thunderstorm with slight hail [Storm]',
+  99: 'Thunderstorm with heavy hail [Storm]'
 };
 
 function fetchJson(url) {

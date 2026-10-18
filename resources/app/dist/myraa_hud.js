@@ -314,25 +314,25 @@
               ⬡ HOLO DECK
             </button>
             <button class="btn-hud" id="hud-nav-reactor" style="padding: 6px 12px; font-size: 10.5px;" title="Reactor Power & System Telemetry">
-              ⚡ REACTOR
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg> REACTOR
             </button>
             <button class="btn-hud" id="hud-nav-tactical" style="padding: 6px 12px; font-size: 10.5px;" title="Tactical Radar Scope">
-              🎯 TACTICAL
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> TACTICAL
             </button>
             <button class="btn-hud" id="hud-nav-workforce" style="padding: 6px 12px; font-size: 10.5px;" title="Autonomous 28-Agent Workforce">
-              🤖 AGENTS
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" x2="8" y1="16" y2="16"/><line x1="16" x2="16" y1="16" y2="16"/></svg> AGENTS
             </button>
             <button class="btn-hud" id="hud-nav-skills" style="padding: 6px 12px; font-size: 10.5px;" title="Cognitive Skills & MCP Tools (139 Skills)">
-              💡 SKILLS
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> SKILLS
             </button>
             <button class="btn-hud" id="hud-nav-workspace" style="padding: 6px 12px; font-size: 10.5px;" title="Workspace Console & App Studio">
-              📁 WORKSPACE
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg> WORKSPACE
             </button>
             <button class="btn-hud btn-hud-gold" id="hud-nav-settings" style="padding: 6px 12px; font-size: 10.5px;" title="Settings, Plugins & Vault">
               ⚙️ SETTINGS
             </button>
             <button class="btn-hud btn-hud-red" id="hud-nav-livevoice" style="padding: 6px 12px; font-size: 10.5px;" title="Toggle Gemini Live Voice Mode">
-              🎙️ LIVE VOICE
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg> LIVE VOICE
             </button>
           </nav>
 
@@ -342,7 +342,7 @@
               <span class="blink" style="width: 7px; height: 7px; border-radius: 9999px; background: #34d399; box-shadow: 0 0 8px #34d399;"></span>
               <span>GRID STABLE</span>
             </div>
-            <div style="color: rgba(34,211,238,0.8);">⚡ 4.2ms</div>
+            <div style="color: rgba(34,211,238,0.8);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg> 4.2ms</div>
             <div style="color: #fecdd3; border: 1px solid rgba(255,45,77,0.4); padding: 2px 7px; background: rgba(255,45,77,0.12);">THREAT <span id="hud-threat-val">14</span></div>
 
             <!-- Digital Clock -->
@@ -354,7 +354,7 @@
             <!-- Panel Collapse / Sound FX Controls -->
             <div style="display: flex; align-items: center; gap: 6px; border-left: 1px solid rgba(34,211,238,0.2); padding-left: 12px;">
               <button id="hud-toggle-sound" class="btn-hud" style="padding: 5px 8px; font-size: 10px;" title="Toggle Audio Feedback Sounds">
-                🔊 SFX
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg> SFX
               </button>
               <button id="hud-toggle-layout" class="btn-hud" style="padding: 5px 8px; font-size: 10px;" title="Toggle Cockpit Panels / Cinema Companion View">
                 ◫ PANELS
@@ -396,7 +396,7 @@
           <div class="hud-panel hud-corner scanlines" style="padding: 14px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
               <div class="font-hud-display" style="font-size: 11px; letter-spacing: 0.24em; color: #22d3ee; display: flex; align-items: center; gap: 6px;">
-                <span>⚡</span> ARC REACTOR
+                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span> ARC REACTOR
               </div>
               <span class="font-hud-mono" style="font-size: 9.5px; color: #34d399; display: flex; align-items: center; gap: 5px;">
                 <span style="width: 6px; height: 6px; border-radius: 9999px; background: #34d399; box-shadow: 0 0 6px #34d399;"></span> ONLINE
@@ -561,7 +561,7 @@
                 <span style="position: absolute; bottom: 0; left: 0; width: 16px; height: 16px; border-bottom: 2px solid #22d3ee; border-left: 2px solid #22d3ee;"></span>
                 <span style="position: absolute; bottom: 0; right: 0; width: 16px; height: 16px; border-bottom: 2px solid #22d3ee; border-right: 2px solid #22d3ee;"></span>
                 <span class="font-hud-mono" style="position: absolute; -top: 22px; left: 50%; transform: translateX(-50%); font-size: 8.5px; letter-spacing: 0.18em; color: #22d3ee; white-space: nowrap;">
-                  ID: OPERATOR ✓
+                  ID: OPERATOR <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 </span>
               </div>
 
@@ -640,7 +640,7 @@
                 flex-shrink: 0;
                 box-shadow: 0 0 12px rgba(34,211,238,0.4);
               ">
-                <span style="font-size: 15px; color: #22d3ee;">⚡</span>
+                <span style="font-size: 15px; color: #22d3ee;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
               </div>
               <div style="flex: 1; height: 38px; position: relative;">
                 <canvas id="hud-wave-canvas" style="width: 100%; height: 100%;"></canvas>
@@ -677,7 +677,7 @@
 
             <div style="display: flex; gap: 8px;">
               <button id="hud-mic-btn" class="btn-hud" style="width: 42px; flex-shrink: 0; font-size: 14px;" title="Voice Dictation">
-                🎤
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
               </button>
               <input type="text" id="hud-chat-input" placeholder="Transmit directive to Mira... (e.g. 'Mira, status report' or 'hey mira')" style="
                 flex: 1;
@@ -703,7 +703,7 @@
           <div class="hud-panel hud-red" style="padding: 12px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
               <div class="font-hud-display" style="font-size: 11px; letter-spacing: 0.24em; color: #ff2d4d; display: flex; align-items: center; gap: 6px;">
-                <span>🎯</span> TACTICAL SCOPE
+                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span> TACTICAL SCOPE
               </div>
               <span class="font-hud-mono" style="font-size: 9px; color: rgba(255,45,77,0.85);">GRID K-9</span>
             </div>
@@ -960,7 +960,7 @@
     if (soundBtn) {
       soundBtn.addEventListener('click', () => {
         sfxMuted = !sfxMuted;
-        soundBtn.textContent = sfxMuted ? '🔇 MUTED' : '🔊 SFX';
+        soundBtn.textContent = sfxMuted ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg> MUTED' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg> SFX';
         soundBtn.style.color = sfxMuted ? '#f43f5e' : '#a5f3fc';
         beep(440, 0.05);
       });

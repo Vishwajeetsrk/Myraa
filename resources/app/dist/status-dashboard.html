@@ -592,7 +592,7 @@
           <td><span class="tag">${c.category}</span></td>
           <td><span class="status-pill ${statClass}"><span class="dot"></span> ${c.status}</span></td>
           <td><span class="tag ${riskClass}">${c.risk_level}</span></td>
-          <td>${c.offline_support ? '<span style="color: var(--emerald);">✓ Yes</span>' : '<span style="color: var(--rose);">✗ Online</span>'}</td>
+          <td>${c.offline_support ? '<span style="color: var(--emerald);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Yes</span>' : '<span style="color: var(--rose);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Online</span>'}</td>
           <td style="color: var(--text-muted);">${c.description}</td>
         </tr>
       `;

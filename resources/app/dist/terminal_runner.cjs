@@ -19,7 +19,7 @@ function getAugmentedEnv() {
   const env = { ...process.env };
   const additionalPaths = [
     'C:\\Program Files\\nodejs',
-    path.join(process.env.APPDATA || 'C:\\Users\\Vishwajeet\\AppData\\Roaming', 'npm'),
+    path.join(process.env.APPDATA || (process.env.USERPROFILE ? path.join(process.env.USERPROFILE, 'AppData', 'Roaming') : path.join(require('os').homedir(), 'AppData', 'Roaming')), 'npm'),
     'C:\\Program Files\\Git\\cmd',
     'C:\\Program Files\\Git\\bin',
     'C:\\Windows\\system32',

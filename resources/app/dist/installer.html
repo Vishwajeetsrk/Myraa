@@ -573,7 +573,7 @@
     }
 
     .custom-checkbox-row input[type="checkbox"]:checked::after {
-      content: '✓';
+      content: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
       color: #fff;
       font-size: 12px;
       font-weight: 800;
@@ -1125,7 +1125,7 @@
       <div class="titlebar-controls">
         <button class="win-control-btn" onclick="minimizeInstaller()">—</button>
         <button class="win-control-btn" onclick="maximizeInstaller()">▢</button>
-        <button class="win-control-btn close" onclick="closeInstaller()">✕</button>
+        <button class="win-control-btn close" onclick="closeInstaller()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
     </div>
 
@@ -1337,7 +1337,7 @@
               </div>
             </div>
             <div class="perm-card-controls">
-              <button class="btn-perm-action granted" id="btn-allow-mic" onclick="testGrantMicrophone()">Granted ✓</button>
+              <button class="btn-perm-action granted" id="btn-allow-mic" onclick="testGrantMicrophone()">Granted <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
               <label class="toggle-switch">
                 <input type="checkbox" id="toggle-mic" checked>
                 <span class="toggle-slider"></span>
@@ -1404,7 +1404,7 @@
               </div>
             </div>
             <div class="perm-card-controls">
-              <button class="btn-perm-action granted" onclick="configureFileSystemScope()">Configured ✓</button>
+              <button class="btn-perm-action granted" onclick="configureFileSystemScope()">Configured <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
               <label class="toggle-switch">
                 <input type="checkbox" id="toggle-filesystem" checked>
                 <span class="toggle-slider"></span>
@@ -1427,7 +1427,7 @@
               </div>
             </div>
             <div class="perm-card-controls">
-              <button class="btn-perm-action granted" id="btn-allow-loc">Granted ✓</button>
+              <button class="btn-perm-action granted" id="btn-allow-loc">Granted <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
               <label class="toggle-switch">
                 <input type="checkbox" id="toggle-location" checked>
                 <span class="toggle-slider"></span>
@@ -1480,15 +1480,15 @@
           <!-- 7-Stage Checklist -->
           <div class="install-stage-checklist">
             <div class="install-stage-item completed" id="stage-1">
-              <div class="stage-status-icon">✓</div>
+              <div class="stage-status-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
               <span>Preparing AI environment</span>
             </div>
             <div class="install-stage-item completed" id="stage-2">
-              <div class="stage-status-icon">✓</div>
+              <div class="stage-status-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
               <span>Installing MIRA Core</span>
             </div>
             <div class="install-stage-item completed" id="stage-3">
-              <div class="stage-status-icon">✓</div>
+              <div class="stage-status-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
               <span>Configuring Voice Engine</span>
             </div>
             <div class="install-stage-item active" id="stage-4">
@@ -1543,7 +1543,7 @@
            =================================================================== -->
       <div class="installer-view" id="view-screen-5">
         <div class="screen5-hero-block">
-          <div class="screen5-check-circle">✓</div>
+          <div class="screen5-check-circle"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
           <h2 class="screen5-title">MIRA IS READY.</h2>
           <p class="screen5-sub">Your AI assistant has been installed and connected to Windows.</p>
         </div>
@@ -1704,7 +1704,7 @@
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(t => t.stop());
-        btn.textContent = 'Granted ✓';
+        btn.textContent = 'Granted <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
         btn.classList.add('granted');
         document.getElementById('toggle-mic').checked = true;
         appendLog('Microphone permission verified and active.');
@@ -1814,7 +1814,7 @@
       const el = document.getElementById(id);
       if (!el) return;
       el.className = 'install-stage-item completed';
-      el.querySelector('.stage-status-icon').innerHTML = '✓';
+      el.querySelector('.stage-status-icon').innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
     }
 
     function markStageActive(id) {
