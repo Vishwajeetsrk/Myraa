@@ -2,6 +2,9 @@
 
 Built: 2026-10-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, unsigned)
 
+> Rebuilt 2026-10-18 19:55 with the Course Studio SQLite bridge fix (commit `19d9e07`).
+> GitHub Release `v9.4.0` assets were replaced with this build; hashes below match it.
+
 ## 1. Deep Testing & Verification Summary
 
 | Component | Status | Verification Details |
@@ -41,8 +44,8 @@ The production installer packages for **v9.4.0** are generated, verified, and pl
 ## 3. SHA256 Integrity Verification
 
 ```
-2D9158067C61406AA06172D02C4572AF1CF3039406D27AB8BF106F108ABA6B80  MYRAA-Setup-9.4.0.exe
-DD1EC0C05B26C32197E1069F4AB105C2A669401926EE86C28ADFB62E4ACD56DA  MYRAA-Portable-9.4.0.exe
+FC7FF835B60A0BE12ACF428B593AE9AF39413B27366BC49B532952A6C70584C1  MYRAA-Setup-9.4.0.exe
+DF5361A3257D002D31598813B5C58BA91B4DE8CFE5C0197FCAF0DA57351BB89D  MYRAA-Portable-9.4.0.exe
 ```
 
 Batched copies (SMB differs from cache, not integrity). The packer re-hashes every file after copy.
@@ -58,7 +61,7 @@ Batched copies (SMB differs from cache, not integrity). The packer re-hashes eve
 
 ### [B] What is Missing / Limitations:
 1. **EV Code Signing Certificate:** installers are unsigned; Windows SmartScreen shows an unknown publisher warning on first launch until accepted once.
-2. **GitHub Release upload:** binaries exceed GitHub's 100 MB per-file limit; publish via GitHub Releases (not repo commits) when ready.
+2. **GitHub Release upload:** published for `v9.4.0` — binaries exceed GitHub's 100 MB per-file limit, so Releases (not repo commits) is the distribution channel.
 3. **MCP transports:** registry is bookkeeping only in v9.4.0; real stdio/http transport execution lands in the next cycle (permission enforcement hooks in with it).
 
 ### [C] How It Works:
@@ -72,9 +75,10 @@ Batched copies (SMB differs from cache, not integrity). The packer re-hashes eve
   1. Runs the setup executable and registers shortcuts.
 
 ### [D] Next Plan:
-1. Upload v9.4.0 installers to GitHub Releases (tag `v9.4.0`) for the auto-updater feed.
-2. MCP transport execution (stdio + http) with per-agent permission enforcement wired into the tool engine.
-3. Observability pass: timeline/event surfaces into the UI; course-create 500 fix; security agent phase.
+1. **[DONE]** GitHub Release `v9.4.0` published with Setup + Portable + `latest.yml` + blockmap (auto-updater feed ready); assets re-uploaded after the bridge-fix rebuild.
+2. **[DONE]** Course-create 500 fixed: SQLite bridge dispatch folded into a single chain (one JSON line per command; previously 5 disjoint chains emitted a trailing `Unknown command`). Verified live: `POST /api/course-studio/courses` -> 200.
+3. MCP transport execution (stdio + http) with per-agent permission enforcement wired into the tool engine.
+4. Observability pass: timeline/event surfaces into the UI; security agent phase.
 
 ---
 
