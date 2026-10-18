@@ -20,6 +20,16 @@ const MAX_TOOLS = 200;
 const PROBE_TIMEOUT_MS = 15000;
 const CALL_TIMEOUT_MS = 20000;
 
+const PRESETS = [
+  { id: 'filesystem', transport: 'stdio', command: 'npx -y @modelcontextprotocol/server-filesystem "{dir}"', vars: ['dir'], note: 'Official reference filesystem server - read/write access scoped to one folder. Needs Node 18+/npx.' },
+  { id: 'memory', transport: 'stdio', command: 'npx -y @modelcontextprotocol/server-memory', vars: [], note: 'Official knowledge-graph memory server. Needs Node 18+/npx.' },
+  { id: 'everything', transport: 'stdio', command: 'npx -y @modelcontextprotocol/server-everything', vars: [], note: 'Official reference server with echo/add/sample tools - ideal for first probes. Needs Node 18+/npx.' },
+  { id: 'git', transport: 'stdio', command: 'uvx mcp-server-git --repository "{dir}"', vars: ['dir'], note: 'Official git server (log/diff/show). Needs uv (uvx) installed.' },
+  { id: 'fetch', transport: 'stdio', command: 'uvx mcp-server-fetch', vars: [], note: 'Official fetch server - URLs to markdown. Needs uv (uvx) installed.' },
+  { id: 'time', transport: 'stdio', command: 'uvx mcp-server-time', vars: [], note: 'Official time/timezone server. Needs uv (uvx) installed.' },
+  { id: 'sqlite', transport: 'stdio', command: 'uvx mcp-server-sqlite --db-path "{db}"', vars: ['db'], note: 'Official SQLite server - query one database file. Needs uv (uvx) installed.' },
+];
+
 function dataDir() {
   const base = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
   return path.join(base, 'MYRAA', 'mcp');
@@ -127,6 +137,7 @@ function createMcpManager(opts) {
       protocolVersion: s.protocolVersion || null,
       toolsCount: Array.isArray(s.tools) ? s.tools.length : 0,
       toolsCachedAt: s.toolsCachedAt || null,
+      preset: s.preset || null,
       implemented: s.transport === 'stdio',
     };
   }
@@ -165,6 +176,7 @@ function createMcpManager(opts) {
       rec.transport = transport;
       rec.command = command;
       rec.url = url;
+      rec.preset = null;
       rec.tools = [];
       rec.serverInfo = null;
       rec.protocolVersion = null;
@@ -180,6 +192,7 @@ function createMcpManager(opts) {
         status: 'registered',
         registeredAt: nowIso(), updatedAt: nowIso(), lastProbe: null,
         tools: [], serverInfo: null, protocolVersion: null, toolsCachedAt: null,
+        preset: null,
       };
       state.servers.push(rec);
       journal('registered', name, transport);
@@ -207,6 +220,43 @@ function createMcpManager(opts) {
 
   function disableServer(input) { return setStatus(input, 'disabled'); }
   function enableServer(input) { return setStatus(input, 'registered'); }
+
+  function listPresets() {
+    return {
+      ok: true,
+      count: PRESETS.length,
+      presets: PRESETS.map((p) => ({ id: p.id, transport: p.transport, command: p.command, vars: p.vars.slice(), note: p.note, source: 'official' })),
+      note: 'curated official MCP servers - npx presets need Node 18+, uv presets need uv/uvx; nothing is downloaded until the first probe/call',
+    };
+  }
+
+  function addPreset(input) {
+    const i = input || {};
+    const preset = PRESETS.find((p) => p.id === sliceText(i.preset, 40).trim().toLowerCase());
+    if (!preset) return { ok: false, code: 'VALIDATION', error: 'unknown preset - GET /api/mcp/presets lists them' };
+    const vars = {};
+    const missing = [];
+    for (const v of preset.vars) {
+      const raw = sliceText(i[v], 300).trim();
+      if (!raw || raw.includes('"')) { missing.push(v); continue; }
+      vars[v] = raw;
+    }
+    if (missing.length) return { ok: false, code: 'VALIDATION', error: 'preset "' + preset.id + '" needs: ' + missing.join(', ') + ' (absolute path, no quotes)' };
+    let command = preset.command;
+    for (const k of Object.keys(vars)) command = command.split('{' + k + '}').join(vars[k]);
+    const name = sliceText(i.name, 40).trim() || preset.id;
+    const out = registerServer({ name, transport: preset.transport, command });
+    if (!out.ok) return out;
+    load();
+    const rec = findServer(name);
+    if (rec) {
+      rec.preset = preset.id;
+      rec.updatedAt = nowIso();
+      journal('preset-added', rec.name, preset.id);
+      save();
+    }
+    return { ok: true, preset: preset.id, server: rec ? view(rec) : out.server, note: 'preset added - run probe to start it and fetch its tools' };
+  }
 
   function listServers() {
     load();
@@ -365,8 +415,10 @@ function createMcpManager(opts) {
     }
     router.get('/', (req, res) => { res.json(status()); });
     router.get('/servers', (req, res) => { res.json(listServers()); });
+    router.get('/presets', (req, res) => { res.json(listPresets()); });
     router.get('/servers/:name/tools', (req, res) => { reply(res, listTools({ name: req.params.name }), 200); });
     router.post('/register', (req, res) => { const r = registerServer(req.body || {}); res.status(r.ok ? 200 : 400).json(r); });
+    router.post('/presets/add', (req, res) => { const r = addPreset(req.body || {}); res.status(r.ok ? 200 : 400).json(r); });
     router.post('/probe', (req, res) => {
       probeServer(req.body || {})
         .then((r) => reply(res, r, 200))
@@ -416,7 +468,7 @@ function createMcpManager(opts) {
   }
 
   return {
-    registerServer, disableServer, enableServer, listServers, probeServer, probe: probeServer, listTools, callTool, status, createRouter, registerAgiTools,
+    registerServer, disableServer, enableServer, listServers, probeServer, probe: probeServer, listTools, callTool, listPresets, addPreset, status, createRouter, registerAgiTools,
     storePath: () => file,
     _reset: () => { state = null; },
   };
@@ -434,6 +486,8 @@ module.exports = {
   probe: singleton.probeServer,
   listTools: singleton.listTools,
   callTool: singleton.callTool,
+  listPresets: singleton.listPresets,
+  addPreset: singleton.addPreset,
   status: singleton.status,
   createRouter: singleton.createRouter,
   registerAgiTools: singleton.registerAgiTools,

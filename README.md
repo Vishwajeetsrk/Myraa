@@ -330,7 +330,7 @@ Built-in zero-configuration access to 88 free public APIs across 14 categories:
 
 ## 17. Autonomous Operations Stack (v9.4.0)
 
-The v9.4.0 cycle adds nine governed autonomy subsystems, and the follow-up MCP transport phase makes the MCP registry real. Every subsystem ships with a live test suite -- **321 automated checks** across 10 suites -- and follows one safety contract: honest errors, additive-only data operations, and local-first storage under `%APPDATA%\MYRAA\`.
+The v9.4.0 cycle adds nine governed autonomy subsystems, and the follow-up MCP transport phase makes the MCP registry real. Every subsystem ships with a live test suite -- **317 automated checks** across 10 suites -- and follows one safety contract: honest errors, additive-only data operations, and local-first storage under `%APPDATA%\MYRAA\`.
 
 ### 17.1 Evidence Engine
 Turns observations into auditable findings.
@@ -398,12 +398,13 @@ A read-only chronological merge of events, broker bindings, approval cards, and 
 Per-agent tool policy plus the Model Context Protocol server registry.
 - Policies per agent: allow/deny pattern lists; deny rules beat allow rules; HIGH/CRITICAL tools require an explicit (non-wildcard) grant; unknown agents default to deny
 - Revoke adds a deny rule; every change is journaled and emitted on the event bus as `permission.changed`
-- MCP registry with a live stdio transport: real `initialize` handshake, `tools/list` caching, and approval-gated `tools/call` (`mcp_probe` MEDIUM, `mcp_call` HIGH); process trees are killed on Windows via `taskkill /T /F`, and every failure is an honest code (`TIMEOUT`, `SERVER_EXITED`, `SPAWN_ERROR`, `RPC_ERROR`, ...). The http transport stays honest with `NOT_IMPLEMENTED`
+- MCP registry with a live stdio transport: real `initialize` handshake, `tools/list` caching, and approval-gated `tools/call` (`mcp_probe` MEDIUM, `mcp_call` HIGH); process trees are killed on Windows via `taskkill /T /F`, and every failure is an honest code (`TIMEOUT`, `SERVER_EXITED`, `SPAWN_ERROR`, `RPC_ERROR`, ...). The http transport stays honest with `NOT_IMPLEMENTED`. No fake server fixtures exist -- the transport is verified live against official MCP servers (`MYRAA_MCP_LIVE=1`)
+- Curated presets for official MCP servers (filesystem, memory, everything, git, fetch, time, sqlite) with one-click add: `GET /api/mcp/presets`, `POST /api/mcp/presets/add`
 - Voice: "tool permissions" / "who can use what", "allow agent jarvis to use connector_invoke", "revoke agent jarvis tool connector_invoke", "mcp servers", "probe mcp <name>"
-- API: `GET/POST /api/permissions/*`, `GET/POST /api/mcp/*` (incl. `/api/mcp/call`, `/api/mcp/servers/:name/tools`)
+- API: `GET/POST /api/permissions/*`, `GET/POST /api/mcp/*` (incl. `/api/mcp/call`, `/api/mcp/presets/add`)
 
 ### Verification
-All subsystems are covered by the live suites in `tests\` (evidence 29, investigation 37, workspace 43, connector market 26, model gateway 34, safety broker 31, event bus 25, timeline 27, permissions + MCP 34, MCP transport 35 -- 321 checks total). Run them individually with `node tests\test_<name>.cjs`, or boot the app and watch the per-phase mount log lines.
+All subsystems are covered by the live suites in `tests\` (evidence 29, investigation 37, workspace 43, connector market 26, model gateway 34, safety broker 31, event bus 25, timeline 27, permissions + MCP 34, MCP transport 31 -- 317 checks total). The MCP transport suite additionally runs real-server checks against the official `server-everything` when `MYRAA_MCP_LIVE=1` is set (no fake fixtures shipped). Run suites individually with `node tests\test_<name>.cjs`, or boot the app and watch the per-phase mount log lines.
 
 ---
 
@@ -478,7 +479,7 @@ Myraa/
 │       │   └── assets/                   # WebGL 3D models, textures & background.mp4
 │       ├── package.json                  # Application dependencies (v9.4.0)
 │       └── version.json                  # Dynamic version authority (9.4.0)
-├── tests/                        # 321 live checks across 10 suites (node tests\test_*.cjs)
+├── tests/                        # 317 live checks across 10 suites (node tests\test_*.cjs)
 ├── docs/                         # Per-phase integration docs (evidence, timeline, mcp-permissions, ...)
 ├── Projects/
 │   └── FigmaOutput/              # Generated HTML/CSS wireframes and mockups
@@ -528,7 +529,7 @@ Myraa/
 - `GET /api/connector-market/catalog` -- Zero-auth connector catalogue with host allowlists
 - `GET /api/model-gateway/status` -- Model lane status, probes, and honest chain policy
 - `GET /api/permissions/agents` / `POST /api/permissions/grant` -- Per-agent tool permissions
-- `GET /api/mcp/servers` / `POST /api/mcp/register` -- MCP registry + stdio transport (`/probe`, `/call`, `/servers/:name/tools`)
+- `GET /api/mcp/servers` / `POST /api/mcp/register` -- MCP registry + stdio transport (`/probe`, `/call`, `/presets`, `/presets/add`, `/servers/:name/tools`)
 
 ---
 

@@ -36,8 +36,10 @@ Servers are disabled, never hard-deleted.
 
 API: `registerServer({name, transport, command|url})`, `disableServer`,
 `enableServer`, `listServers`, `probeServer` (alias `probe`, async),
-`listTools`, `callTool`, `status`, `createRouter`, `registerAgiTools`
-HTTP: GET `/api/mcp`, `/servers`, `/servers/:name/tools`; POST `/register`, `/probe`, `/call`, `/disable`, `/enable`
+`listTools`, `callTool`, `listPresets`, `addPreset({preset, name?, ...vars})`,
+`status`, `createRouter`, `registerAgiTools`
+HTTP: GET `/api/mcp`, `/servers`, `/servers/:name/tools`, `/presets`; POST `/register`, `/probe`, `/call`, `/presets/add`, `/disable`, `/enable`
+Presets: curated official MCP servers (filesystem, memory, everything, git, fetch, time, sqlite); `filesystem` needs `dir`, `git` needs `dir`, `sqlite` needs `db`; npx presets need Node 18+, uvx presets need uv. Nothing downloads until the first probe/call.
 agi tools: `mcp_servers`, `mcp_status` (LOW), `mcp_probe` (MEDIUM), `mcp_call` (HIGH, approval-gated) - category `mcp`
 
 ## Voice
@@ -56,10 +58,14 @@ agi tools: `mcp_servers`, `mcp_status` (LOW), `mcp_probe` (MEDIUM), `mcp_call` (
 ## Tests
 - `tests/test_permissions_mcp.cjs` - policy + registry (34 checks,
   standalone with `NODE_PATH` when outside repo layout)
-- `tests/test_mcp_transport.cjs` - 35 hermetic transport checks against
-  `tests/fixtures/fake_mcp_server.cjs` (spawns a local node fixture, no network)
+- `tests/test_mcp_transport.cjs` - 31 checks: registry, validation, presets,
+  and honest errors; nothing is spawned in the default run. Real-server
+  verification is env-gated (`MYRAA_MCP_LIVE=1`) and runs against the
+  official `npx -y @modelcontextprotocol/server-everything` - probe,
+  `tools/list`, and a real `tools/call`. No fake server fixtures ship.
 
 ## Rollback
-Copy `*.bak_phase24_*` / `*.bak_phase25_*` back; delete `tool_permissions.cjs`,
-`mcp_manager.cjs`, `mcp_stdio_client.cjs`, `tests/test_permissions_mcp.cjs`,
-`tests/test_mcp_transport.cjs`, `tests/fixtures`, `docs/mcp-permissions`.
+Copy `*.bak_phase24_*` / `*.bak_phase25_*` / `*.bak_phase25b_*` back; delete
+`tool_permissions.cjs`, `mcp_manager.cjs`, `mcp_stdio_client.cjs`,
+`tests/test_permissions_mcp.cjs`, `tests/test_mcp_transport.cjs`,
+`docs/mcp-permissions`.

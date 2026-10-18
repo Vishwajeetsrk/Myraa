@@ -6,7 +6,8 @@ All notable changes to MYRAA AI OS are documented here.
 
 ### Added
 - **MCP stdio transport (Phase 25):** the MCP registry is now real for stdio servers - `initialize` handshake, `tools/list` caching, and approval-gated `tools/call` via a minimal newline-delimited JSON-RPC client (`mcp_stdio_client.cjs`); process trees are killed on Windows with `taskkill /T /F`. New HTTP `POST /api/mcp/call` and `GET /api/mcp/servers/:name/tools`; new agi tools `mcp_probe` (MEDIUM) and `mcp_call` (HIGH, approval-gated); new voice intent "probe mcp `<name>`". The http transport stays honest with `NOT_IMPLEMENTED`.
-- `tests/test_mcp_transport.cjs` - 35 hermetic checks against `tests/fixtures/fake_mcp_server.cjs` (no network).
+- **Curated real-server presets:** `GET /api/mcp/presets` / `POST /api/mcp/presets/add` add official MCP servers (filesystem, memory, everything, git, fetch, time, sqlite) in one call; `npx` presets need Node 18+, `uvx` presets need uv.
+- `tests/test_mcp_transport.cjs` - 31 checks (registry, validation, presets, honest errors; nothing is spawned in the default run). The transport itself is verified live against the official `server-everything` with `MYRAA_MCP_LIVE=1` - no fake server fixtures ship in the repo.
 
 ### Changed
 - `mcp_manager.cjs`: `probe` is now async with honest error codes (`TIMEOUT`, `SERVER_EXITED`, `SPAWN_ERROR`, `RPC_ERROR`, `DISABLED`, `NOT_IMPLEMENTED`); server views/status expose per-transport `implemented` flags and cached tool counts.

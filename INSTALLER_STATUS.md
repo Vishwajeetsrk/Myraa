@@ -79,7 +79,7 @@ Batched copies (SMB differs from cache, not integrity). The packer re-hashes eve
 ### [D] Next Plan:
 1. **[DONE]** GitHub Release `v9.4.0` published with Setup + Portable + `latest.yml` + blockmap (auto-updater feed ready); assets re-uploaded after the bridge-fix rebuild.
 2. **[DONE]** Course-create 500 fixed: SQLite bridge dispatch folded into a single chain (one JSON line per command; previously 5 disjoint chains emitted a trailing `Unknown command`). Verified live: `POST /api/course-studio/courses` -> 200.
-3. **[DONE on main, unreleased]** MCP stdio transport: real `initialize` handshake, `tools/list` caching, approval-gated `tools/call`, voice "probe mcp `<name>`", hermetic transport suite (`tests/test_mcp_transport.cjs`, 35 checks). Pending: http transport + rebuild/re-release with this code.
+3. **[DONE on main, unreleased]** MCP stdio transport: real `initialize` handshake, `tools/list` caching, approval-gated `tools/call`, voice "probe mcp `<name>`", curated official-server presets (filesystem, memory, everything, git, fetch, time, sqlite), registry/validation suite (`tests/test_mcp_transport.cjs`, 31 checks, no spawned servers) plus live real-server verification via `MYRAA_MCP_LIVE=1` (verified against the official `server-everything`: probe + `tools/call` echo/get-sum). Pending: http transport + rebuild/re-release with this code.
 4. Observability pass: timeline/event surfaces into the UI; security agent phase.
 
 ---
