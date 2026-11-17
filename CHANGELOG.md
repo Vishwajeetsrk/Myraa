@@ -10,6 +10,7 @@ All notable changes to MYRAA AI OS are documented here.
   - `step_watcher.cjs`: OS-agnostic settle-aware step detection with screen fingerprints and `/api/step-watcher`.
   - `response_tags.cjs`: typed `[POINT]/[STEPS]/[PLAN]/[GOAL]/[DO]/[DONE]` parser for **model replies only**; malformed tags dropped, screen content cannot produce tags; `/api/response-tags`.
   - Three new test suites (25 + 14 + 21 checks). Total documented battery: 378 checks across 13 suites.
+- Published GitHub Release `v9.6.2` with 4 assets (Setup, Portable, latest.yml, blockmap; release id 449099762).
 
 ## [9.6.1] - 2026-11-17
 

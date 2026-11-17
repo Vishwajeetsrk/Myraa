@@ -5,7 +5,7 @@ Built: 2026-11-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
 > v9.6.2 adds the Phase 29 P1 slice on top of v9.6.1: verifiable action receipts, settle-aware step
 > watcher, model-only typed response tags (all mounted under `/api/...`), plus the earlier REA
 > preset, MCP timeout fix, WCAG AA design pass, animated shadcn bell and modernized verifier.
-> GitHub Release **v9.6.1 is live**; v9.6.2 is packed locally and not published yet.
+> GitHub Release **v9.6.2 is live** at `https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.6.2` (4 assets uploaded, id 449099762).
 
 ## 1. Verification summary
 
@@ -28,7 +28,7 @@ Built: 2026-11-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
    - exes + `MYRAA-Install-v9.6.2.bat` + `SHA256SUMS.txt` + `checksums.txt` + `README.txt`
 3. **Build output:** `C:\Users\Vishwajeet\Music\Myraa\resources\app\dist-release\`
    - exes, `latest.yml`, blockmap, `win-unpacked\`
-4. **Published releases:** v9.6.1 (`https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.6.1`) and v9.5.0; v9.6.2 not published yet
+4. **Published release:** v9.6.2 at `https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.6.2` (Setup, Portable, latest.yml, blockmap; id 449099762); v9.6.1 and v9.5.0 remain as previous releases
 
 ## 3. SHA256 integrity
 
@@ -56,7 +56,7 @@ A15ED4D829E05C312990C9821670C61B238038094379592784080F3DC2714983  MYRAA-Portable
 ### [C] Next plan
 1. **[DONE]** v9.6.2 built, packed, hash-verified; packaged smoke: health, Phase 29 APIs, 8 presets, tag parse.
 2. **[DONE]** Phase 29 P1 slice (60 checks) + 28 suites green; verifier 23 PASS / 0 FAIL.
-3. **[PENDING]** Publish GitHub Release v9.6.2 (Setup + Portable + latest.yml + blockmap).
+3. **[DONE]** GitHub Release v9.6.2 published: Setup + Portable + latest.yml + blockmap (id 449099762, all state=uploaded).
 4. **[PENDING]** Observability UI over step/receipt events; http MCP transport; fuse hardening; nightly CI; shipped React source recovery (needs Linux worker or original source).
 
 ---
