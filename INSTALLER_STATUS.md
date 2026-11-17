@@ -13,7 +13,7 @@ Built: 2026-11-17 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
 | Component | Status | Verification details |
 |-----------|--------|----------------------|
 | Core Express backend | [OK] Verified | Boots on 3000 (LAN/mobile), all phase mounts log clean; permissions + MCP 6 agi tools |
-| Test suites | [OK] Verified | 25 `tests/test_*.cjs` suites exit 0 (documented battery 318 checks across 10 suites + auxiliary); stale investigation skill-count assertion fixed |
+| Test suites | [OK] Verified | 28 `tests/test_*.cjs` suites exit 0 (documented battery 378 checks across 13 suites + auxiliary); stale investigation skill-count assertion fixed. Phase 29 modules are source-only, not in the v9.6.1 installer |
 | End-to-end verifier | [OK] Verified | `tests/verify_final_system.cjs` modernized: dynamic version/paths, isolated port 3011, capability preservation, installer hash check - **25 PASS / 0 FAIL** (was 7/8 stale failures) |
 | MCP | [OK] Verified | Real stdio transport; 8 presets incl `rea`; packaged real probe 207 tools in 13.2s, real `inspect_electron_fuses` tool call SHA256-bound to MYRAA.exe; http transport honest `NOT_IMPLEMENTED` |
 | Packaged app bundle | [OK] Verified | `app.asar.unpacked` has `version.json` = 9.6.1, `mcp_stdio_client.cjs`, `mcp_manager.cjs` with `rea` preset + cap 300 + 60s/90s timeouts; packaged server on 3005: health 9.6.1, 8 presets, REA probe/call OK |

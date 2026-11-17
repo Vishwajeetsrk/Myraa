@@ -5,6 +5,11 @@ Source studied: `github.com/hussainn7/plip-oss` (MIT, commit at time of reading 
 Plip itself is macOS 13+ / Apple Silicon only - **do not try to install it on Windows**. This document
 records only cross-platform patterns worth rebuilding in MYRAA, with original MYRAA code.
 
+> **P1 slice implemented (2026-11-17, Phase 29):** `resources/app/dist/action_receipts.cjs`,
+> `step_watcher.cjs`, `response_tags.cjs` + tests `test_action_receipts.cjs`, `test_step_watcher.cjs`,
+> `test_response_tags.cjs` (60 checks, all green). Mounted at `/api/action-receipts`,
+> `/api/step-watcher`, `/api/response-tags`; live-verified on the dev server. Not yet in a shipped installer.
+
 ## Pattern map
 
 | Plip pattern | MYRAA surface today | Gap | Port action | Priority |

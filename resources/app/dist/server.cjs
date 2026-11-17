@@ -5156,6 +5156,13 @@ async function startServer() {
   } catch(e) {
     console.warn("[Server] Could not mount evidence_routes.cjs:", e.message);
   }
+  try {
+    const reaRoutes = require(import_path2.default.join(__dirname, "rea_routes.cjs"));
+    app.use(reaRoutes);
+    console.log("[Server] Successfully mounted rea_routes.cjs (Reverse Engineer Anything)");
+  } catch(e) {
+    console.warn("[Server] Could not mount rea_routes.cjs:", e.message);
+  }
 
   try {
     // Phase 19: connector marketplace -> agi tool_execution_engine + status router
@@ -5197,6 +5204,19 @@ async function startServer() {
     console.log("[Server] Task timeline mounted " + mountedTimeline.count + " agi tools (Phase 23)");
   } catch(e) {
     console.warn("[Server] Could not mount task timeline:", e.message);
+  }
+  try {
+    // Phase 29: verifiable action receipts, step watcher, typed response tags (plip patterns)
+    const receiptMod29 = require(import_path2.default.join(__dirname, "action_receipts.cjs"));
+    const stepMod29 = require(import_path2.default.join(__dirname, "step_watcher.cjs"));
+    const tagMod29 = require(import_path2.default.join(__dirname, "response_tags.cjs"));
+    const eventsMod29 = require(import_path2.default.join(__dirname, "event_bus.cjs"));
+    app.use("/api/action-receipts", receiptMod29.createActionReceipts({ eventBus: eventsMod29 }).createRouter());
+    app.use("/api/step-watcher", stepMod29.createStepWatcher({ eventBus: eventsMod29 }).createRouter());
+    app.use("/api/response-tags", tagMod29.createRouter());
+    console.log("[Server] Action receipts + step watcher + response tags mounted (Phase 29)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Phase 29 modules:", e.message);
   }
   try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
@@ -8530,7 +8550,7 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
   app.use("/assets", import_express.default.static(import_path2.default.join(candidateDistPath, "assets")));
   app.use("/assets", import_express.default.static(appAssetsDir));
   app.get("/api/health", (req, res) => {
-    let ver = "9.3.1";
+    let ver = "9.5.0";
     try {
       const p = import_path2.default.join(__dirname, "..", "version.json");
       if (import_fs.default.existsSync(p)) ver = JSON.parse(import_fs.default.readFileSync(p, "utf8")).version || ver;
@@ -8665,7 +8685,7 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
     process.exit(1);
   });
   server.listen(PORT, "0.0.0.0", () => {
-    logStartup(`MYRAA v9.2.0 server started on http://0.0.0.0:${PORT}`);
+    logStartup(`MYRAA v9.5.0 server started on http://0.0.0.0:${PORT}`);
     console.log(`[Server] Running on http://0.0.0.0:${PORT} (LAN & Mobile Remote Enabled)`);
     ensureDesktopAgent().then(async () => {
       await ensureDesktopObserver();

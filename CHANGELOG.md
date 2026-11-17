@@ -2,6 +2,15 @@
 
 All notable changes to MYRAA AI OS are documented here.
 
+## [Unreleased]
+
+### Added
+- **Phase 29 - plip-oss patterns implemented** (see `docs/myraa-audit/PLIP_PATTERNS_PORT.md`):
+  - `action_receipts.cjs`: append-only, redacted action receipts with evidence, duration, undo tokens, event-bus events, and HTTP routes at `/api/action-receipts`.
+  - `step_watcher.cjs`: OS-agnostic settle-aware step detection with screen fingerprints and `/api/step-watcher`.
+  - `response_tags.cjs`: typed `[POINT]/[STEPS]/[PLAN]/[GOAL]/[DO]/[DONE]` parser for **model replies only**; malformed tags dropped, screen content cannot produce tags; `/api/response-tags`.
+  - Three new test suites (25 + 14 + 21 checks). Total documented battery: 378 checks across 13 suites.
+
 ## [9.6.1] - 2026-11-17
 
 ### Fixed
