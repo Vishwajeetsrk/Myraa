@@ -1,6 +1,8 @@
 # MYRAA gap, upgrade and self-improvement plan
 
-Date: 2026-11-17 · Shipped version: 9.5.0 · Source has unreleased changes (REA preset, WCAG pass, shadcn component).
+Date: 2026-11-17 · Source version: 9.6.1 · Last published release: 9.5.0.
+
+> Progress: **P0-1 DONE** (verifier modernized, 25 PASS / 0 FAIL). **P0-2 DONE** (v9.6.1 built, packed, hash-verified; packaged smoke with real REA probe 207 tools + real `tools/call` OK). P0-3 (fuses) and P0-4 (shipped React source) remain open.
 
 Evidence for this report:
 - All 25 `tests/test_*.cjs` suites run: **25 pass, 0 fail** after fixing one stale assertion in this session.
@@ -32,7 +34,7 @@ Evidence for this report:
 - `EnableCookieEncryption`: disabled, `EnableEmbeddedAsarIntegrityValidation`: disabled, `OnlyLoadAppFromAsar`: disabled
 - Caveat: the app spawns its backend with `ELECTRON_RUN_AS_NODE=1`, so flipping `RunAsNode` needs a separate node binary or a server-in-main refactor first. Do not flip blindly.
 
-**P0-4. Dashboards are not the shipped UI.** `resources/app/dist/assets/index-*.js` is the compiled React app but its source is not in the repo. The new shadcn bell lives in `Projects/Website Design/agon-agent[myraa dashboard]` (a design project). To land React UI changes in installers you need either the original source restored or a source-recovery/package workflow.
+**P0-4. Dashboards are not the shipped UI.** `resources/app/dist/assets/index-*.js` is the compiled React app but its source is not in the repo. The new shadcn bell lives in `Projects/Website Design/agon-agent[myraa dashboard]` (a design project). To land React UI changes in installers you need either the original source restored or a source-recovery/package workflow. Attempted REA `recover_javascript_sources` on the bundle: that tool requires Linux x64 with Wakaru and `prlimit`, unavailable on this Windows host - recovery remains blocked until a Linux worker or the original source exists.
 
 **P1-5. MCP http transport is unimplemented** (honest `NOT_IMPLEMENTED`). Stdio is real; http needs an HTTP/SSE client session manager.
 

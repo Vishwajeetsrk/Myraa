@@ -17,8 +17,8 @@ const EVENTS_CAP = 200;
 const TRANSPORTS = ['stdio', 'http'];
 const NAME_RE = /^[a-z0-9_-]{1,40}$/i;
 const MAX_TOOLS = 300;
-const PROBE_TIMEOUT_MS = 15000;
-const CALL_TIMEOUT_MS = 20000;
+const PROBE_TIMEOUT_MS = 60000;
+const CALL_TIMEOUT_MS = 90000;
 
 const PRESETS = [
   { id: 'filesystem', transport: 'stdio', command: 'npx -y @modelcontextprotocol/server-filesystem "{dir}"', vars: ['dir'], note: 'Official reference filesystem server - read/write access scoped to one folder. Needs Node 18+/npx.' },

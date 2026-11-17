@@ -1,7 +1,7 @@
 # Version
 
-**Current Version:** 9.6.0
-**Build:** 20261117.1
+**Current Version:** 9.6.1
+**Build:** 20261117.2
 
 ## Release Strategy
 

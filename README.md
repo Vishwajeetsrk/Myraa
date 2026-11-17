@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-9.6.0-38CFFF?style=for-the-badge&labelColor=0a0f1e" alt="version" />
+  <img src="https://img.shields.io/badge/version-9.6.1-38CFFF?style=for-the-badge&labelColor=0a0f1e" alt="version" />
   <img src="https://img.shields.io/badge/platform-Windows%20Native%20x64-1a2332?style=for-the-badge" alt="platform" />
   <img src="https://img.shields.io/badge/license-MIT-8b5cf6?style=for-the-badge&labelColor=0a0f1e" alt="license" />
   <img src="https://img.shields.io/badge/capabilities-230+-22c55e?style=for-the-badge&labelColor=0a0f1e" alt="capabilities" />
@@ -451,10 +451,12 @@ Myraa/
 ├── Start-MYRAA.bat               # Root one-click native desktop launcher
 ├── Installers/
 │   ├── v9.4.0/                       # Previous release pack (bridge-fix build)
-│   └── v9.5.0/                       # Current release pack (exes also copied to Desktop\MYRAA-Installers-v9.5.0)
-│       ├── MYRAA-Setup-9.5.0.exe     # NSIS Windows setup, x64 (308.9 MB, unsigned)
-│       ├── MYRAA-Portable-9.5.0.exe  # Portable single-file executable (303.0 MB)
-│       ├── MYRAA-Install-v9.5.0.bat  # 1-click automated setup helper
+│   ├── v9.5.0/                       # Previous release pack (GitHub Release live)
+│   ├── v9.6.0/                       # Superseded by v9.6.1 (MCP probe timeout fix)
+│   └── v9.6.1/                       # Current release pack (exes also copied to Desktop\MYRAA-Installers-v9.6.1)
+│       ├── MYRAA-Setup-9.6.1.exe     # NSIS Windows setup, x64, unsigned
+│       ├── MYRAA-Portable-9.6.1.exe  # Portable single-file executable
+│       ├── MYRAA-Install-v9.6.1.bat  # 1-click automated setup helper
 │       ├── SHA256SUMS.txt            # SHA256 hashes, re-verified after copy
 │       └── checksums.txt             # Fixed-format checksum list
 ├── resources/
@@ -478,8 +480,8 @@ Myraa/
 │       │   ├── myraa_v6_styles.css       # Core layout styling & holographic transparency
 │       │   ├── skill_discovery_engine.cjs# Skill registry and scanning
 │       │   └── assets/                   # WebGL 3D models, textures & background.mp4
-│       ├── package.json                  # Application dependencies (v9.5.0)
-│       └── version.json                  # Dynamic version authority (9.5.0)
+│       ├── package.json                  # Application dependencies (v9.6.0)
+│       └── version.json                  # Dynamic version authority (9.6.0)
 ├── tests/                        # 318 live checks across 10 suites (node tests\test_*.cjs)
 ├── docs/                         # Per-phase integration docs (evidence, timeline, mcp-permissions, ...)
 ├── Projects/
