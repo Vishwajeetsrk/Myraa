@@ -2,7 +2,7 @@
 
 All notable changes to MYRAA AI OS are documented here.
 
-## [Unreleased]
+## [9.6.2] - 2026-11-18
 
 ### Added
 - **Phase 29 - plip-oss patterns implemented** (see `docs/myraa-audit/PLIP_PATTERNS_PORT.md`):

@@ -8,7 +8,7 @@ records only cross-platform patterns worth rebuilding in MYRAA, with original MY
 > **P1 slice implemented (2026-11-17, Phase 29):** `resources/app/dist/action_receipts.cjs`,
 > `step_watcher.cjs`, `response_tags.cjs` + tests `test_action_receipts.cjs`, `test_step_watcher.cjs`,
 > `test_response_tags.cjs` (60 checks, all green). Mounted at `/api/action-receipts`,
-> `/api/step-watcher`, `/api/response-tags`; live-verified on the dev server. Not yet in a shipped installer.
+> `/api/step-watcher`, `/api/response-tags`; live-verified on the dev server and in the packaged v9.6.2 installer.
 
 ## Pattern map
 
