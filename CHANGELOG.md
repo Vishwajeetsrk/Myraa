@@ -6,6 +6,7 @@ All notable changes to MYRAA AI OS are documented here.
 
 ### Fixed
 - MCP stdio timeouts raised: `PROBE_TIMEOUT_MS` 15s -> 60s (30s per initialize/tools request), `CALL_TIMEOUT_MS` 20s -> 90s. Heavy real servers such as REA initialize in more than 7.5s on a cold packaged install and previously failed with `initialize timed out after 7500ms`. Verified in the packaged v9.6.1 bundle: real REA probe listed 207 tools in 13.2s and a real `tools/call` succeeded.
+- Published GitHub Release `v9.6.1` with 4 assets (Setup, Portable, latest.yml, blockmap; release id 448787142).
 
 ## [9.6.0] - 2026-11-17
 

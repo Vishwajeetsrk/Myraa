@@ -6,7 +6,7 @@ Built: 2026-11-17 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
 > (real stdio transport, 207 real tools), `MAX_TOOLS` 200 -> 300, MCP probe/call timeouts
 > raised to 60s/90s, the WCAG AA design-token pass, the animated shadcn bell in the
 > AURELIA dashboard project, and a modernized end-to-end verifier.
-> GitHub Release **v9.5.0 is live**; v9.6.1 is packed locally and not published yet.
+> GitHub Release **v9.6.1 is live** at `https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.6.1` (4 assets uploaded, id 448787142).
 
 ## 1. Verification summary
 
@@ -29,7 +29,7 @@ Built: 2026-11-17 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
    - exes + `MYRAA-Install-v9.6.1.bat` + `SHA256SUMS.txt` + `checksums.txt` + `README.txt`
 3. **Build output:** `C:\Users\Vishwajeet\Music\Myraa\resources\app\dist-release\`
    - exes, `latest.yml`, blockmap, `win-unpacked\`
-4. **Published release:** v9.5.0 at `https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.5.0` (v9.6.1 not published yet)
+4. **Published releases:** v9.6.1 at `https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.6.1` (Setup, Portable, latest.yml, blockmap; id 448787142); v9.5.0 remains the previous release
 
 ## 3. SHA256 integrity
 
@@ -58,7 +58,7 @@ FAD6618FEB8C037D1E3B6D68A9AD9382CFAC0EE09765F884656F4FB0A00FA0A6  MYRAA-Setup-9.
 1. **[DONE]** v9.6.1 built, packed, hash-verified; packaged smoke: health, 8 presets, real REA probe (207 tools) + real tool call.
 2. **[DONE]** Verifier modernized (25 PASS / 0 FAIL); stale investigation assertion fixed; MCP timeout fix shipped.
 3. **[DONE]** Global skill installs + provenance registry; WCAG AA pass; shadcn bell + perf pass.
-4. **[PENDING]** Publish GitHub Release v9.6.1 (Setup + Portable + latest.yml + blockmap) on user go-ahead.
+4. **[DONE]** GitHub Release v9.6.1 published: Setup + Portable + latest.yml + blockmap (id 448787142, all state=uploaded).
 5. **[PENDING]** Recover shipped React source (needs Linux worker or original source); observability UI; http MCP transport; fuse hardening; nightly CI.
 
 ---
