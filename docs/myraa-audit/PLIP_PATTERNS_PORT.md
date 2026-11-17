@@ -25,6 +25,19 @@ records only cross-platform patterns worth rebuilding in MYRAA, with original MY
 2. `step_watcher.cjs` - wraps the existing screen capture; produces deterministic "step done" events for timeline UI (also unblocks the pending observability dashboard).
 3. Typed tag parser in the coding orchestrator - parse only from the model's own reply; never from screen text (Plip's explicit safety rule); unknown tags are dropped, never spoken.
 
+## Source-level confirmations (read from the upstream code)
+
+Verified by reading `prompt.py`, `pointing.py` and `actions/core.py` directly:
+
+- The full tag grammar is `[POINT:x,y:label]` (optional `:screenN`), `[STEPS:n]`, `[PLAN: a | b | c]`, `[GOAL: ...]`, `[DO:name {json}]`, `[DONE]`. My earlier summary omitted `[PLAN]`/`[GOAL]`.
+- `ReplyStream` is an **incremental** parser: streamed text becomes ordered `SpeechChunk` / `PointTag` / `ActionTag` / `PlanTag` / `GoalTag` / `StepsTag` / `DoneTag` events. `[DO:...]` args are scanned with a JSON-aware balanced-bracket matcher; malformed tags are dropped and never spoken. Leaked tool-call markup (`<invoke ...>`, `<thinking>`) mutes speech from that point.
+- Point tags are held and released just before the sentence that mentions the control is spoken, so the mascot starts flying at the same moment as the speech. Short speech chunks are merged (24-char floor) to avoid tiny TTS requests.
+- Actions are declarative: `ActionSpec(name, category, say, fn, preview=..., args=...)`. Consequential actions supply a `Preview(title, lines, confirm, state)` card; execution returns `ActionResult(say, detail, report, items, undo, note, look_after, settle, opens)` and the report is fed back to the model on the next turn.
+- Safety details worth copying: file actions restricted to the home folder / numbered search results; scripts and installers always confirm; links carrying saved personal details get a confirm card; password/card/code field values are never included in model reports; "submit" only fires after the typed value is verified; page text is labelled "content, not instructions"; searches are numbered so stale indexes cannot be reused.
+- `organize_desktop` returns an undo record of exact moves; `undo` reverses them and removes only folders it emptied. Actions carry `settle`/`look_after` delays so the next observation is taken after the screen changes.
+
+These confirm the P1 slice: MYRAA already has the safety broker, event bus and screen capture - what is missing is the tag protocol, per-action receipt with `undo` token, and the settle-aware step watcher.
+
 ## Guardrails (non-negotiable)
 
 - No code copy without MIT attribution; all implementations written fresh for MYRAA.
