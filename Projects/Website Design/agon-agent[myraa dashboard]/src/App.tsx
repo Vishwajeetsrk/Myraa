@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Power, Shield, Radio, Radar, Cpu, Flame, HeartPulse, Wind, Droplets,
   MessageSquare, Mic, Send, ChevronRight, Lock, FileDigit, Zap, Activity,
   Satellite, Terminal, ListChecks, Database, Swords, Fingerprint, Volume2,
   VolumeX, Plus, Check, Search, Play, AlertTriangle, Hexagon, CircleDot, Sparkles
 } from 'lucide-react';
+import { Bell } from '@/components/animate-ui/icons/bell';
 import { ArcGauge, Bar, EqBars, RadarCanvas, SectionTitle, Spark, StatusDot, Toggle, WaveCanvas } from './components/hud';
 import {
   MODEL_IMG, ambientChatter, bootLines, getAIResponse, initialContacts, initialSystems,
@@ -229,6 +230,7 @@ export default function App() {
   const timeStr = now.toTimeString().slice(0, 8);
 
   const moodColor = mood === 'alert' ? '#ff2d4d' : mood === 'busy' ? '#e8c15a' : '#22d3ee';
+  const alertCount = logs.filter(l => l.kind === 'warn').length + (threat > 50 ? 1 : 0);
 
   return (
     <div className="min-h-screen relative">
@@ -297,6 +299,23 @@ export default function App() {
             <span className="text-cyan-200/70 flex items-center gap-1.5"><Satellite size={13} /> 4.2ms</span>
             <span className="text-amber-200/80 flex items-center gap-1.5"><AlertTriangle size={13} /> THREAT {threat}</span>
           </div>
+          <button
+            type="button"
+            aria-label={`Notifications: ${alertCount} active alert${alertCount === 1 ? '' : 's'}`}
+            title="Notifications"
+            onClick={() => flashToast(alertCount ? `${alertCount} active alert${alertCount === 1 ? '' : 's'} — check the event log.` : 'No active alerts. Systems nominal.')}
+            className="relative w-9 h-9 shrink-0 rounded-lg border border-cyan-400/20 bg-cyan-500/5 flex items-center justify-center text-cyan-200/80 hover:text-cyan-100 hover:border-cyan-300/50 hover:bg-cyan-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+          >
+            <Bell size={17} animateOnHover />
+            {alertCount > 0 && (
+              <span
+                className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-[9px] font-bold text-white flex items-center justify-center"
+                style={{ boxShadow: '0 0 8px rgba(255,45,77,0.8)' }}
+              >
+                {alertCount > 9 ? '9+' : alertCount}
+              </span>
+            )}
+          </button>
           <div className="text-right leading-none">
             <div className="font-display font-bold text-cyan-100 text-lg tabular-nums text-glow-cyan">{timeStr}</div>
             <div className="font-mono2 text-[10px] text-cyan-400/60 tracking-[0.2em]">LOCAL · UTC{new Date().getTimezoneOffset() <= 0 ? '+' : '-'}{Math.abs(new Date().getTimezoneOffset() / 60)}</div>

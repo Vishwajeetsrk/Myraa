@@ -40,7 +40,7 @@ function buildPe(machine, optMagic) {
 
 async function main() {
   console.log('== module surface ==');
-  ok('skill catalog has 4 skills', skills.SKILL_CATALOG.length === 4 && skills.SKILL_CATALOG.every((s) => s.id && s.intent && s.summary));
+  ok('skill catalog has core + REA skills', skills.SKILL_CATALOG.length >= 4 && ['investigate_feature', 'rea_inspect_artifact', 'rea_analyze_app'].every((id) => skills.SKILL_CATALOG.some((s) => s.id === id)) && skills.SKILL_CATALOG.every((s) => s.id && s.intent && s.summary));
   ok('exports decoders', ['sha256File', 'extractStrings', 'peekPe', 'listAsar', 'peekSqlite', 'listZip', 'inspectArtifact', 'investigateFeature', 'crashScan', 'verifyReconstruction'].every((k) => typeof skills[k] === 'function'));
 
   console.log('== files + hashing ==');

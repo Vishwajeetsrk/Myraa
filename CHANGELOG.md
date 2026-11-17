@@ -15,6 +15,12 @@ All notable changes to MYRAA AI OS are documented here.
 ### Fixed
 - **UI contrast pass** (replica-design method, WCAG AA): `--text-muted` `#657086` -> `#7E8DA4` (3.95:1 -> 5.84:1 on bg, 5.27:1 on surface), new `--border-input` role `#526689` (3.39:1), visible focus state on the input bar (`.bottom-input-container:focus-within`), `mobile_companion.html` 11px label `#64748b` -> `#94a3b8`. All 19 token pairs pass; artifacts in `replica/` (`recon.md`, `design/tokens.json`, `design/components.md`).
 
+### UI and tooling (2026-11-17)
+- Installed `@animate-ui/icons-lucide-bell` via `npx shadcn@latest add` into the AURELIA dashboard project; wired as an animated header notification bell with a live alert badge and accessible label.
+- Deduplicated animation libraries (`framer-motion` removed, `motion/react` used everywhere): dashboard bundle 557 KB -> 436 KB (gzip 178 KB -> 139 KB), faster load.
+- Fixed stale `tests/test_investigation.cjs` assertion: the skill catalog now has 8 entries (4 REA skills), not 4.
+- Added `docs/myraa-audit/MYRAA_GAP_AND_UPGRADE_PLAN.md`: verified gaps and a concrete upgrade plan (personal, reliable, earning, automation, fast learning, correctness, GitHub skill ingestion).
+
 ## [9.5.0] - 2026-10-18
 
 ### Added
