@@ -2,7 +2,7 @@
 
 All notable changes to MYRAA AI OS are documented here.
 
-## [Unreleased]
+## [9.6.0] - 2026-11-17
 
 ### Added
 - **REA preset (8th official server):** `rea` = `npx -y rea-agents mcp` - REA "Reverse Engineer Anything" (morluto/rea, MIT): evidence-backed analysis of JavaScript/Electron apps, native binaries, .NET assemblies and websites. Live-verified through MYRAA's own stdio transport: probe (207 tools, serverInfo `rea 6.7.0`), real `tools/call` `inspect_electron_fuses` on the installed `MYRAA.exe` (PE x86_64, SHA256-bound). Needs Node 22+.
@@ -20,6 +20,7 @@ All notable changes to MYRAA AI OS are documented here.
 - Deduplicated animation libraries (`framer-motion` removed, `motion/react` used everywhere): dashboard bundle 557 KB -> 436 KB (gzip 178 KB -> 139 KB), faster load.
 - Fixed stale `tests/test_investigation.cjs` assertion: the skill catalog now has 8 entries (4 REA skills), not 4.
 - Added `docs/myraa-audit/MYRAA_GAP_AND_UPGRADE_PLAN.md`: verified gaps and a concrete upgrade plan (personal, reliable, earning, automation, fast learning, correctness, GitHub skill ingestion).
+- Modernized `tests/verify_final_system.cjs`: runtime version/paths, isolated test port 3011, capability-preservation checks, real installer hash verification - **25 PASS / 0 FAIL** (was 7 PASS / 8 FAIL with stale 9.3.0 assumptions).
 
 ## [9.5.0] - 2026-10-18
 

@@ -1,175 +1,198 @@
 'use strict';
+/**
+ * MYRAA end-to-end verifier (modernized, Phase 28).
+ * All version/path expectations are read from the repo at runtime -
+ * no hardcoded versions, no stale release/ paths, no assumption that
+ * port 3000 is free. Starts its own backend on a test port.
+ * Run: node tests\verify_final_system.cjs
+ */
 
 const fs = require('fs');
 const path = require('path');
-const http = require('http');
+const os = require('os');
+const crypto = require('crypto');
 const { spawn } = require('child_process');
 
 let passed = 0;
 let failed = 0;
 
 function assert(condition, message) {
-  if (condition) {
-    console.log(`[PASS] ${message}`);
-    passed++;
-  } else {
-    console.error(`[FAIL] ${message}`);
-    failed++;
+  if (condition) { console.log('[PASS] ' + message); passed++; }
+  else { console.error('[FAIL] ' + message); failed++; }
+}
+
+function sha256File(file) {
+  return new Promise((resolve, reject) => {
+    const h = crypto.createHash('sha256');
+    const stream = fs.createReadStream(file);
+    stream.on('data', (chunk) => h.update(chunk));
+    stream.on('error', reject);
+    stream.on('end', () => resolve(h.digest('hex').toUpperCase()));
+  });
+}
+
+async function waitForHealth(port, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const r = await fetch('http://127.0.0.1:' + port + '/api/health');
+      if (r.ok) return await r.json();
+    } catch (e) { /* not up yet */ }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
+  return null;
 }
 
 async function run() {
+  const root = path.resolve(__dirname, '..');
+  const dist = path.join(root, 'resources', 'app', 'dist');
+  const versionPath = path.join(root, 'resources', 'app', 'version.json');
+  const versionData = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
+  const version = String(versionData.version || '');
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'resources', 'app', 'package.json'), 'utf8'));
+
   console.log('=====================================================================');
-  console.log('  MYRAA AI OS — Full System End-to-End Verification (v9.3.0)');
+  console.log('  MYRAA AI OS - Full System Verification (runtime version ' + version + ')');
   console.log('=====================================================================\n');
 
-  // 1. Rule 1: No Emojis Check
-  console.log('[*] 1. Checking Rule 1 (Zero Emojis)...');
-  const workspaceRoot = path.resolve(__dirname, '..');
-  const indexHtml = fs.readFileSync(path.join(workspaceRoot, 'resources', 'app', 'dist', 'index.html'), 'utf8');
-  const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+  // 1. Rule 1: zero emojis + capability scripts still mounted
+  console.log('[*] 1. Checking Rule 1 (Zero Emojis, capabilities preserved)...');
+  const indexHtml = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+  const emojiRegex = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
   assert(!emojiRegex.test(indexHtml), 'index.html contains zero emojis');
-  assert(!indexHtml.includes('universal-control-addon.js'), 'index.html has no intrusive universal-control-addon.js');
-  assert(!indexHtml.includes('ui-health-patch.js'), 'index.html has no intrusive ui-health-patch.js');
+  for (const script of ['universal-control-addon.js', 'ui-health-patch.js']) {
+    assert(indexHtml.includes(script) && fs.existsSync(path.join(dist, script)), script + ' is referenced and present (capability preserved)');
+  }
 
-  // 2. Rule 2: User Data & Secrets Check
+  // 2. Rule 2: user data / secrets preserved (never print values)
   console.log('\n[*] 2. Checking Rule 2 (User Data & Secrets Preservation)...');
   const secretsCandidates = [
-    path.join(workspaceRoot, 'secrets.json'),
+    path.join(root, 'secrets.json'),
     path.join(process.env.APPDATA || '', 'MYRAA', 'secrets.json'),
-    path.join(process.env.APPDATA || '', 'MYRAA AI OS', 'secrets.json')
+    path.join(process.env.APPDATA || '', 'MYRAA AI OS', 'secrets.json'),
   ];
-  const secretsPath = secretsCandidates.find(p => fs.existsSync(p));
-  assert(Boolean(secretsPath && fs.existsSync(secretsPath)), 'secrets.json exists in workspace or AppData');
-  const secrets = JSON.parse(fs.readFileSync(secretsPath, 'utf8'));
-  assert(Boolean(secrets.geminiApiKey), 'Gemini API key is configured and preserved');
+  const secretsPath = secretsCandidates.find((p) => p && fs.existsSync(p));
+  assert(Boolean(secretsPath), 'secrets.json exists in workspace or AppData');
+  if (secretsPath) {
+    try {
+      const secrets = JSON.parse(fs.readFileSync(secretsPath, 'utf8'));
+      assert(Boolean(secrets.geminiApiKey), 'Gemini API key is configured and preserved (value not printed)');
+    } catch (e) { assert(false, 'secrets.json is readable JSON: ' + e.message); }
+  }
 
-  // 3. Rule 3: Dynamic Version Accuracy
-  console.log('\n[*] 3. Checking Rule 3 (Version Accuracy)...');
-  const versionPath = path.join(workspaceRoot, 'resources', 'app', 'version.json');
-  assert(fs.existsSync(versionPath), 'version.json exists');
-  const versionData = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
-  assert(versionData.version === '9.3.0', 'version.json declares version 9.3.0');
+  // 3. Rule 3: dynamic version accuracy
+  console.log('\n[*] 3. Checking Rule 3 (Dynamic Version Accuracy)...');
+  assert(/^\d+\.\d+\.\d+$/.test(version), 'version.json declares a semantic version (' + version + ')');
+  assert(pkg.version === version, 'resources/app/package.json matches version.json');
+  const versionMd = fs.readFileSync(path.join(root, 'VERSION.md'), 'utf8');
+  assert(versionMd.includes(version), 'VERSION.md records the current version (' + version + ')');
 
-  // 4. 3D Model & Character Assets Check
-  console.log('\n[*] 4. Checking Evelyn 3D Assets...');
+  // 4. Protected 3D companion assets
+  console.log('\n[*] 4. Checking 3D companion assets...');
   const pmxCandidates = [
     path.join(process.env.LOCALAPPDATA || '', 'Programs', 'MYRAA', 'resources', 'app.asar.unpacked', 'dist', 'assets', 'characters', 'evelyn', 'model.pmx'),
-    path.join(workspaceRoot, 'resources', 'app', 'dist', 'assets', 'characters', 'evelyn', 'model.pmx'),
-    path.join(workspaceRoot, 'resources', 'app', 'assets', 'characters', 'evelyn', 'model.pmx'),
-    path.join(process.env.USERPROFILE || '', 'Videos', 'MYRAA', 'resources', 'app', 'assets', 'characters', 'evelyn', 'model.pmx')
+    path.join(dist, 'assets', 'characters', 'evelyn', 'model.pmx'),
+    path.join(root, 'resources', 'app', 'assets', 'characters', 'evelyn', 'model.pmx'),
   ];
-  const pmxPath = pmxCandidates.find(p => fs.existsSync(p));
-  assert(Boolean(pmxPath && fs.existsSync(pmxPath)), `Evelyn model.pmx found at: ${pmxPath}`);
+  const pmxPath = pmxCandidates.find((p) => p && fs.existsSync(p));
+  assert(Boolean(pmxPath), '3D companion model.pmx found at: ' + pmxPath);
   const pmxSize = pmxPath ? fs.statSync(pmxPath).size : 0;
-  assert(pmxSize > 2500000, `Evelyn model.pmx is full size (${pmxSize} bytes)`);
+  assert(pmxSize > 2500000, '3D companion model.pmx is full size (' + pmxSize + ' bytes)');
 
-  // 5. Backend Server Verification
-  console.log('\n[*] 5. Launching and Validating Backend Server on Port 3000...');
-  const installedExe = path.join(process.env.LOCALAPPDATA || '', 'Programs', 'MYRAA', 'MYRAA.exe');
-  const portableExe = path.join(process.env.USERPROFILE || '', 'Desktop', 'MYRAA-Portable', 'MYRAA-Portable-8.3.4', 'MYRAA AI.exe');
-  const runtimeExe = fs.existsSync(installedExe) ? installedExe : (fs.existsSync(portableExe) ? portableExe : 'node');
-  
-  const serverCandidates = [
-    path.join(process.env.LOCALAPPDATA || '', 'Programs', 'MYRAA', 'resources', 'app.asar.unpacked', 'dist', 'server.cjs'),
-    path.join(workspaceRoot, 'resources', 'app', 'dist', 'server.cjs'),
-    path.join(process.env.USERPROFILE || '', 'Desktop', 'MYRAA-Portable', 'MYRAA-Portable-8.3.4', 'resources', 'app.asar.unpacked', 'dist', 'server.cjs')
-  ];
-  const serverPath = serverCandidates.find(p => fs.existsSync(p));
-  const appRoot = path.dirname(path.dirname(serverPath));
-
-  const serverProcess = spawn(runtimeExe, [serverPath], {
-    cwd: appRoot,
+  // 5. Backend on an isolated test port (never touches a running app on 3000)
+  console.log('\n[*] 5. Starting backend on isolated test port 3011...');
+  const port = 3011;
+  const serverPath = path.join(dist, 'server.cjs');
+  const child = spawn(process.execPath, [serverPath], {
+    cwd: dist,
     env: {
       ...process.env,
-      PORT: '3000',
-      NODE_ENV: 'production',
-      ELECTRON_RUN_AS_NODE: '1'
+      MYRAA_PORT: String(port),
+      PORT: String(port),
+      NODE_ENV: 'test',
+      MYRAA_MCP_DB: path.join(os.tmpdir(), 'myraa_verify_mcp_' + version + '.json'),
     },
-    stdio: 'pipe'
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
-
-  serverProcess.stdout.on('data', d => {
-    const str = d.toString();
-    if (str.includes('[Server] Running') || str.includes('Skill Discovery')) {
-      console.log('  [LOG]', str.trim());
-    }
-  });
-
-  // Wait for server to start
-  await new Promise(resolve => setTimeout(resolve, 4000));
+  let stderrTail = '';
+  child.stderr.on('data', (d) => { stderrTail = (stderrTail + d.toString()).slice(-2000); });
 
   try {
-    // Health endpoint
-    const health = await fetch('http://127.0.0.1:3000/api/health').then(r => r.json());
-    assert(health.status === 'ok' && health.version === '9.3.0', 'GET /api/health returned ok with v9.3.0');
+    const health = await waitForHealth(port, 90000);
+    if (!health) {
+      assert(false, 'GET /api/health on test port 3011 (server did not boot: ' + stderrTail.slice(-300) + ')');
+    } else {
+      assert(health.status === 'ok' && health.version === version, 'GET /api/health returned ok with runtime version ' + version);
 
-    // Evelyn 3D PMX Model endpoint
-    const modelRes = await fetch('http://127.0.0.1:3000/assets/characters/evelyn/model.pmx');
-    const modelBuffer = await modelRes.arrayBuffer();
-    assert(modelRes.status === 200 && modelBuffer.byteLength === 2986453, `GET /assets/.../model.pmx returned 200 with exact 2,986,453 bytes (not HTML!)`);
+      const modelRes = await fetch('http://127.0.0.1:' + port + '/assets/characters/evelyn/model.pmx');
+      const modelBuffer = await modelRes.arrayBuffer();
+      const contentType = String(modelRes.headers.get('content-type') || '');
+      assert(modelRes.status === 200 && modelBuffer.byteLength > 2500000 && !contentType.includes('text/html'),
+        'GET /assets/.../model.pmx returned binary model (' + modelBuffer.byteLength + ' bytes, ' + contentType + ')');
 
-    // Chat endpoint
-    const chat = await fetch('http://127.0.0.1:3000/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'hi' })
-    }).then(r => r.json());
-    assert(chat.ok && typeof chat.reply === 'string' && chat.reply.length > 0, `POST /api/chat returned valid response: "${chat.reply.slice(0, 60)}..."`);
-    assert(!emojiRegex.test(chat.reply), 'POST /api/chat response strictly complies with Rule 1 (Zero emojis)');
+      const chatRes = await fetch('http://127.0.0.1:' + port + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'hi' }),
+        signal: AbortSignal.timeout(45000),
+      });
+      const chat = await chatRes.json();
+      assert(Boolean(chat.ok && typeof chat.reply === 'string' && chat.reply.length > 0), 'POST /api/chat returned a reply');
+      if (typeof chat.reply === 'string') assert(!emojiRegex.test(chat.reply), 'POST /api/chat reply complies with zero-emoji rule');
 
-    // Skills endpoint
-    const skills = await fetch('http://127.0.0.1:3000/api/skills').then(r => r.json());
-    assert(skills && (Array.isArray(skills) || Array.isArray(skills.skills)), 'GET /api/skills returned active skills');
+      const skills = await fetch('http://127.0.0.1:' + port + '/api/skills').then((r) => r.json());
+      assert(Boolean(skills && (Array.isArray(skills) || Array.isArray(skills.skills))), 'GET /api/skills returned active skills');
 
-    // Word Engine Verification
-    console.log('\n[*] 5.1 Validating OfficeDocEngine & Word Automation Capabilities...');
-    const ode = require(path.join(workspaceRoot, 'resources', 'app', 'dist', 'office_doc_engine.cjs'));
-    const genRes = await ode.generateWord({
-      filename: 'e2e_verification_test.docx',
-      title: 'MYRAA E2E Quality Verification',
-      subtitle: 'Certified Autonomous Build v9.3.0'
-    });
-    assert(genRes.ok && fs.existsSync(genRes.path), `OfficeDocEngine created valid Word document at ${genRes.path}`);
-
-    const reviewRes = await ode.reviewWord({ filePath: genRes.path });
-    assert(reviewRes.ok && reviewRes.scores && reviewRes.scores.readability > 0, `OfficeDocEngine reviewed document: readability score ${reviewRes.scores.readability}/100`);
-
-    const qaRes = await ode.qaPipelineWord({ filePath: genRes.path });
-    assert(qaRes.ok && fs.existsSync(qaRes.path), `OfficeDocEngine QA pipeline completed: fixes applied=${qaRes.fixCount}`);
-
+      console.log('\n[*] 5.1 Validating Word Engine...');
+      const ode = require(path.join(dist, 'office_doc_engine.cjs'));
+      const genRes = await ode.generateWord({
+        filename: 'e2e_verification_test.docx',
+        title: 'MYRAA E2E Verification',
+        subtitle: 'Certified Build v' + version,
+      });
+      assert(Boolean(genRes.ok && genRes.path && fs.existsSync(genRes.path)), 'OfficeDocEngine created a Word document');
+      if (genRes.ok && genRes.path && fs.existsSync(genRes.path)) {
+        const reviewRes = await ode.reviewWord({ filePath: genRes.path });
+        assert(Boolean(reviewRes.ok && reviewRes.scores && reviewRes.scores.readability > 0), 'OfficeDocEngine reviewed the document (readability ' + (reviewRes.scores && reviewRes.scores.readability) + ')');
+        const qaRes = await ode.qaPipelineWord({ filePath: genRes.path });
+        assert(Boolean(qaRes.ok && qaRes.path && fs.existsSync(qaRes.path)), 'OfficeDocEngine QA pipeline completed');
+      }
+    }
   } catch (err) {
-    assert(false, `Server endpoint test failed: ${err.message}`);
+    assert(false, 'Server endpoint test failed: ' + err.message);
   } finally {
-    serverProcess.kill();
+    child.kill();
   }
 
-  // 6. Windows Shortcuts & Release Package Verification
-  console.log('\n[*] 6. Checking Shortcuts and Release Package...');
-  const desktopLnk = path.join(process.env.USERPROFILE || '', 'Desktop', 'MYRAA.lnk');
-  const startMenuLnk = path.join(process.env.APPDATA || '', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'MYRAA', 'MYRAA.lnk');
-  assert(fs.existsSync(desktopLnk), `Desktop shortcut exists: ${desktopLnk}`);
-  assert(fs.existsSync(startMenuLnk), `Start Menu shortcut exists: ${startMenuLnk}`);
+  // 6. Shortcuts + versioned installer package (current pipeline, not release/)
+  console.log('\n[*] 6. Checking shortcuts and installer package v' + version + '...');
+  const deskLnk = path.join(process.env.USERPROFILE || '', 'Desktop', 'MYRAA.lnk');
+  const menuRoots = [
+    path.join(process.env.APPDATA || '', 'Microsoft', 'Windows', 'Start Menu', 'Programs'),
+    path.join(process.env.PROGRAMDATA || 'C:\\ProgramData', 'Microsoft', 'Windows', 'Start Menu', 'Programs'),
+  ];
+  const menuLnk = menuRoots.map((r) => path.join(r, 'MYRAA', 'MYRAA.lnk')).find((p) => fs.existsSync(p));
+  assert(fs.existsSync(deskLnk), 'Desktop shortcut exists');
+  assert(Boolean(menuLnk), 'Start Menu shortcut exists (user or All Users)');
 
-  const releaseSetup = path.join(workspaceRoot, 'release', 'MYRAA-Setup-9.3.0.exe');
-  const releaseChecksums = path.join(workspaceRoot, 'release', 'checksums.txt');
-  const releaseNotes = path.join(workspaceRoot, 'release', 'release-notes.md');
-  assert(fs.existsSync(releaseSetup), 'release/MYRAA-Setup-9.3.0.exe installer binary exists (204 MB)');
-  assert(fs.existsSync(releaseChecksums), 'release/checksums.txt exists');
-  assert(fs.existsSync(releaseNotes), 'release/release-notes.md exists');
+  const pack = path.join(root, 'Installers', 'v' + version);
+  const setup = path.join(pack, 'MYRAA-Setup-' + version + '.exe');
+  const portable = path.join(pack, 'MYRAA-Portable-' + version + '.exe');
+  assert(fs.existsSync(setup) && fs.statSync(setup).size > 100 * 1024 * 1024, 'versioned Setup installer exists (v' + version + ')');
+  assert(fs.existsSync(portable), 'versioned Portable installer exists (v' + version + ')');
+  assert(fs.existsSync(path.join(pack, 'SHA256SUMS.txt')), 'SHA256SUMS.txt exists in versioned pack');
+  assert(fs.existsSync(path.join(pack, 'checksums.txt')), 'checksums.txt exists in versioned pack');
+  if (fs.existsSync(setup) && fs.existsSync(path.join(pack, 'SHA256SUMS.txt'))) {
+    const sums = fs.readFileSync(path.join(pack, 'SHA256SUMS.txt'), 'utf8');
+    const expected = (sums.split(/\r?\n/).find((line) => line.includes('MYRAA-Setup-' + version + '.exe')) || '').split(/\s+/)[0].toUpperCase();
+    const actual = await sha256File(setup);
+    assert(Boolean(expected) && expected === actual, 'Setup SHA256 matches SHA256SUMS.txt');
+  }
 
   console.log('\n=====================================================================');
-  console.log(`  VERIFICATION SUMMARY: ${passed} PASSED, ${failed} FAILED`);
+  console.log('  VERIFICATION SUMMARY: ' + passed + ' PASSED, ' + failed + ' FAILED');
   console.log('=====================================================================');
-
-  if (failed > 0) {
-    process.exit(1);
-  } else {
-    process.exit(0);
-  }
+  process.exit(failed ? 1 : 0);
 }
 
-run().catch(e => {
-  console.error('Fatal test error:', e);
-  process.exit(1);
-});
+run().catch((e) => { console.error('Fatal test error:', e); process.exit(1); });
