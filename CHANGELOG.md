@@ -17,7 +17,10 @@ All notable changes to MYRAA AI OS are documented here.
 - New suites `test_connector_registry.cjs` (9), `test_action_registry.cjs` (11), `test_approval_manager.cjs` (10).
 - Phase 8 `mcp_manager_v2.cjs`: management facade over the existing MCP manager (discover/connect/disconnect/enable/inspect/logs/presets/install); tools/resources/prompts honesty preserved. Mounted at `/api/mcp-v2`.
 - Phase 9 `skill_registry.cjs`: 532 catalogued skills with installed/health derived from real SKILL.md files (live: 530 READY / 2 UNAVAILABLE, no hardcoded ACTIVE). Mounted at `/api/skills-v2`.
-- New suites `test_mcp_manager_v2.cjs` (13), `test_skill_registry.cjs` (14). Total 478 checks across 21 suites.
+- New suites `test_mcp_manager_v2.cjs` (13), `test_skill_registry.cjs` (14).
+- Phase 10 `agent_delegation.cjs`: specialist delegation over the existing 28-agent orchestrator with structured results, real task.* events and honest failures. Mounted at `/api/agents-v2`.
+- Phase 11 `task_engine.cjs`: persistent task state machine (QUEUED/RUNNING/WAITING_FOR_APPROVAL/PAUSED/COMPLETED/FAILED/CANCELLED), approval attachment, real events and route CRUD. Mounted at `/api/tasks`.
+- New suites `test_agent_delegation.cjs` (13), `test_task_engine.cjs` (17). Total 508 checks across 23 suites.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).

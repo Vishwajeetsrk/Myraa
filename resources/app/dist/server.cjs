@@ -5280,6 +5280,16 @@ async function startServer() {
     console.warn("[Server] Could not mount Phase 8/9 modules:", e.message);
   }
   try {
+    // Phase 10/11: specialist delegation + durable task engine
+    const delegation34 = require(import_path2.default.join(__dirname, "agent_delegation.cjs"));
+    const taskEngine34 = require(import_path2.default.join(__dirname, "task_engine.cjs"));
+    app.use("/api/agents-v2", delegation34.createRouter());
+    app.use("/api/tasks", taskEngine34.createRouter());
+    console.log("[Server] Agent delegation + task engine mounted (Phase 10/11)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Phase 10/11 modules:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
