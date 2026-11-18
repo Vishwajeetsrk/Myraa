@@ -5378,6 +5378,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Skill Runner:", e.message);
   }
   try {
+    // Application Adapter Registry: detect from live windows, real UIA inspect/locate/verify
+    const appAdapters = require(import_path2.default.join(__dirname, "application_adapters.cjs"));
+    app.use("/api/application-adapters", appAdapters.createRouter());
+    console.log("[Server] Application Adapter Registry mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Application Adapter Registry:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));

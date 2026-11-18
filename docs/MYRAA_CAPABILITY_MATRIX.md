@@ -16,7 +16,8 @@ Statuses are from real runtime checks (`/api/capabilities`, `/api/health-manager
 | Connectors | `connector_registry.cjs` (8 env-key connectors) | `/api/connectors-v2` | 9 checks | PARTIAL | OAuth (Google/GitHub/Graph/Salesforce/Canva/Figma) |
 | Actions | `action_registry.cjs` (47 derived actions) | `/api/actions` | 11 checks | VERIFIED | execution bindings for every action |
 | Approvals | `approval_manager.cjs` over broker/workspace | `/api/approvals` | 10 checks | VERIFIED | in-app approval cards |
-| Screen Intelligence | `screen_intelligence.cjs` (UIA/OCR/capture) | `/api/screen-intelligence` | 14 checks, consent gate | PARTIAL | vision routing, change detector, application adapters |
+| Screen Intelligence | `screen_intelligence.cjs` (UIA/OCR/capture) | `/api/screen-intelligence` | 14 checks, consent gate | PARTIAL | vision routing, change detector |
+| Application adapters | `application_adapters.cjs` (16 adapters, live window detection + UIA) | `/api/application-adapters` | 18 checks | PARTIAL | live app edit/create/execute bridges |
 | Action verification | `action_verifier.cjs` | `/api/action-verification` | 12 checks, approval gate | VERIFIED | more executors |
 | Browser agent | `browser_agent.cjs` + playwright-core + system Chrome | `/api/browser/*` | 11 checks, live start/navigate | VERIFIED | DOM inspection routes, uploads, profiles |
 | Tasks | `task_engine.cjs` (7-state durable machine) | `/api/tasks` | 17 checks | VERIFIED | parallel worker pool |

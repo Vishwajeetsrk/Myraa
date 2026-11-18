@@ -8,7 +8,7 @@ This file lists what MYRAA **cannot** currently do. None of these are presented 
 - Skill lifecycle (install/update/remove) and per-skill self-tests: 717 skills catalogued, 715 manifests verified. Bounded execution exists for skills with real scripts (`skill_runner.cjs`, `/api/skills-runner`), but instruction-only skills still cannot be "executed", and install/update/remove are not implemented.
 - MCP http transport, resources and prompts: stdio tools only; those endpoints honestly return `NOT_IMPLEMENTED`.
 - Microsoft Word/Excel/PowerPoint deep visual editing: document generation/review exists, but live open-document visual modification and chart/dashboard automation are not verified.
-- Application Adapter Registry (Word/Excel/PPT/VSCode-specific inspect/verify adapters): only generic UIA is available.
+- Application Adapter Registry live editing: 16 adapters now detect real windows and expose real UIA inspect/read/locate/verify (`/api/application-adapters`), but per-app edit/create/execute bridges are not implemented.
 - Parallel worker pool and durable workflow engine: task engine is sequential with dependency states.
 - Computer runtime abstraction (sandbox/Docker/remote): not started.
 
