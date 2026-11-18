@@ -28,7 +28,10 @@ All notable changes to MYRAA AI OS are documented here.
 - Phase 14 UI polish (additive overlays only): `ui_polish_phase14.css` (visible focus rings, scrollable panels/modals, 32px header hit areas, reduced-motion, header-safe floating bar), `ui_accessibility_addon.js` (raises sub-11px inline text, adds aria-label/title to icon-only controls, watches dynamic DOM), and moved the floating control bar below the header. The compiled React bundle and 3D avatar are untouched.
 - New suite `test_ui_polish.cjs` (17).
 - Phase 15 `diagnostics_center.cjs`: one diagnostics catalog aggregating the real HealthManager, capability registry, skill/project/memory state and asset checks; microphone/GPU are honestly UNAVAILABLE when no real probe exists. Exports a markdown report. Mounted at `/api/diagnostics-center`.
-- New suite `test_diagnostics_center.cjs` (14). Total 568 checks across 27 suites.
+- New suite `test_diagnostics_center.cjs` (14).
+- Phase 16 `test_api_surface.cjs` (8 checks): every new module exports a working router and is mounted in the server; no fake status/version/emoji literals in new code.
+- Phase 17: `content-visibility` + intrinsic-size hints for long lists, screen-reader live region announcing real avatar states, icon labels/tooltips, reduced-motion and focus rings preserved. New suite `test_accessibility_perf.cjs` (12 checks).
+- Total 588 checks across 29 suites. All 17 phases of the product-repair plan have a real implementation slice; avatar/voice/working capabilities preserved.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).

@@ -117,3 +117,29 @@ FAKE: `/api/agent-health`, `/api/live/status`, `/api/system/about.status`, `/api
 | Safety/approval | broker + permissions | voice-only broker | none | approval card | permission engine | tests green | PARTIAL | HTTP approval surface; HIGH tool enforcement |
 | Capability status | new registry | /api/capabilities | not wired yet | n/a | real health checks | 16 checks green | REAL (source) | ship in installer; frontend consume registry |
 
+## Product-repair phases 1-17 (implementation status)
+
+All phases have a real, additive implementation slice. Every new module exports a working router and is mounted in `server.cjs` (verified by `tests/test_api_surface.cjs`). Nothing was deleted; avatar, voice and existing capabilities are intact.
+
+| Phase | Area | Implementation | API / file | Honest limit |
+|---|---|---|---|---|
+| 1 | Verified audit | `CAPABILITY_MAP.md`, `CAPABILITY_RECON...` | docs | read-only evidence |
+| 2 | Capability registry | extended `agi/capability_registry.cjs` + bootstrap (12 real subsystems) | `/api/capabilities` | not consumed by React yet |
+| 3 | Health engine | `health_manager.cjs` (11 measured checks) | `/api/health-manager` | some services genuinely UNAVAILABLE |
+| 4 | Provider abstraction | `ai_provider_manager.cjs` (6 adapters over the real gateway) | `/api/providers` | Gemini/Anthropic chat NOT_IMPLEMENTED |
+| 5 | Connectors | `connector_registry.cjs` (8 real catalog entries) | `/api/connectors-v2` | OAuth not implemented; env keys only |
+| 6 | Actions | `action_registry.cjs` (47 derived actions) | `/api/actions` | registry reports state; execution via existing engine |
+| 7 | Approvals | `approval_manager.cjs` over broker/workspace/engine | `/api/approvals` | no bypass; denied cannot execute |
+| 8 | MCP management | `mcp_manager_v2.cjs` | `/api/mcp-v2` | resources/prompts NOT_IMPLEMENTED |
+| 9 | Skills | `skill_registry.cjs` (532 catalogued / 530 real SKILL.md) | `/api/skills-v2` | run/install/update NOT_IMPLEMENTED |
+| 10 | Agents | `agent_delegation.cjs` over 28 real agents | `/api/agents-v2` | needs a real provider for live delegation |
+| 11 | Tasks | `task_engine.cjs` (7-state durable machine) | `/api/tasks` | no global durable job queue yet |
+| 12 | Projects/memory | `project_index.cjs` (real dirs + 4 stores) | `/api/projects-v2` | SQLite count null (no in-process query) |
+| 13 | Voice/avatar | `avatar_state_bridge.cjs` + read-only DOM addon | `/api/avatar` | 3D model untouched; states are labels |
+| 14 | UI polish | `ui_polish_phase14.css`, `ui_accessibility_addon.js` | static assets | compiled React bundle not rebuilt |
+| 15 | Diagnostics | `diagnostics_center.cjs` (20 real checks + markdown report) | `/api/diagnostics-center` | mic/GPU honestly UNAVAILABLE |
+| 16 | API coverage | `test_api_surface.cjs` | tests | enforces mounted routers + no fake literals |
+| 17 | Perf/a11y | `content-visibility`, aria-live region, tooltips | static assets | no 3D changes |
+
+Everything remains **source-only**: none of phases 1-17 are in a shipped installer yet. A v9.7.0 rebuild is required before any of this reaches an installed app. The compiled React settings cards with hardcoded IoT/plugin/version values also remain until the original UI source is recovered (REA source recovery requires a Linux x64 worker).
+

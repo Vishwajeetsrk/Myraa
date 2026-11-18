@@ -62,6 +62,15 @@ header {
   }
 }
 
+/* Performance: let the browser skip offscreen work in long card lists. */
+.skill-card,
+.plugin-card,
+.memory-card,
+[data-virtual="true"] {
+  content-visibility: auto !important;
+  contain-intrinsic-size: auto 96px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

@@ -1,0 +1,80 @@
+/* Phase 14 UI polish - loaded AFTER the React + v6 styles. Overlay only. */
+
+:root {
+  --myraa-ui-min-text: 11px;
+  --myraa-header-h: 56px;
+}
+
+/* Keyboard focus must always be visible, regardless of component CSS. */
+:focus-visible {
+  outline: 2px solid var(--border-focus, #38CFFF) !important;
+  outline-offset: 2px !important;
+}
+
+/* Header controls: guaranteed hit area and breathing room at min window size. */
+header button,
+header [role="button"] {
+  min-width: 32px !important;
+  min-height: 32px !important;
+  flex-shrink: 0 !important;
+}
+header {
+  min-height: var(--myraa-header-h);
+}
+
+/* Floating universal-control bar must not cover the native header controls. */
+#myraa-uctrl-top-bar {
+  top: 66px !important;
+  z-index: 60 !important;
+  max-width: calc(100vw - 32px);
+}
+
+/* Panels and modals: never clip content. The global body is overflow:hidden,
+   so scroll must live on the panel itself. */
+.hud-panel,
+[class*="panel"],
+[class*="drawer"],
+[class*="modal"],
+[role="dialog"] {
+  max-height: calc(100vh - 96px) !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+/* No status conveyed by color alone: keep readable text alongside badges. */
+[class*="status"],
+[class*="badge"] {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 1280px) {
+  header {
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+  }
+  header [class*="omnibar"],
+  header input[type="text"] {
+    min-width: 120px !important;
+  }
+  #myraa-uctrl-top-bar {
+    top: 62px !important;
+  }
+}
+
+/* Performance: let the browser skip offscreen work in long card lists. */
+.skill-card,
+.plugin-card,
+.memory-card,
+[data-virtual="true"] {
+  content-visibility: auto !important;
+  contain-intrinsic-size: auto 96px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -64,6 +64,20 @@
       setTimeout(function () { pending = false; pass(); }, 250);
     }).observe(document.body, { childList: true, subtree: true });
   }
+  // Screen-reader announcements for real avatar state changes (no visuals changed).
+  var liveRegion = document.getElementById('myraa-a11y-live');
+  if (!liveRegion) {
+    liveRegion = document.createElement('div');
+    liveRegion.id = 'myraa-a11y-live';
+    liveRegion.setAttribute('role', 'status');
+    liveRegion.setAttribute('aria-live', 'polite');
+    liveRegion.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;';
+    document.body.appendChild(liveRegion);
+  }
+  document.addEventListener('myraa:avatar-state', function (ev) {
+    try { liveRegion.textContent = 'MYRAA ' + ((ev.detail && ev.detail.state) || 'idle'); } catch (e) {}
+  });
+
   window.__myraaUiPolish = stats;
   document.dispatchEvent(new CustomEvent('myraa:ui-polish', { detail: stats }));
 })();
