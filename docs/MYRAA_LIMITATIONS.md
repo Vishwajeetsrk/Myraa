@@ -13,7 +13,7 @@ This file lists what MYRAA **cannot** currently do. None of these are presented 
 - Computer runtime abstraction (sandbox/Docker/remote): not started.
 
 ## Partially implemented
-- Screen Intelligence: normalized context + target resolver work, but no vision-model routing, no change detector, no semantic screen tree, consent is off by default in dev.
+- Screen Intelligence v2: semantic element classification, real window→controls tree, UIA-based layout-issue detection, structural diff, action planning and verification are live (`/api/vision/*`, `/api/screen/*`). Still absent: vision-model understanding, color-contrast/typography analysis from rendered pixels, document-internal structure (headings/paragraphs inside a document), and a perceptual change detector. Consent remains off by default in dev.
 - Browser agent: real launch/navigate/screenshot works via playwright-core + system Chrome; DOM inspection, uploads, profiles and approval-gated form submission routes are not built.
 - Agents: 28 real agents + delegation, but live model-backed delegation requires configured providers and is not verified end-to-end.
 - Memory: 4 stores, one real overview, but no unified logical MemoryFacade; SQLite row counts are honestly `null`.

@@ -5316,8 +5316,12 @@ async function startServer() {
   try {
     // Screen Intelligence: normalized observation over existing UIA/OCR/capture
     const screenIntel42 = require(import_path2.default.join(__dirname, "screen_intelligence.cjs"));
-    app.use("/api/screen-intelligence", screenIntel42.createRouter());
-    console.log("[Server] Screen Intelligence mounted (observe + target resolver)");
+    const screenRouter42 = screenIntel42.createRouter();
+    app.use("/api/screen-intelligence", screenRouter42);
+    // Universal Visual Understanding API aliases (same real engine, no duplicate implementation)
+    app.use("/api/vision", screenRouter42);
+    app.use("/api/screen", screenRouter42);
+    console.log("[Server] Screen Intelligence mounted (observe + semantic engine + vision/screen aliases)");
   } catch(e) {
     console.warn("[Server] Could not mount Screen Intelligence:", e.message);
   }

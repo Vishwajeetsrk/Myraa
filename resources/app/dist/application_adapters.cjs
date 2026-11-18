@@ -154,9 +154,11 @@ async function locate(input) {
   if (!chk.ok) return chk;
   const w = await resolveWindow(input);
   if (!w.ok) return w;
-  const ctx = await screen.captureContext({ titleHint: w.title });
+  const cap = await screen.captureContext({ titleHint: w.title });
+  if (!cap.ok) return cap;
+  const ctx = cap.context;
   const target = screen.resolveTarget({ query: (input || {}).query || (input || {}).text, uiTree: ctx.uiTree || [] });
-  return { ok: !!target.ok, appId: input.appId, window: w.title, ...target, consent: ctx.consent };
+  return { ok: !!target.ok, appId: input.appId, window: w.title, ...target, consent: ctx.consent !== undefined ? ctx.consent : (require('./screen_intelligence.cjs').status().consent) };
 }
 
 function verify(input) {
