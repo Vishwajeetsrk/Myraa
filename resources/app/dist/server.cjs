@@ -5258,6 +5258,18 @@ async function startServer() {
     console.warn("[Server] Could not mount Phase 3/4 modules:", e.message);
   }
   try {
+    // Phase 5/6/7: truthful connector registry, action registry, HTTP approvals
+    const connectorReg32 = require(import_path2.default.join(__dirname, "connector_registry.cjs"));
+    const actionReg32 = require(import_path2.default.join(__dirname, "action_registry.cjs"));
+    const approvalMod32 = require(import_path2.default.join(__dirname, "approval_manager.cjs"));
+    app.use("/api/connectors-v2", connectorReg32.createRouter());
+    app.use("/api/actions", actionReg32.createRouter());
+    app.use("/api/approvals", approvalMod32.createRouter());
+    console.log("[Server] Connector registry + action registry + approvals mounted (Phase 5/6/7)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Phase 5/6/7 modules:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
