@@ -132,6 +132,25 @@
 #myraa-command-palette .meta,
 #myraa-capability-center .meta { font-size: 11px; color: var(--myraa-muted); }
 
+/* Navigation discoverability + composer clarity (design-skill critique pass). */
+.left-sidebar .nav-item,
+[class*="nav-item"] {
+  min-height: 40px !important;
+  gap: 10px !important;
+  padding: 9px 12px !important;
+  justify-content: flex-start !important;
+}
+.bottom-input-container {
+  min-height: 56px !important;
+  margin-bottom: 18px !important;
+  padding: 12px 16px !important;
+}
+[class*="pill"],
+[class*="badge"] {
+  font-size: 11px !important;
+  padding: 5px 9px !important;
+}
+
 .myraa-launch-btn {
   padding: 6px 12px;
   border-radius: 9px;

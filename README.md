@@ -330,7 +330,7 @@ Built-in zero-configuration access to 88 free public APIs across 14 categories:
 
 ## 17. Autonomous Operations Stack (v9.4.0)
 
-The v9.4.0 cycle adds nine governed autonomy subsystems, and the follow-up MCP transport phase makes the MCP registry real. Every subsystem ships with a live test suite -- **669 automated checks** across 34 suites -- and follows one safety contract: honest errors, additive-only data operations, and local-first storage under `%APPDATA%\MYRAA\`.
+The v9.4.0 cycle adds nine governed autonomy subsystems, and the follow-up MCP transport phase makes the MCP registry real. Every subsystem ships with a live test suite -- **672 automated checks** across 34 suites -- and follows one safety contract: honest errors, additive-only data operations, and local-first storage under `%APPDATA%\MYRAA\`.
 
 ### 17.1 Evidence Engine
 Turns observations into auditable findings.

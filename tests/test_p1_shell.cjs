@@ -24,6 +24,9 @@ function check(name, cond, extra) {
   check('settings/memory workspaces widen', /\[class\*="settings"\]/.test(css) && /min-width: min\(760px/.test(css));
   check('status strip + palette styles present', /#myraa-unified-status/.test(css) && /#myraa-command-palette/.test(css));
   check('focus/keyboard styling retained', /focus/.test(addon) && /Escape/.test(addon));
+  check('nav items are discoverable and sized', /nav-item[\s\S]{0,220}min-height: 40px/.test(css));
+  check('composer is raised and roomy', /bottom-input-container[\s\S]{0,160}min-height: 56px/.test(css));
+  check('pills/badges are readable', /\[class\*="pill"\]/.test(css) && /font-size: 11px/.test(css));
 
   check('Ctrl+K opens command palette', /ctrlKey/.test(addon) && /openPalette/.test(addon));
   check('capability center exists', /openCapabilityCenter/.test(addon) && /myraa-capability-input/.test(addon));

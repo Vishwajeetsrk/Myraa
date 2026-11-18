@@ -45,7 +45,7 @@ All notable changes to MYRAA AI OS are documented here.
 - Action → Observe → Verify (spec phases 7-8): `action_verifier.cjs` captures a real before/after ScreenContext around approved UIA actions, writes receipts, emits `action.verified`, and reports `verified:true` only when a real observation changed; missing approval gives `APPROVAL_REQUIRED`, unimplemented executors give `NOT_IMPLEMENTED`. Mounted at `/api/action-verification`.
 - New suite `test_action_verifier.cjs` (12 checks).
 - Design ecosystem (user-supplied repos): Owl-Listener/designer-skills (MIT, 111), ui-ux-pro-max-skill (MIT), bergside/awesome-design-skills (67) installed additively into `%USERPROFILE%\.agents\skills`; MYRAA skill discovery now scans that directory (live: 717 catalogued / 715 verified SKILL.md). Installed `@thesvg/react@4.0.12` (MIT) and added `brand_icon_registry.cjs` serving 7,681 real brand SVGs at `/api/icons/icon/:name` with currentColor mono variant; unknown names return NOT_FOUND (no fake logos). Audit: `docs/myraa-audit/UI_CAPABILITY_AUDIT.md`.
-- New suite `test_brand_icons.cjs` (21 checks). Total 669 checks across 34 suites.
+- New suite `test_brand_icons.cjs` (21 checks). Design-critique pass on the design-system overlay: larger nav hit areas, raised/roomier composer, readable pills/badges (3 new P1 shell checks). Total 672 checks across 34 suites.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).
