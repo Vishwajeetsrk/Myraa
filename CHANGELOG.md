@@ -6,6 +6,7 @@ All notable changes to MYRAA AI OS are documented here.
 
 ### Fixed
 - Packaged startup: `call-bind-apply-helpers` was packed only under `call-bind/node_modules`, so `dunder-proto` could not resolve it and the backend died with `MODULE_NOT_FOUND` (express -> qs -> side-channel chain). The real fix registers every nested asar `node_modules` directory in the backend's NODE_PATH at launch (`electron/main.cjs`). Verified with an asar-only smoke test, a silent reinstall (exit 0), and a real app launch: health 9.6.3, main window created, Phase 29 endpoints live.
+- Published GitHub Release `v9.6.3` with 4 assets (Setup, Portable, latest.yml, blockmap; release id 449659588).
 
 ## [9.6.2] - 2026-11-18
 

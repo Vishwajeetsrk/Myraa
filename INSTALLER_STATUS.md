@@ -8,7 +8,7 @@ Built: 2026-11-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
 > under `call-bind/node_modules`, while `dunder-proto` resolved it from the asar root. v9.6.3 registers
 > all nested asar `node_modules` directories in the backend's NODE_PATH at launch. The installed app
 > now reaches `GET /api/health` and creates the main window.
-> GitHub Release **v9.6.2 is live**; v9.6.3 is packed locally and not published yet.
+> GitHub Release **v9.6.3 is live** at `https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.6.3` (4 assets uploaded, id 449659588).
 
 ## 1. Verification summary
 
@@ -27,7 +27,7 @@ Built: 2026-11-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, un
 1. **Desktop:** `C:\Users\Vishwajeet\Desktop\MYRAA-Installers-v9.6.3\`
 2. **Workspace pack:** `C:\Users\Vishwajeet\Music\Myraa\Installers\v9.6.3\`
 3. **Build output:** `C:\Users\Vishwajeet\Music\Myraa\resources\app\dist-release\`
-4. **Published releases:** v9.6.2 (`https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.6.2`) and earlier; v9.6.3 not published yet
+4. **Published release:** v9.6.3 at `https://github.com/Vishwajeetsrk/Myraa/releases/tag/v9.6.3` (Setup, Portable, latest.yml, blockmap; id 449659588); v9.6.2 and earlier remain as previous releases
 
 ## 3. SHA256 integrity
 
@@ -48,7 +48,7 @@ FA04FE7E5D07D74E3AB1BC8201A3A7B6B072E99997775A728F4C744AD36DE172  MYRAA-Portable
 
 1. **[DONE]** Packaged startup fixed and verified by real silent install + launch.
 2. **[DONE]** Phase 29 modules (action receipts, step watcher, response tags) shipped in the installer.
-3. **[PENDING]** Publish GitHub Release v9.6.3 (Setup + Portable + latest.yml + blockmap).
+3. **[DONE]** GitHub Release v9.6.3 published: Setup + Portable + latest.yml + blockmap (id 449659588, all state=uploaded).
 4. **[PENDING]** Observability UI, http MCP transport, fuse hardening, nightly CI, shipped React source recovery.
 
 ---
