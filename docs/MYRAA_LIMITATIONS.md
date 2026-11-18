@@ -20,6 +20,9 @@ This file lists what MYRAA **cannot** currently do. None of these are presented 
 - Voice: real WS events drive avatar state labels; mic selection, input level and full audio diagnostics are not implemented.
 - Compiled React settings/skills/connector cards still contain static values because the original UI source is not in this repo. Runtime addons correct only detectable badges.
 
+## Provider routing (audit finding, v9.8 Phase A)
+- `/api/chat` routes through the single `ai_provider_manager` gateway (real Gemini adapter). However `ai_gateway_service.cjs`, `memory_kb.cjs`, `myraa_core.cjs` and `myraa_v6_real_routes.cjs` still reference provider SDKs (`@google/genai`, `@anthropic-ai/sdk`) directly. The capability intelligence layer audits this; full consolidation is not yet done.
+
 ## Environment / external dependencies
 - Installers unsigned: SmartScreen warning until an EV code-signing certificate is configured (external purchase required).
 - Electron permission allowlist now denies unknown permissions; individual site-level consent UX is not built.

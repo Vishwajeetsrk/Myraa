@@ -146,6 +146,36 @@ const CATALOG = [
       } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
     },
   },
+  {
+    id: 'connector.oauth',
+    keywords: ['oauth', 'gmail', 'google calendar', 'microsoft graph', 'salesforce', 'canva', 'figma', 'connect my account', 'sign in to'],
+    check() {
+      const configured = Boolean(process.env.GITHUB_TOKEN || process.env.GH_TOKEN || process.env.GOOGLE_CLIENT_ID || process.env.MSGRAPH_CLIENT_ID);
+      return {
+        status: 'NOT_IMPLEMENTED',
+        reason: configured
+          ? 'credentials are present in env but no OAuth authorization/callback/token-refresh flow is implemented; env keys are not OAuth'
+          : 'no OAuth flow implemented; only env-key connectors exist',
+        evidence: { envCredentialPresent: configured, oauthFlow: false, tokenStore: false },
+      };
+    },
+  },
+  {
+    id: 'mcp.http',
+    keywords: ['mcp http', 'http transport', 'mcp resources', 'mcp prompts', 'remote mcp'],
+    check() {
+      try {
+        const s = require(path.join(DIST, 'mcp_manager.cjs')).status();
+        const impl = s.implemented || {};
+        const available = impl.http === true;
+        return {
+          status: available ? 'AVAILABLE' : 'NOT_IMPLEMENTED',
+          reason: available ? 'http transport reports implemented' : 'only stdio transport is implemented; resources/prompts/http are not',
+          evidence: { implemented: impl },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
 ];
 
 const PLANS = {
@@ -170,6 +200,16 @@ const PLANS = {
     required: ['Excel chart API adapter', 'data-range binding', 'validation'],
     steps: ['Add chart builder to office engine', 'Bind charts to real ranges', 'Validate generated workbook with python openpyxl', 'Expose /api/office/word|excel capability state'],
     verification: 'generate a workbook with a bar chart and verify chart XML exists',
+  },
+  'connector.oauth': {
+    required: ['OAuth client credentials', 'callback receiver', 'encrypted token store', 'refresh/revoke'],
+    steps: ['Register OAuth app per provider and collect client credentials', 'Implement PKCE authorization + local callback receiver', 'Store tokens encrypted via secure_vault (never in React)', 'Add health check, refresh and revoke flows', 'Mark connector connected only after a real API call succeeds'],
+    verification: 'complete an authorization flow and verify a real provider API returns 200 with no token in logs or UI',
+  },
+  'mcp.http': {
+    required: ['HTTP transport client', 'auth', 'per-server/tool permissions', 'resources/prompts handlers'],
+    steps: ['Add HTTP/SSE transport to mcp_stdio_client abstraction', 'Add per-server auth + timeouts + retries', 'Implement resources/list + prompts/list behind explicit permissions', 'Add health checks and audit trail', 'Keep all tool invocation approval-gated'],
+    verification: 'connect to a real HTTP MCP server, list tools/resources/prompts and invoke one approved tool',
   },
 };
 
@@ -202,11 +242,169 @@ function analyze(request) {
   };
 }
 
+// ---------------------------------------------------------------- capability metadata (Phase A)
+// Curated, reviewed - no arbitrary repository is granted execution privileges.
+const META = Object.freeze({
+  'screen.observe': { risk: 'LOW', requiresApproval: false, alternatives: ['window metadata only', 'OCR-only mode'], complexity: 'low', safeToAutoImplement: true, reusable: ['screen_intelligence.cjs', 'ui_automation_service.cjs'] },
+  'screen.ocr': { risk: 'LOW', requiresApproval: false, setup: 'install tesseract.js / system tesseract', alternatives: ['vision model OCR', 'application text API'], complexity: 'medium', safeToAutoImplement: true, reusable: ['ocr_engine.cjs'] },
+  'browser.automation': { risk: 'MEDIUM', requiresApproval: false, setup: 'playwright-core + browser executable', alternatives: ['CDP over existing Chrome'], complexity: 'low', safeToAutoImplement: true, reusable: ['browser_agent.cjs'] },
+  'office.excel': { risk: 'MEDIUM', requiresApproval: true, setup: 'chart adapter + validation', alternatives: ['python openpyxl generation', 'Excel COM automation'], complexity: 'high', safeToAutoImplement: false, reusable: ['office_doc_engine.cjs', 'file_intelligence pipeline'], packages: ['exceljs'] },
+  'office.word': { risk: 'MEDIUM', requiresApproval: true, alternatives: ['docx library generation', 'Word COM automation'], complexity: 'high', safeToAutoImplement: false, reusable: ['office_doc_engine.cjs', 'application_adapters.cjs'], packages: ['docx'] },
+  'office.powerpoint': { risk: 'MEDIUM', requiresApproval: true, alternatives: ['pptxgenjs generation'], complexity: 'high', safeToAutoImplement: false, reusable: ['office_doc_engine.cjs'], packages: ['pptxgenjs'] },
+  'video.engine': { risk: 'MEDIUM', requiresApproval: true, setup: 'ASR adapter + vision adapter', alternatives: ['whisper.cpp local ASR', 'frame-sampling vision model'], complexity: 'high', safeToAutoImplement: false, reusable: ['video_engine.cjs'], packages: ['ffmpeg'] },
+  'github.integration': { risk: 'MEDIUM', requiresApproval: false, setup: 'GITHUB_TOKEN or OAuth app credentials', alternatives: ['git CLI for local operations'], complexity: 'medium', safeToAutoImplement: false, reusable: ['myraa_github_connector.cjs', 'git_service.cjs'] },
+  'skills.execution': { risk: 'MEDIUM', requiresApproval: true, setup: 'signature verification + dependency resolver', alternatives: ['read-only instruction skills'], complexity: 'high', safeToAutoImplement: false, reusable: ['skill_registry.cjs', 'skill_runner.cjs', 'approval_manager.cjs'] },
+  'mcp.stdio': { risk: 'LOW', requiresApproval: false, alternatives: [], complexity: 'low', safeToAutoImplement: true, reusable: ['mcp_manager.cjs', 'mcp_stdio_client.cjs'] },
+  'connector.oauth': { risk: 'HIGH', requiresApproval: true, setup: 'OAuth client id/secret + callback + encrypted token store', alternatives: ['user-supplied personal access token via env'], complexity: 'high', safeToAutoImplement: false, reusable: ['connector_registry.cjs', 'secure_vault.cjs'] },
+  'mcp.http': { risk: 'MEDIUM', requiresApproval: true, setup: 'HTTP transport + auth + per-server permissions', alternatives: ['stdio transport for local servers'], complexity: 'high', safeToAutoImplement: false, reusable: ['mcp_manager.cjs', 'mcp_stdio_client.cjs'] },
+});
+
+const UNSAFE = /(delete\s+(all|everything|system)|format\s+(drive|disk|c:)|wipe\s+(disk|drive)|exfiltrat|disable\s+(security|antivirus)|send\s+(credentials|passwords)\s+to)/i;
+
+function checkOne(id) {
+  const c = CATALOG.find((x) => x.id === id);
+  if (!c) return { id, status: 'UNKNOWN', reason: 'capability not in catalog', evidence: null };
+  try {
+    const r = c.check();
+    return { id, status: r.status, reason: r.reason, evidence: r.evidence, lastVerified: new Date().toISOString() };
+  } catch (e) { return { id, status: 'FAILED', reason: e.message, evidence: null, lastVerified: new Date().toISOString() }; }
+}
+
+function gapDetails(id) {
+  const c = CATALOG.find((x) => x.id === id);
+  if (!c) return { ok: false, code: 'CAPABILITY_NOT_FOUND' };
+  const checked = checkOne(id);
+  const m = META[id] || {};
+  const plan = PLANS[id] || {
+    required: ['capability adapter', 'health check', 'integration test'],
+    steps: ['Inspect the existing subsystem', 'Implement the missing adapter', 'Register with the capability registry', 'Add a real self-test and verify evidence'],
+    verification: 'run the capability self-test and check the produced evidence',
+  };
+  return {
+    ok: true,
+    capability: id,
+    status: checked.status,
+    reason: checked.reason,
+    evidence: checked.evidence,
+    dependencies: (plan.required || []).concat(m.setup ? [m.setup] : []),
+    availableAlternatives: m.alternatives || [],
+    implementationPlan: plan.steps || [],
+    verification: plan.verification,
+    estimatedComplexity: m.complexity || 'medium',
+    requiresUserAction: Boolean(m.setup || m.requiresApproval),
+    safeToAutoImplement: m.safeToAutoImplement !== false,
+    risk: m.risk || 'LOW',
+    requiresApproval: Boolean(m.requiresApproval),
+    reusableSystems: m.reusable || [],
+    candidatePackages: m.packages || [],
+    candidateRepos: m.repos || [],
+    note: 'candidate packages/repos are curated and reviewed; nothing is installed or executed automatically',
+  };
+}
+
+function canDo(request) {
+  const text = String(request || '');
+  if (!text.trim()) return { ok: true, verdict: 'UNKNOWN', reason: 'no request supplied' };
+  if (UNSAFE.test(text)) return { ok: true, verdict: 'UNSAFE', reason: 'request matches a prohibited destructive/credential pattern; no action will be taken' };
+  const a = analyze(text);
+  if (!a.capabilities.length) return { ok: true, verdict: 'UNKNOWN', reason: 'no capability could be mapped to this request', request: text };
+  const order = { AVAILABLE: 0, PARTIAL: 1, DEGRADED: 2, CONFIGURATION_REQUIRED: 3, DEPENDENCY_MISSING: 4, PROVIDER_REQUIRED: 5, OFFLINE: 6, PERMISSION_REQUIRED: 7, NOT_IMPLEMENTED: 8, UNAVAILABLE: 9, FAILED: 10 };
+  const primary = [...a.capabilities].sort((x, y) => (order[x.status] ?? 11) - (order[y.status] ?? 11))[0];
+  const m = META[primary.id] || {};
+  let verdict;
+  if (primary.status === 'AVAILABLE') verdict = 'YES';
+  else if (['NOT_IMPLEMENTED', 'UNAVAILABLE', 'FAILED'].includes(primary.status)) verdict = 'NO_YET';
+  else if (primary.status === 'PARTIAL' || primary.status === 'DEGRADED') verdict = 'PARTIAL';
+  else if (primary.status === 'PERMISSION_REQUIRED' || m.requiresApproval) verdict = 'YES_WITH_APPROVAL';
+  else if (['CONFIGURATION_REQUIRED', 'DEPENDENCY_MISSING', 'PROVIDER_REQUIRED', 'OFFLINE'].includes(primary.status)) verdict = 'YES_WITH_SETUP';
+  else verdict = 'NO_YET';
+  const gap = gapDetails(primary.id);
+  return {
+    ok: true,
+    verdict,
+    request: text,
+    capability: primary.id,
+    status: primary.status,
+    reason: primary.reason,
+    requiresApproval: verdict === 'YES_WITH_APPROVAL',
+    requiresSetup: verdict === 'YES_WITH_SETUP',
+    gap: verdict === 'NO_YET' || verdict === 'YES_WITH_SETUP' ? gap : null,
+    note: 'verdict derives from runtime health checks, never from UI labels',
+  };
+}
+
+function createImplementationTask(id, opts = {}) {
+  const g = gapDetails(id);
+  if (!g.ok) return g;
+  if (!g.safeToAutoImplement) {
+    return { ok: false, code: 'APPROVAL_REQUIRED', capability: id, reason: 'this capability is not safe to auto-implement; user approval and dependency changes are required', gap: g };
+  }
+  // Creates a DURABLE TASK describing the work. It does not install or execute anything.
+  try {
+    const tasks = require(path.join(DIST, 'task_engine.cjs'));
+    const t = tasks.create({
+      goal: 'Implement capability: ' + id,
+      agent: 'Capability Intelligence',
+      tools: g.reusableSystems,
+      steps: g.implementationPlan,
+    });
+    if (!t || t.ok === false) return { ok: false, code: 'TASK_CREATE_FAILED', detail: t && t.error, gap: g };
+    return {
+      ok: true,
+      taskId: t.task && t.task.id || null,
+      capability: id,
+      status: 'QUEUED',
+      plan: g.implementationPlan,
+      verification: g.verification,
+      note: 'durable task created; implementation, dependency installation and registration still require execution and verification',
+    };
+  } catch (e) {
+    return { ok: false, code: 'TASK_ENGINE_UNAVAILABLE', detail: e.message, plan: g.implementationPlan };
+  }
+}
+
+function selfTest() {
+  const results = CATALOG.map((c) => {
+    const r = checkOne(c.id);
+    return { capability: c.id, status: r.status, passed: STATUS.includes(r.status) && r.status !== 'FAILED', reason: r.reason };
+  });
+  return {
+    ok: true,
+    passed: results.filter((r) => r.passed).length,
+    failed: results.filter((r) => !r.passed).length,
+    results,
+    note: 'self-test runs every capability health check; failures are reported, not hidden',
+  };
+}
+
 function createRouter() {
   let router = null;
   try { router = require('express').Router(); } catch (e) { return null; }
   router.get('/catalog', (req, res) => res.json({ ok: true, capabilities: CATALOG.map((c) => ({ id: c.id, keywords: c.keywords })), statuses: STATUS }));
   router.post('/analyze', (req, res) => res.json(analyze((req.body || {}).request)));
+  router.post('/can-do', (req, res) => res.json(canDo((req.body || {}).request)));
+  router.get('/gaps', (req, res) => {
+    const a = analyze((req.query || {}).request || '');
+    res.json({ ok: true, gaps: a.gaps.map((g) => gapDetails(g.capability)).filter((g) => g.ok) });
+  });
+  router.get('/gap/:id', (req, res) => {
+    const g = gapDetails(req.params.id);
+    res.status(g.ok ? 200 : 404).json(g);
+  });
+  router.get('/plan/:id', (req, res) => {
+    const g = gapDetails(req.params.id);
+    res.status(g.ok ? 200 : 404).json(g.ok ? {
+      ok: true, capability: g.capability, required: g.dependencies, alternatives: g.availableAlternatives,
+      plan: g.implementationPlan, verification: g.verification, complexity: g.estimatedComplexity,
+      reusableSystems: g.reusableSystems, candidatePackages: g.candidatePackages, candidateRepos: g.candidateRepos,
+      security: 'no repository/package is installed or executed without user approval and review',
+    } : g);
+  });
+  router.post('/task/:id', (req, res) => {
+    const r = createImplementationTask(req.params.id, req.body || {});
+    res.status(r.ok ? 200 : 403).json(r);
+  });
+  router.get('/self-test', (req, res) => res.json(selfTest()));
   return router;
 }
-module.exports = { STATUS, CATALOG, analyze, createRouter };
+module.exports = { STATUS, CATALOG, META, analyze, canDo, gapDetails, createImplementationTask, selfTest, createRouter };
