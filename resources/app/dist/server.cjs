@@ -5270,6 +5270,16 @@ async function startServer() {
     console.warn("[Server] Could not mount Phase 5/6/7 modules:", e.message);
   }
   try {
+    // Phase 8/9: MCP management facade + real skill registry state
+    const mcpV2 = require(import_path2.default.join(__dirname, "mcp_manager_v2.cjs"));
+    const skillReg33 = require(import_path2.default.join(__dirname, "skill_registry.cjs"));
+    app.use("/api/mcp-v2", mcpV2.createRouter());
+    app.use("/api/skills-v2", skillReg33.createRouter());
+    console.log("[Server] MCP management + skill registry mounted (Phase 8/9)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Phase 8/9 modules:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
