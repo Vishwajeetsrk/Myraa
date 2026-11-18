@@ -9,7 +9,7 @@ This file lists what MYRAA **cannot** currently do. None of these are presented 
 - MCP http transport, resources and prompts: stdio tools only; those endpoints honestly return `NOT_IMPLEMENTED`.
 - Microsoft Word/Excel/PowerPoint deep visual editing: document generation/review exists, but live open-document visual modification and chart/dashboard automation are not verified.
 - Application Adapter Registry live editing: 16 adapters now detect real windows and expose real UIA inspect/read/locate/verify (`/api/application-adapters`), but per-app edit/create/execute bridges are not implemented.
-- Parallel worker pool and durable workflow engine: task engine is sequential with dependency states.
+- Parallel worker isolation and durable workflow resume: `parallel_runner.cjs` now runs a bounded pool with a dependency graph over real module functions (`/api/parallel`), but it has no worker-thread/process isolation and does not resume jobs after restart. A multi-app durable workflow engine is still absent.
 - Computer runtime abstraction (sandbox/Docker/remote): not started.
 
 ## Partially implemented

@@ -20,7 +20,8 @@ Statuses are from real runtime checks (`/api/capabilities`, `/api/health-manager
 | Application adapters | `application_adapters.cjs` (16 adapters, live window detection + UIA) | `/api/application-adapters` | 18 checks | PARTIAL | live app edit/create/execute bridges |
 | Action verification | `action_verifier.cjs` | `/api/action-verification` | 12 checks, approval gate | VERIFIED | more executors |
 | Browser agent | `browser_agent.cjs` + playwright-core + system Chrome | `/api/browser/*` | 11 checks, live start/navigate | VERIFIED | DOM inspection routes, uploads, profiles |
-| Tasks | `task_engine.cjs` (7-state durable machine) | `/api/tasks` | 17 checks | VERIFIED | parallel worker pool |
+| Tasks | `task_engine.cjs` (7-state durable machine) | `/api/tasks` | 17 checks | VERIFIED | app-level execution semantics |
+| Parallel runner | `parallel_runner.cjs` (bounded pool, job graph over real modules) | `/api/parallel` | 17 checks | VERIFIED | worker-thread isolation, cross-restart resume |
 | Agents | `agent_delegation.cjs` over 28 real agents | `/api/agents-v2` | 13 checks | PARTIAL | live provider delegation |
 | Memory | 4 physical stores, real overview | `/api/projects-v2` | 13 checks | PARTIAL | unified MemoryFacade, SQLite in-process count |
 | Voice/avatar | real WS events → state labels; 3D model untouched | `/api/avatar`, `/api/live/status` | 16 checks | PARTIAL | mic selection, input-level diagnostics |

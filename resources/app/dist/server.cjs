@@ -5386,6 +5386,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Application Adapter Registry:", e.message);
   }
   try {
+    // Parallel Runner: bounded pool over real module functions with a job graph
+    const parallelRunner = require(import_path2.default.join(__dirname, "parallel_runner.cjs"));
+    app.use("/api/parallel", parallelRunner.createRouter());
+    console.log("[Server] Parallel Runner mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Parallel Runner:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
