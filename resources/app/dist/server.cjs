@@ -5362,6 +5362,14 @@ async function startServer() {
     console.warn("[Server] Could not mount capability gap analyzer:", e.message);
   }
   try {
+    // Video Intelligence Engine: real ffmpeg probe/analyze/edit with output validation
+    const videoEngine = require(import_path2.default.join(__dirname, "video_engine.cjs"));
+    app.use("/api/video", videoEngine.createRouter());
+    console.log("[Server] Video Intelligence Engine mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Video Intelligence Engine:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));

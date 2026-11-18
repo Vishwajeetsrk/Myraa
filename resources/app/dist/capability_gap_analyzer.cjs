@@ -95,12 +95,16 @@ const CATALOG = [
     id: 'video.engine',
     keywords: ['video', 'mp4', 'subtitle', 'trim video', 'transcribe video', 'render video'],
     check() {
-      const ff = commandAvailable('ffmpeg');
-      return {
-        status: ff.ok ? 'PARTIAL' : 'DEPENDENCY_MISSING',
-        reason: ff.ok ? 'ffmpeg available; MYRAA video adapter not implemented yet' : 'ffmpeg not available: ' + ff.detail,
-        evidence: { ffmpeg: ff.ok, detail: ff.detail },
-      };
+      try {
+        const vs = require(path.join(DIST, 'video_engine.cjs')).status();
+        return {
+          status: vs.ok ? 'PARTIAL' : vs.status,
+          reason: vs.ok
+            ? 'ffmpeg/ffprobe verified; probe/analyze(scene+silence)/trim/concat/edit/thumbnail implemented with ffprobe output validation; vision/ASR and subtitles NOT_IMPLEMENTED'
+            : vs.reason,
+          evidence: { ffmpeg: vs.ffmpeg, ffprobe: vs.ffprobe, limitations: vs.limitations },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
     },
   },
   {
@@ -143,9 +147,10 @@ const PLANS = {
     verification: 'POST /api/browser/start -> navigate -> screenshot file exists',
   },
   'video.engine': {
-    required: ['ffmpeg binary', 'video adapter module', 'output validation'],
-    steps: ['Install ffmpeg', 'Add video_engine.cjs wrapper (probe/analyze/trim)', 'Add output existence + ffprobe validation', 'Register capability + tests'],
-    verification: 'render a 1-second clip and validate output with ffprobe',
+    required: ['vision model adapter', 'ASR transcription adapter', 'approval gate + render receipts'],
+    steps: ['Add frame-sampling vision adapter for object/UI detection', 'Add ASR adapter for speech-to-text', 'Generate subtitles from transcript and wire into the edit pipeline', 'Add approval-gated render with output receipts'],
+    verification: 'analyze a real clip and verify transcript/labels against known ground truth',
+    note: 'core ffmpeg engine (probe/scene+silence analysis/trim/concat/edit/thumbnail with ffprobe validation) is already implemented',
   },
   'skills.execution': {
     required: ['skill runner', 'permission checks', 'sandbox', 'timeout/cancel', 'audit'],
