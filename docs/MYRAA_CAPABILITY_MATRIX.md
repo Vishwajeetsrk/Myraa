@@ -29,7 +29,7 @@ Statuses are from real runtime checks (`/api/capabilities`, `/api/health-manager
 | Design Doctor | `design_doctor.cjs` (66 evidenced findings) | `/api/design-doctor` | 15 checks | VERIFIED | act on findings |
 | Real icons | `@thesvg/react` (7,681 SVGs) | `/api/icons` | 21 checks | VERIFIED | none |
 | Capability intelligence | `capability_gap_analyzer.cjs` (gap schema, canDo verdict, dependency resolver, planner, self-test, durable tasks) | `/api/capability-gap` (+`/can-do`,`/gaps`,`/plan`,`/task`,`/self-test`) | 25 checks | VERIFIED | auto-install with approval, live provider audit |
-| Office (Word/Excel/PPT) | `office_doc_engine.cjs` | existing routes | static verification | PARTIAL | charts, live visual editing, slide redesign |
+| Office (Word/Excel/PPT) | `office_doc_engine.cjs` + `excel_intelligence.cjs` (openpyxl analysis/charts/dashboard) | existing routes + `/api/excel-intelligence` | 14 real-workbook checks | PARTIAL | live Word visual editing, slide redesign, PPT visual QA |
 | Video engine | none (ffmpeg probe only) | gap analyzer reports DEPENDENCY_MISSING | real ffmpeg probe | NOT_IMPLEMENTED | ffmpeg + adapter + validation |
 | OAuth | none | gap analyzer reports CONFIGURATION_REQUIRED | real token checks | NOT_IMPLEMENTED | OAuth PKCE flow + secure token storage |
 

@@ -330,7 +330,7 @@ Built-in zero-configuration access to 88 free public APIs across 14 categories:
 
 ## 17. Autonomous Operations Stack (v9.4.0)
 
-The v9.4.0 cycle adds nine governed autonomy subsystems, and the follow-up MCP transport phase makes the MCP registry real. Every subsystem ships with a live test suite -- **838 automated checks** across 44 suites -- and follows one safety contract: honest errors, additive-only data operations, and local-first storage under `%APPDATA%\MYRAA\`.
+The v9.4.0 cycle adds nine governed autonomy subsystems, and the follow-up MCP transport phase makes the MCP registry real. Every subsystem ships with a live test suite -- **852 automated checks** across 45 suites -- and follows one safety contract: honest errors, additive-only data operations, and local-first storage under `%APPDATA%\MYRAA\`.
 
 ### 17.1 Evidence Engine
 Turns observations into auditable findings.
@@ -404,7 +404,7 @@ Per-agent tool policy plus the Model Context Protocol server registry.
 - API: `GET/POST /api/permissions/*`, `GET/POST /api/mcp/*` (incl. `/api/mcp/call`, `/api/mcp/presets/add`)
 
 ### Verification
-All subsystems are covered by the live suites in `tests\` (evidence 29, investigation 37, workspace 43, connector market 26, model gateway 34, safety broker 31, event bus 25, timeline 27, permissions + MCP 34, MCP transport 32, action receipts 25, step watcher 14, response tags 21, capability registry 16, health manager 12, provider manager 15, connector registry 9, action registry 11, approval manager 10, MCP v2 13, skill registry 14, agent delegation 13, task engine 17, project index 13, avatar bridge 16, UI polish 17, diagnostics center 14, API surface 8, accessibility/perf 12, P0 security 16, P1 shell 16, screen intelligence 14, action verifier 12, brand icons 21, activity center 15, design doctor 15, settings workspace 13, browser agent 11, capability intelligence 25, video engine 17, skill runner 17, application adapters 18, parallel runner 17, screen intelligence v2 18 -- 838 checks across 44 documented suites; the live `tests\` directory (59 `test_*.cjs` files, all green) is authoritative). The MCP transport suite additionally runs real-server checks against the official `server-everything` when `MYRAA_MCP_LIVE=1` is set (no fake fixtures shipped). Run suites individually with `node tests\test_<name>.cjs`, or boot the app and watch the per-phase mount log lines.
+All subsystems are covered by the live suites in `tests\` (evidence 29, investigation 37, workspace 43, connector market 26, model gateway 34, safety broker 31, event bus 25, timeline 27, permissions + MCP 34, MCP transport 32, action receipts 25, step watcher 14, response tags 21, capability registry 16, health manager 12, provider manager 15, connector registry 9, action registry 11, approval manager 10, MCP v2 13, skill registry 14, agent delegation 13, task engine 17, project index 13, avatar bridge 16, UI polish 17, diagnostics center 14, API surface 8, accessibility/perf 12, P0 security 16, P1 shell 16, screen intelligence 14, action verifier 12, brand icons 21, activity center 15, design doctor 15, settings workspace 13, browser agent 11, capability intelligence 25, video engine 17, skill runner 17, application adapters 18, parallel runner 17, screen intelligence v2 18, excel intelligence 14 -- 852 checks across 45 documented suites; the live `tests\` directory (60 `test_*.cjs` files, all green) is authoritative). The MCP transport suite additionally runs real-server checks against the official `server-everything` when `MYRAA_MCP_LIVE=1` is set (no fake fixtures shipped). Run suites individually with `node tests\test_<name>.cjs`, or boot the app and watch the per-phase mount log lines.
 
 ---
 
@@ -484,7 +484,7 @@ Myraa/
 │       │   └── assets/                   # WebGL 3D models, textures & background.mp4
 │       ├── package.json                  # Application dependencies (v9.6.3)
 │       └── version.json                  # Dynamic version authority (9.6.3)
-├── tests/                        # 838 documented checks across 44 suites; 59 test_*.cjs files, all green (node tests\test_*.cjs)
+├── tests/                        # 852 documented checks across 45 suites; 60 test_*.cjs files, all green (node tests\test_*.cjs)
 ├── docs/                         # Per-phase integration docs (evidence, timeline, mcp-permissions, ...)
 ├── Projects/
 │   └── FigmaOutput/              # Generated HTML/CSS wireframes and mockups

@@ -67,7 +67,8 @@ First packaged release of the capability-repair program. Includes all work below
 - Fixed two real bugs found while extending: UIA window-list result (`{ok,windows}`) was never unwrapped so observation saw zero windows; UIA control `rect` bounds were dropped.
 - Fixed `application_adapters.locate` reading the wrong capture shape (`ctx.uiTree` vs `ctx.context.uiTree`).
 - Live-verified: `/analyze` returned a real Excel window with 200 UIA elements and 45 evidenced issues.
-- Total 838 documented checks across 44 suites; 59 `test_*.cjs` files present in `tests\`.
+- Phase C (Excel): `excel_intelligence.cjs` + `/api/excel-intelligence` extends the existing Office engine with real openpyxl workbook analysis (sheets, inferred column types, missing/duplicate values, formula counts), data-driven chart recommendation (bar/line/pie/scatter by data shape), dashboard generation with multiple charts bound to real ranges and KPI formulas, and reopen-validation of the produced workbook. No chart is reported unless openpyxl reads it back. New suite `test_excel_intelligence.cjs` (14 checks); live generate returned chartsReadBack=1, verified=true.
+- Total 852 documented checks across 45 suites; 60 `test_*.cjs` files present in `tests\`.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).

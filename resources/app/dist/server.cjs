@@ -5398,6 +5398,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Parallel Runner:", e.message);
   }
   try {
+    // Excel Intelligence: real openpyxl analysis, chart selection, dashboard + readback validation
+    const excelIntel = require(import_path2.default.join(__dirname, "excel_intelligence.cjs"));
+    app.use("/api/excel-intelligence", excelIntel.createRouter());
+    console.log("[Server] Excel Intelligence mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Excel Intelligence:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
