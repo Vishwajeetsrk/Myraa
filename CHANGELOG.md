@@ -40,6 +40,7 @@ All notable changes to MYRAA AI OS are documented here.
 - Electron permissions replaced unconditional `callback(true)` with an explicit allowlist; unknown permissions are denied and logged.
 - Removed the duplicate Apex route mount and hardcoded version fallbacks (`9.5.0`/`8.3.2`/`9.3.0`) — versions are read from `version.json`, with honest `0.0.0` when unavailable.
 - New `tests/test_p0_security.cjs` (16 checks); provider suite extended to 17. Total 606 checks across 30 suites.
+- P1 UX foundation: MYRAA Design System (`myraa_design_system.css`) with one token layer and shared panel/card/status styling; wider settings/memory workspaces; `myraa_shell_addon.js` adds a real-data status strip, a Capability Center (natural-language search across real skills/actions/connectors), and Ctrl+K command palette; static VERIFIED/ACTIVE badges are corrected to UNVERIFIED/MANIFEST VERIFIED. All numbers come from live APIs; avatar and 3D untouched. New suite `test_p1_shell.cjs` (16 checks). Total 622 checks across 31 suites.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).
