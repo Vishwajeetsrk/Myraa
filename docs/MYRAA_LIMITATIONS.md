@@ -5,7 +5,7 @@ This file lists what MYRAA **cannot** currently do. None of these are presented 
 ## Not implemented
 - OAuth for any connector (GitHub, Google/Gmail/Calendar, Microsoft Graph, Salesforce, Canva, Figma). Current connectors use environment keys only.
 - Video analysis/editing engine. `ffmpeg` is probed by the capability gap analyzer, but no adapter, renderer or output validation exists.
-- Skill runner/sandbox: 717 skills are catalogued and 715 manifests verified, but MYRAA cannot execute them through a validated runner.
+- Skill lifecycle (install/update/remove) and per-skill self-tests: 717 skills catalogued, 715 manifests verified. Bounded execution exists for skills with real scripts (`skill_runner.cjs`, `/api/skills-runner`), but instruction-only skills still cannot be "executed", and install/update/remove are not implemented.
 - MCP http transport, resources and prompts: stdio tools only; those endpoints honestly return `NOT_IMPLEMENTED`.
 - Microsoft Word/Excel/PowerPoint deep visual editing: document generation/review exists, but live open-document visual modification and chart/dashboard automation are not verified.
 - Application Adapter Registry (Word/Excel/PPT/VSCode-specific inspect/verify adapters): only generic UIA is available.

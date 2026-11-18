@@ -5370,6 +5370,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Video Intelligence Engine:", e.message);
   }
   try {
+    // Skill Runner: bounded execution for skills with real scripts, real approval gate
+    const skillRunner = require(import_path2.default.join(__dirname, "skill_runner.cjs"));
+    app.use("/api/skills-runner", skillRunner.createRouter());
+    console.log("[Server] Skill Runner mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Skill Runner:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));

@@ -124,8 +124,16 @@ const CATALOG = [
     id: 'skills.execution',
     keywords: ['skill', 'run skill', 'execute skill'],
     check() {
-      const present = exists(path.join(DIST, 'skill_registry.cjs'));
-      return { status: present ? 'NOT_IMPLEMENTED' : 'UNAVAILABLE', reason: present ? 'registry reports manifests; runner/sandbox not implemented' : 'registry missing', evidence: { registry: present, run: false } };
+      try {
+        const rs = require(path.join(DIST, 'skill_runner.cjs')).status();
+        return {
+          status: rs.ok ? 'PARTIAL' : 'UNAVAILABLE',
+          reason: rs.ok
+            ? rs.executable + ' of ' + rs.discovered + ' skills have real scripts; bounded execution with redacted receipts and a real approval gate works; install/update/remove and instruction-only execution remain NOT_IMPLEMENTED'
+            : 'skill runner unavailable',
+          evidence: { discovered: rs.discovered, executable: rs.executable, instructionOnly: rs.instructionOnly, receipts: rs.receipts },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
     },
   },
   {
@@ -153,9 +161,10 @@ const PLANS = {
     note: 'core ffmpeg engine (probe/scene+silence analysis/trim/concat/edit/thumbnail with ffprobe validation) is already implemented',
   },
   'skills.execution': {
-    required: ['skill runner', 'permission checks', 'sandbox', 'timeout/cancel', 'audit'],
-    steps: ['Add skill_runner.cjs using the action registry', 'Validate manifest permissions before execution', 'Run in a bounded process with timeout', 'Write receipts + verification result'],
-    verification: 'run a harmless test skill and verify its declared output',
+    required: ['install/update/remove lifecycle', 'self-test per skill', 'instruction-only execution adapter'],
+    steps: ['Add install/update/remove with signature + dependency checks', 'Add a declarative self-test to each executable skill manifest', 'Define an honest execution mode for instruction-only skills', 'Wire skill receipts into the activity center'],
+    verification: 'install a skill, run its self-test, execute it, verify declared output, then remove it cleanly',
+    note: 'bounded runner with allowlisted interpreters, sanitised env, timeout, redacted receipts and real approval gating is already implemented',
   },
   'office.excel': {
     required: ['Excel chart API adapter', 'data-range binding', 'validation'],

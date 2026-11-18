@@ -27,7 +27,8 @@ function check(name, cond, extra) {
   check('plan includes verification', video.gaps.find((g) => g.capability === 'video.engine').implementation.verification.length > 20);
 
   const skill = ga.analyze('run a skill');
-  check('skill execution is NOT_IMPLEMENTED, not faked', skill.capabilities.find((c) => c.id === 'skills.execution').status === 'NOT_IMPLEMENTED');
+  const skillCap = skill.capabilities.find((c) => c.id === 'skills.execution');
+  check('skill execution is PARTIAL with real runner evidence', skillCap.status === 'PARTIAL' && skillCap.evidence.executable > 0 && /NOT_IMPLEMENTED/.test(skillCap.reason));
 
   const mcp = ga.analyze('call an mcp tool');
   check('MCP status from real registry', mcp.capabilities.find((c) => c.id === 'mcp.stdio').status === 'AVAILABLE');

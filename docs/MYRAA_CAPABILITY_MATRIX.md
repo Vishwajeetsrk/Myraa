@@ -12,7 +12,7 @@ Statuses are from real runtime checks (`/api/capabilities`, `/api/health-manager
 | Diagnostics | `diagnostics_center.cjs` | `/api/diagnostics-center` | 20 checks + report | VERIFIED | none for current scope |
 | Provider routing | `ai_provider_manager.cjs` + real Gemini adapter | `/api/providers`, `/api/chat` | 17 checks, live chat reply | VERIFIED | Anthropic chat adapter; full stack consolidation |
 | MCP stdio | `mcp_manager.cjs` + `mcp_manager_v2.cjs` | `/api/mcp`, `/api/mcp-v2` | real probe 207 tools (REA) | VERIFIED | http transport, resources, prompts |
-| Skills | `skill_registry.cjs` (717 catalogued / 715 verified) | `/api/skills-v2` | 14 checks | PARTIAL | runner, sandbox, update/remove |
+| Skills | `skill_registry.cjs` (717/715) + `skill_runner.cjs` (bounded executor) | `/api/skills-v2`, `/api/skills-runner` | 14 + 17 checks | PARTIAL | install/update/remove, instruction-only execution, self-tests |
 | Connectors | `connector_registry.cjs` (8 env-key connectors) | `/api/connectors-v2` | 9 checks | PARTIAL | OAuth (Google/GitHub/Graph/Salesforce/Canva/Figma) |
 | Actions | `action_registry.cjs` (47 derived actions) | `/api/actions` | 11 checks | VERIFIED | execution bindings for every action |
 | Approvals | `approval_manager.cjs` over broker/workspace | `/api/approvals` | 10 checks | VERIFIED | in-app approval cards |
