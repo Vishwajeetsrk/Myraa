@@ -40,7 +40,8 @@ class SkillDiscoveryEngine {
       { path: this.primarySkillsDir, source: 'Universal Downloads Library' },
       { path: this.workspaceSkillsDir, source: 'Workspace Agents' },
       { path: this.userSkillsDir, source: 'User Custom' },
-      { path: this.globalSkillsDir, source: 'Global Config' }
+      { path: this.globalSkillsDir, source: 'Global Config' },
+      { path: path.join(process.env.USERPROFILE || require('os').homedir(), '.agents', 'skills'), source: 'Global Agent Skills' }
     ];
 
     for (const loc of scanLocations) {

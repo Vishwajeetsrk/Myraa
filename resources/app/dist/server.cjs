@@ -5330,6 +5330,14 @@ async function startServer() {
     console.warn("[Server] Could not mount action verification:", e.message);
   }
   try {
+    // Real brand icons from @thesvg/react + design-skill ingestion support
+    const brandIcons44 = require(import_path2.default.join(__dirname, "brand_icon_registry.cjs"));
+    app.use("/api/icons", brandIcons44.createRouter());
+    console.log("[Server] Brand icon registry mounted (real SVG assets)");
+  } catch(e) {
+    console.warn("[Server] Could not mount brand icon registry:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));

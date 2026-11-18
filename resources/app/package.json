@@ -45,6 +45,7 @@
     "@anthropic-ai/sdk": "^0.124.0",
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.1.14",
+    "@thesvg/react": "^4.0.12",
     "@vitejs/plugin-react": "^5.0.4",
     "call-bind-apply-helpers": "^1.0.2",
     "dotenv": "^17.2.3",
