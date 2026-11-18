@@ -156,6 +156,7 @@
     var targets = [
       ['Capability Center', 'find what MYRAA can do', openCapabilityCenter],
       ['Health report', 'open real diagnostics', function () { window.open('/api/diagnostics-center/report', '_blank'); }],
+      ['Design Doctor', 'evidence-based UI critique from real source files', function () { window.open('/api/design-doctor/report', '_blank'); }],
       ['Tasks', 'open task registry', function () { window.open('/api/tasks/list', '_blank'); }],
     ];
     targets.filter(function (t) { return !q || (t[0] + ' ' + t[1]).toLowerCase().indexOf(q) !== -1; })

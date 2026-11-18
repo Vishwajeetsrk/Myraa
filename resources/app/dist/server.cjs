@@ -5346,6 +5346,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Activity Center:", e.message);
   }
   try {
+    // Design Doctor: static critique from real UI source files
+    const designDoctor47 = require(import_path2.default.join(__dirname, "design_doctor.cjs"));
+    app.use("/api/design-doctor", designDoctor47.createRouter());
+    console.log("[Server] Design Doctor mounted (evidence-based static critique)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Design Doctor:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));

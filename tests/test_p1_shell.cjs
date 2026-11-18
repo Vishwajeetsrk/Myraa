@@ -37,6 +37,7 @@ function check(name, cond, extra) {
   check('badge pass removes fake VERIFIED', /UNVERIFIED/.test(addon));
   check('addon never touches 3D internals', !/\.mesh|\.texture|\.shader|model\.pmx|EYES AUTO/i.test(addon));
   check('no hardcoded capability counts', !/\b(532|530|28|12|8)\s+(skills|agents|connectors)/i.test(addon));
+  check('Design Doctor reachable from command palette', /Design Doctor/.test(addon) && /\/api\/design-doctor\/report/.test(addon));
 
   console.log('\nP1 shell tests: ' + pass + ' pass, ' + fail + ' fail');
   process.exit(fail ? 1 : 0);
