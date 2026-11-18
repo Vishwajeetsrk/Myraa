@@ -1,0 +1,202 @@
+/* MYRAA Design System (P1) - one token layer loaded after all other UI CSS. */
+
+:root {
+  --myraa-bg: #070b14;
+  --myraa-surface: rgba(16, 24, 39, 0.82);
+  --myraa-surface-2: rgba(23, 34, 53, 0.9);
+  --myraa-border: rgba(56, 207, 255, 0.14);
+  --myraa-border-strong: rgba(56, 207, 255, 0.4);
+  --myraa-text: #f5f7fa;
+  --myraa-muted: #9ba8bd;
+  --myraa-accent: #38cfff;
+  --myraa-accent-2: #a855f7;
+  --myraa-success: #42d39b;
+  --myraa-warning: #f5b942;
+  --myraa-danger: #ff5f6d;
+  --myraa-radius: 14px;
+  --myraa-gap: 12px;
+  --myraa-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+/* One panel look for every surface. */
+.myraa-panel,
+[class*="hud-panel"],
+[class*="drawer"],
+[class*="modal"] {
+  background: var(--myraa-surface) !important;
+  border: 1px solid var(--myraa-border) !important;
+  border-radius: var(--myraa-radius) !important;
+  box-shadow: var(--myraa-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.myraa-card,
+[class*="skill-card"],
+[class*="plugin-card"] {
+  background: var(--myraa-surface-2) !important;
+  border: 1px solid var(--myraa-border) !important;
+  border-radius: 12px !important;
+  padding: 14px !important;
+  gap: 10px !important;
+}
+
+/* Readable body text; technical metadata may stay smaller. */
+.myraa-panel,
+[class*="hud-panel"] {
+  font-size: 13px !important;
+  color: var(--myraa-text) !important;
+  line-height: 1.5 !important;
+}
+
+/* Wider workspaces so settings/memory stop feeling cramped. */
+[class*="settings"],
+[class*="memory"],
+[class*="workspace"] {
+  min-width: min(760px, 92vw) !important;
+  max-width: min(1100px, 96vw) !important;
+}
+
+/* Unified status strip and command palette. */
+#myraa-unified-status {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--myraa-surface);
+  border: 1px solid var(--myraa-border);
+  color: var(--myraa-text);
+  font: 11.5px/1.4 'Segoe UI', system-ui, sans-serif;
+  box-shadow: var(--myraa-shadow);
+  overflow: hidden;
+  white-space: nowrap;
+}
+#myraa-unified-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--myraa-success); flex: none; }
+#myraa-unified-status .sep { color: var(--myraa-muted); opacity: 0.5; }
+
+#myraa-command-palette,
+#myraa-capability-center {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 9vh 16px 16px;
+  background: rgba(3, 6, 12, 0.62);
+  backdrop-filter: blur(6px);
+}
+#myraa-command-palette.open,
+#myraa-capability-center.open { display: flex; }
+#myraa-command-palette .box,
+#myraa-capability-center .box {
+  width: min(760px, 96vw);
+  max-height: 78vh;
+  overflow: auto;
+  background: var(--myraa-surface-2);
+  border: 1px solid var(--myraa-border-strong);
+  border-radius: 18px;
+  box-shadow: var(--myraa-shadow);
+  padding: 16px;
+  color: var(--myraa-text);
+}
+#myraa-command-palette input,
+#myraa-capability-center input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--myraa-border);
+  background: rgba(7, 11, 20, 0.7);
+  color: var(--myraa-text);
+  font: 14px 'Segoe UI', system-ui, sans-serif;
+}
+#myraa-command-palette .result,
+#myraa-capability-center .result {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+}
+#myraa-command-palette .result:hover,
+#myraa-capability-center .result:hover { border-color: var(--myraa-border); background: rgba(56, 207, 255, 0.06); }
+#myraa-command-palette .kind,
+#myraa-capability-center .kind { font-size: 10px; color: var(--myraa-accent); font-family: monospace; text-transform: uppercase; }
+#myraa-command-palette .meta,
+#myraa-capability-center .meta { font-size: 11px; color: var(--myraa-muted); }
+
+/* Navigation discoverability + composer clarity (design-skill critique pass). */
+.left-sidebar .nav-item,
+[class*="nav-item"] {
+  min-height: 40px !important;
+  gap: 10px !important;
+  padding: 9px 12px !important;
+  justify-content: flex-start !important;
+}
+.bottom-input-container {
+  min-height: 56px !important;
+  margin-bottom: 18px !important;
+  padding: 12px 16px !important;
+}
+[class*="pill"],
+[class*="badge"] {
+  font-size: 11px !important;
+  padding: 5px 9px !important;
+}
+
+/* Screen Awareness HUD (collapsible, compact, never covers the avatar). */
+#myraa-screen-hud {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 58;
+  width: 264px;
+  max-height: 56vh;
+  overflow: auto;
+  background: var(--myraa-surface);
+  border: 1px solid var(--myraa-border);
+  border-radius: 12px;
+  box-shadow: var(--myraa-shadow);
+  color: var(--myraa-text);
+  font: 11px/1.45 'Segoe UI', system-ui, sans-serif;
+  padding: 8px;
+}
+#myraa-screen-hud #myraa-hud-toggle {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: var(--myraa-accent);
+  font: 700 10px 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  padding: 3px 4px;
+}
+#myraa-screen-hud .myraa-hud-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 4px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+#myraa-screen-hud .myraa-hud-row b { color: var(--myraa-muted); font-weight: 500; text-align: right; }
+#myraa-screen-hud .myraa-hud-event { display: flex; justify-content: space-between; gap: 6px; color: var(--myraa-muted); padding: 2px 4px; }
+#myraa-screen-hud .myraa-hud-events { border-top: 1px solid var(--myraa-border); margin-top: 5px; padding-top: 4px; }
+@media (max-width: 1100px) { #myraa-screen-hud { width: 220px; } }
+
+.myraa-launch-btn {
+  padding: 6px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--myraa-border-strong);
+  background: rgba(56, 207, 255, 0.1);
+  color: var(--myraa-accent);
+  font: 11px 'Segoe UI', system-ui, sans-serif;
+  cursor: pointer;
+}

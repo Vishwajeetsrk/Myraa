@@ -5338,6 +5338,14 @@ async function startServer() {
     console.warn("[Server] Could not mount brand icon registry:", e.message);
   }
   try {
+    // Activity Center + Screen Awareness HUD data (real registries only)
+    const activityCenter46 = require(import_path2.default.join(__dirname, "activity_center.cjs"));
+    app.use("/api/activity-center", activityCenter46.createRouter());
+    console.log("[Server] Activity Center mounted (real aggregated state)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Activity Center:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));

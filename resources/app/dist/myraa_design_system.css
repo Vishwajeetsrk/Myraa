@@ -151,6 +151,46 @@
   padding: 5px 9px !important;
 }
 
+/* Screen Awareness HUD (collapsible, compact, never covers the avatar). */
+#myraa-screen-hud {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 58;
+  width: 264px;
+  max-height: 56vh;
+  overflow: auto;
+  background: var(--myraa-surface);
+  border: 1px solid var(--myraa-border);
+  border-radius: 12px;
+  box-shadow: var(--myraa-shadow);
+  color: var(--myraa-text);
+  font: 11px/1.45 'Segoe UI', system-ui, sans-serif;
+  padding: 8px;
+}
+#myraa-screen-hud #myraa-hud-toggle {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: var(--myraa-accent);
+  font: 700 10px 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  padding: 3px 4px;
+}
+#myraa-screen-hud .myraa-hud-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 4px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+#myraa-screen-hud .myraa-hud-row b { color: var(--myraa-muted); font-weight: 500; text-align: right; }
+#myraa-screen-hud .myraa-hud-event { display: flex; justify-content: space-between; gap: 6px; color: var(--myraa-muted); padding: 2px 4px; }
+#myraa-screen-hud .myraa-hud-events { border-top: 1px solid var(--myraa-border); margin-top: 5px; padding-top: 4px; }
+@media (max-width: 1100px) { #myraa-screen-hud { width: 220px; } }
+
 .myraa-launch-btn {
   padding: 6px 12px;
   border-radius: 9px;
