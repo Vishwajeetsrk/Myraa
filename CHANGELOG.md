@@ -20,7 +20,9 @@ All notable changes to MYRAA AI OS are documented here.
 - New suites `test_mcp_manager_v2.cjs` (13), `test_skill_registry.cjs` (14).
 - Phase 10 `agent_delegation.cjs`: specialist delegation over the existing 28-agent orchestrator with structured results, real task.* events and honest failures. Mounted at `/api/agents-v2`.
 - Phase 11 `task_engine.cjs`: persistent task state machine (QUEUED/RUNNING/WAITING_FOR_APPROVAL/PAUSED/COMPLETED/FAILED/CANCELLED), approval attachment, real events and route CRUD. Mounted at `/api/tasks`.
-- New suites `test_agent_delegation.cjs` (13), `test_task_engine.cjs` (17). Total 508 checks across 23 suites.
+- New suites `test_agent_delegation.cjs` (13), `test_task_engine.cjs` (17).
+- Phase 12 `project_index.cjs`: real project discovery with bounded file counts/git facts and a memory overview across actual stores; unknown values are `null`, never zero or placeholders. Mounted at `/api/projects-v2`.
+- New suite `test_project_index.cjs` (13). Total 521 checks across 24 suites.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).

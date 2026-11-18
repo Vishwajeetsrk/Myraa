@@ -5290,6 +5290,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Phase 10/11 modules:", e.message);
   }
   try {
+    // Phase 12: real project index + memory overview (honest nulls)
+    const projectIndex35 = require(import_path2.default.join(__dirname, "project_index.cjs"));
+    app.use("/api/projects-v2", projectIndex35.createRouter());
+    console.log("[Server] Project index + memory overview mounted (Phase 12)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Phase 12 modules:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
