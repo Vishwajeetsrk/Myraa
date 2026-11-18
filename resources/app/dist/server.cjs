@@ -6360,8 +6360,11 @@ ${interceptorScript}`);
   });
 
   app.get("/api/live/status", (req, res) => {
+    const activeConnections = wss && wss.clients ? wss.clients.size : 0;
     res.json({
-      status: liveSupervisor.currentStatus,
+      status: activeConnections > 0 ? 'CONNECTED' : 'IDLE',
+      statusSource: 'websocket',
+      activeConnections,
       reconnectAttempts: liveSupervisor.reconnectAttempts,
       lastSessionActiveAt: liveSupervisor.lastSessionActiveAt,
       lastError: liveSupervisor.lastError

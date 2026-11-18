@@ -2,6 +2,17 @@
 
 All notable changes to MYRAA AI OS are documented here.
 
+## [Unreleased]
+
+### Added
+- Phase 1 verified implementation map (`docs/myraa-audit/CAPABILITY_MAP.md`) and Phase 2 registry design (`CAPABILITY_REGISTRY_PLAN.md`): every subsystem traced to real entry points, storage, API and health state; fake vs real status catalogued.
+- Extended `agi/capability_registry.cjs` with the universal status enum, truthful public views (null latency when never measured), live counters and `/public` + `/summary` routes; new `agi/capability_bootstrap.cjs` registers 12 real subsystems with real health checks.
+- New `tests/test_capability_registry.cjs` (16 checks). Total 394 checks across 14 suites.
+
+### Fixed
+- `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).
+- `/api/agent-health` no longer reports fake `online:true`/`operational`/92 tools; uses the real probe result. `/api/live/status` status now derives from actual WebSocket client count instead of a supervisor field that is never assigned.
+
 ## [9.6.3] - 2026-11-18
 
 ### Fixed

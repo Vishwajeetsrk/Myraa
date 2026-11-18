@@ -2475,9 +2475,26 @@ router.post('/api/identity/rename', (req, res) => {
   }
 });
 
-router.get('/api/capabilities', (req, res) => {
-  const now = new Date().toISOString();
-  const caps = [
+router.get('/api/capabilities', async (req, res) => {
+  // Phase 2: derive capabilities from the real registry. No hardcoded statuses,
+  // no fabricated last_tested/last_success values.
+  try {
+    const bootstrap = require('./agi/capability_bootstrap.cjs');
+    bootstrap.ensureRegistered();
+    const registry = require('./agi/capability_registry.cjs');
+    await registry.healthSummary();
+    return res.json({
+      success: true,
+      capabilities: registry.listPublic(),
+      summary: registry.getCapabilitySummary(),
+      note: 'statuses derive from registered capabilities and real health checks',
+    });
+  } catch (e) {
+    return res.json({ success: true, capabilities: [], summary: { total: 0, error: 'registry unavailable' } });
+  }
+});
+/*
+const capsLegacy = [
     { id: 'fs.list', name: 'File System Explorer', category: 'System', status: 'REAL', risk_level: 'READ_ONLY', dependencies: ['local_fs'], plugin: null, offline_support: true, online_required: false, last_tested: now, last_success: now, last_error: null, description: 'Browse and inspect filesystem directories' },
     { id: 'fs.read', name: 'File Reader', category: 'System', status: 'REAL', risk_level: 'READ_ONLY', dependencies: ['local_fs'], plugin: null, offline_support: true, online_required: false, last_tested: now, last_success: now, last_error: null, description: 'Read local text and document files' },
     { id: 'fs.write', name: 'File Writer', category: 'System', status: 'REAL', risk_level: 'SAFE_WRITE', dependencies: ['local_fs'], plugin: null, offline_support: true, online_required: false, last_tested: now, last_success: now, last_error: null, description: 'Write files in designated workspace paths' },
@@ -2506,6 +2523,7 @@ router.get('/api/capabilities', (req, res) => {
   ];
   res.json({ success: true, capabilities: caps });
 });
+*/
 
 router.get('/api/feature-truth', (req, res) => {
   const items = [

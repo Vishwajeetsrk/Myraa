@@ -228,7 +228,7 @@ function _readAppVersionSync() {
     const pj = JSON.parse(f.readFileSync(p.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pj && pj.version) return 'v' + pj.version;
   } catch (e) {}
-  return 'v9.2.0';
+  return 'v9.5.0';
 }
 
 router.get('/api/update/check', (req, res) => {
@@ -1081,14 +1081,16 @@ router.get('/api/agent-health', async (req, res) => {
     agentData = await probeAgentHealth(800);
   } catch (e) {}
 
-  const toolCount = agentData?.tool_count || (DesktopAutomation ? Object.keys(DesktopAutomation).length : 92);
+  const toolCount = agentData && Number.isFinite(agentData.tool_count)
+    ? agentData.tool_count
+    : (DesktopAutomation ? Object.keys(DesktopAutomation).length : 0);
   res.json({
-    ok: true,
-    online: true,
+    ok: !!agentData,
+    online: !!agentData,
     tool_count: toolCount,
     toolCount: toolCount,
-    engine: agentData ? 'FastAPI Python Agent (Port 8765)' : 'DesktopAutomation Win32 Native Engine',
-    status: 'operational',
+    engine: agentData ? 'FastAPI Python Agent (Port 8765)' : (DesktopAutomation ? 'DesktopAutomation Win32 Fallback' : 'unavailable'),
+    status: agentData ? 'READY' : (DesktopAutomation ? 'DEGRADED' : 'UNAVAILABLE'),
     capabilities: [
       'App control', 'Browser', 'Volume', 'Brightness', 'Power', 'Files', 'Screenshot', 'Clipboard', 'Office AI', 'Keyboard & Mouse'
     ]
@@ -3431,6 +3433,18 @@ router.get('/api/teach/passive/status', (req, res) => {
   if (!passiveLearningService) return res.status(503).json({ ok: false, error: 'Passive learning service not available' });
   try {
     res.json({ ok: true, ...passiveLearningService.getStatus() });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Get recent passive learning trajectories (Screenpipe ring-buffer with password barrier)
+router.get('/api/teach/passive/recent', (req, res) => {
+  if (!passiveLearningService) return res.status(503).json({ ok: false, error: 'Passive learning service not available' });
+  try {
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const data = passiveLearningService.getRecentTrajectories(limit);
+    res.json(data);
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }

@@ -78,6 +78,25 @@ const CATEGORIES = {
   MULTIMODAL:     'multimodal',
 };
 
+// ── Universal status model (Phase 2) ───────────────────────────────────────
+// Only these states may be rendered by the UI. Every badge needs a real source.
+const STATUS = Object.freeze({
+  UNAVAILABLE: 'UNAVAILABLE',
+  NOT_CONFIGURED: 'NOT_CONFIGURED',
+  DISCONNECTED: 'DISCONNECTED',
+  AUTH_REQUIRED: 'AUTH_REQUIRED',
+  CONNECTING: 'CONNECTING',
+  CONNECTED: 'CONNECTED',
+  DEGRADED: 'DEGRADED',
+  ERROR: 'ERROR',
+  READY: 'READY',
+  RUNNING: 'RUNNING',
+  PAUSED: 'PAUSED',
+  DISABLED: 'DISABLED',
+});
+const STATUS_SOURCES = Object.freeze(['oauth', 'health_check', 'runtime', 'model_probe', 'websocket', 'database', 'local_process']);
+const liveCounters = new Map(); // name -> () => number|null, supplied by real registries only
+
 // ── Registration ───────────────────────────────────────────────────────────
 
 /**
@@ -108,6 +127,21 @@ function register(descriptor) {
     healthCheck: typeof descriptor.healthCheck === 'function' ? descriptor.healthCheck : null,
     riskLevel: descriptor.riskLevel || 'LOW',
     enabled: descriptor.enabled !== false,
+    // Phase 2 truthful status fields. null = not tested / not applicable.
+    available: descriptor.available === true,
+    authenticated: typeof descriptor.authenticated === 'boolean' ? descriptor.authenticated : null,
+    healthy: descriptor.healthy === true,
+    local: descriptor.local === true,
+    requiresNetwork: descriptor.requiresNetwork === true,
+    requiresPermission: descriptor.requiresPermission === true,
+    permissions: Array.isArray(descriptor.permissions) ? descriptor.permissions : [],
+    tools: Array.isArray(descriptor.tools) ? descriptor.tools : [],
+    skills: Array.isArray(descriptor.skills) ? descriptor.skills : [],
+    providers: Array.isArray(descriptor.providers) ? descriptor.providers : [],
+    actions: Array.isArray(descriptor.actions) ? descriptor.actions : [],
+    statusSource: STATUS_SOURCES.includes(descriptor.statusSource) ? descriptor.statusSource : (descriptor.healthCheck ? 'health_check' : 'runtime'),
+    lastUsed: typeof descriptor.lastUsed === 'string' ? descriptor.lastUsed : null,
+    error: typeof descriptor.error === 'string' ? descriptor.error : null,
     lastHealth: { state: 'unknown', latencyMs: 0, timestamp: 0 },
     registeredAt: Date.now(),
   };
@@ -371,11 +405,97 @@ function getSummary() {
   };
 }
 
+// ── Public truthful views (Phase 2) ────────────────────────────────────────
+
+function deriveStatus(e) {
+  if (!e.enabled) return STATUS.DISABLED;
+  const state = String((e.lastHealth && e.lastHealth.state) || '').toLowerCase();
+  if (state === 'healthy' || state === 'ok') return STATUS.READY;
+  if (state === 'degraded') return STATUS.DEGRADED;
+  if (state === 'error') return STATUS.ERROR;
+  if (e.authenticated === false) return STATUS.AUTH_REQUIRED;
+  if (!e.healthCheck && !e.available) return STATUS.NOT_CONFIGURED;
+  return STATUS.UNAVAILABLE;
+}
+
+/** Serialisable capability record. Never includes a function or a secret. */
+function publicView(e) {
+  const checked = !!(e.lastHealth && e.lastHealth.timestamp);
+  return {
+    id: e.id,
+    name: e.name,
+    description: e.description,
+    category: e.category,
+    version: e.version,
+    enabled: !!e.enabled,
+    available: !!e.available,
+    authenticated: e.authenticated,
+    healthy: !!e.healthy,
+    local: !!e.local,
+    requiresNetwork: !!e.requiresNetwork,
+    requiresPermission: !!e.requiresPermission,
+    permissions: e.permissions.slice(),
+    dependencies: e.dependencies.slice(),
+    tools: e.tools.slice(),
+    skills: e.skills.slice(),
+    providers: e.providers.slice(),
+    actions: e.actions.slice(),
+    lastChecked: checked ? new Date(e.lastHealth.timestamp).toISOString() : null,
+    lastUsed: e.lastUsed,
+    error: e.error || (deriveStatus(e) === STATUS.ERROR && checked && e.lastHealth.detail ? String(e.lastHealth.detail).slice(0, 300) : null),
+    // null means no request was ever timed - never fabricate latency.
+    latencyMs: checked && Number.isFinite(e.lastHealth.latencyMs) ? e.lastHealth.latencyMs : null,
+    status: deriveStatus(e),
+    statusSource: e.statusSource,
+    hasHealthCheck: typeof e.healthCheck === 'function',
+  };
+}
+
+function listPublic() { return Array.from(engines.values()).map(publicView); }
+
+/** Real registries supply their own counters; never guess a count. */
+function registerCounter(name, fn) {
+  if (!name || typeof fn !== 'function') return false;
+  liveCounters.set(String(name), fn);
+  return true;
+}
+
+function getCapabilitySummary() {
+  const views = listPublic();
+  const byStatus = {};
+  const byCategory = {};
+  for (const v of views) {
+    byStatus[v.status] = (byStatus[v.status] || 0) + 1;
+    byCategory[v.category] = (byCategory[v.category] || 0) + 1;
+  }
+  const counts = {};
+  for (const [name, fn] of liveCounters) {
+    try {
+      const value = fn();
+      counts[name] = Number.isFinite(value) ? value : null;
+    } catch (e) { counts[name] = null; }
+  }
+  return {
+    total: views.length,
+    enabled: views.filter((v) => v.enabled).length,
+    byStatus,
+    byCategory,
+    liveCounts: counts,
+    statusEnum: Object.values(STATUS),
+  };
+}
+
 // ── Express Router (optional mount) ────────────────────────────────────────
 
 function createRouter() {
   const express = require('express');
   const router = express.Router();
+
+  router.get('/public', (req, res) => {
+    res.json({ capabilities: listPublic(), summary: getCapabilitySummary() });
+  });
+
+  router.get('/summary', (req, res) => res.json(getCapabilitySummary()));
 
   router.get('/registry', (req, res) => {
     res.json({ engines: listAll(), summary: getSummary() });
@@ -438,5 +558,11 @@ module.exports = {
   saveRegistry,
   loadRegistry,
   getSummary,
+  STATUS,
+  STATUS_SOURCES,
+  publicView,
+  listPublic,
+  registerCounter,
+  getCapabilitySummary,
   createRouter,
 };
