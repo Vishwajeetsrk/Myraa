@@ -5354,6 +5354,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Design Doctor:", e.message);
   }
   try {
+    // Capability Gap Analyzer: real capability checks + implementation plans
+    const gapAnalyzer49 = require(import_path2.default.join(__dirname, "capability_gap_analyzer.cjs"));
+    app.use("/api/capability-gap", gapAnalyzer49.createRouter());
+    console.log("[Server] Capability gap analyzer mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount capability gap analyzer:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));

@@ -17,8 +17,22 @@ class BrowserAgent extends EventEmitter {
     this.maxHistory = 100;
     this.headless = true;
     this.playwrightAvailable = false;
+    this.playwrightModule = null;
+    this.runtimeSource = null;
+    this.executablePath = null;
     this._ensureScreenshotDir();
-    this._checkPlaywright();
+    this._playwrightReady = this._checkPlaywright();
+  }
+
+  _findBrowser() {
+    const candidates = [
+      process.env.MYRAA_BROWSER_PATH,
+      process.env.PROGRAMFILES ? path.join(process.env.PROGRAMFILES, 'Google', 'Chrome', 'Application', 'chrome.exe') : null,
+      process.env['PROGRAMFILES(X86)'] ? path.join(process.env['PROGRAMFILES(X86)'], 'Google', 'Chrome', 'Application', 'chrome.exe') : null,
+      path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      process.env.PROGRAMFILES ? path.join(process.env.PROGRAMFILES, 'Microsoft', 'Edge', 'Application', 'msedge.exe') : null,
+    ].filter(Boolean);
+    return candidates.find((p) => fs.existsSync(p)) || null;
   }
 
   _ensureScreenshotDir() {
@@ -27,16 +41,24 @@ class BrowserAgent extends EventEmitter {
 
   async _checkPlaywright() {
     try {
-      require('playwright');
+      this.playwrightModule = require('playwright');
+      this.runtimeSource = 'playwright';
       this.playwrightAvailable = true;
-    } catch (e) {
+      return;
+    } catch (e) { /* full playwright not installed - use the core runtime + system browser */ }
+    try {
+      this.playwrightModule = require('playwright-core');
+      this.runtimeSource = 'playwright-core';
+      this.executablePath = this._findBrowser();
+      this.playwrightAvailable = !!this.executablePath;
+    } catch (e2) {
       this.playwrightAvailable = false;
     }
   }
 
   getCapabilities() {
     return {
-      playwrightAvailable: this.playwrightAvailable, headless: this.headless,
+      playwrightAvailable: this.playwrightAvailable, runtimeSource: this.runtimeSource, executablePath: this.executablePath, headless: this.headless,
       viewport: this.viewport, isActive: this.isActive,
       supportedActions: ['navigate', 'go_back', 'go_forward', 'click', 'type', 'press', 'scroll', 'screenshot', 'evaluate', 'wait', 'hover', 'select', 'focus', 'close'],
       currentUrl: this.page?.url?.() || null, title: null
@@ -44,13 +66,19 @@ class BrowserAgent extends EventEmitter {
   }
 
   async start(headless = true) {
-    if (!this.playwrightAvailable) {
-      throw new Error('Playwright not available. Install with: npm install playwright');
+    await this._playwrightReady;
+    if (!this.playwrightAvailable || !this.playwrightModule) {
+      throw new Error('No browser runtime available: install playwright-core and a system Chrome/Edge, or playwright with browsers');
     }
     this.headless = headless;
     try {
-      const { chromium } = require('playwright');
-      this.browser = await chromium.launch({ headless, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] });
+      const chromium = this.playwrightModule.chromium;
+      const launchOpts = { headless, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] };
+      if (this.runtimeSource === 'playwright-core') {
+        if (!this.executablePath) throw new Error('No system browser found (set MYRAA_BROWSER_PATH)');
+        launchOpts.executablePath = this.executablePath;
+      }
+      this.browser = await chromium.launch(launchOpts);
       this.context = await this.browser.newContext({ viewport: this.viewport, userAgent: this.userAgent });
       this.page = await this.context.newPage();
       this.isActive = true;
