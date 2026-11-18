@@ -5314,6 +5314,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Phase 15 module:", e.message);
   }
   try {
+    // Screen Intelligence: normalized observation over existing UIA/OCR/capture
+    const screenIntel42 = require(import_path2.default.join(__dirname, "screen_intelligence.cjs"));
+    app.use("/api/screen-intelligence", screenIntel42.createRouter());
+    console.log("[Server] Screen Intelligence mounted (observe + target resolver)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Screen Intelligence:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
