@@ -23,7 +23,7 @@ function check(name, cond, extra) {
   check('ollama is local (no key required)', adapters.find((a) => a.id === 'ollama').configured === true && adapters.find((a) => a.id === 'ollama').keyRequired === false);
   check('gemini is unconfigured without key', adapters.find((a) => a.id === 'gemini').configured === false);
   check('realtime flag only on realtime-capable adapter', adapters.filter((a) => a.capabilities.realtime).every((a) => a.id === 'gemini'));
-  check('unimplemented gemini chat is declared', adapters.find((a) => a.id === 'gemini').implemented.chat === false);
+  check('Gemini chat implementation is declared', adapters.find((a) => a.id === 'gemini').implemented.chat === true);
 
   const local = pm.route({ localOnly: true, task: 'coding' });
   check('localOnly routes to ollama', local.ok === true && local.provider === 'ollama');
@@ -39,8 +39,13 @@ function check(name, cond, extra) {
   const stillNoKeyLeak = JSON.stringify(pm.listAdapters());
   check('configured adapter still hides key value', !stillNoKeyLeak.includes('SENTINEL_TEST_KEY'));
 
+  check('Gemini chat adapter is declared implemented', pm.listAdapters().find((a) => a.id === 'gemini').implemented.chat === true);
+  const savedFetch = global.fetch;
+  global.fetch = async () => ({ ok: true, status: 200, text: async () => JSON.stringify({ candidates: [{ content: { parts: [{ text: 'stubbed gemini reply' }] } }] }) });
   const chatResult = await pm.chat({ provider: 'gemini', messages: [{ role: 'user', content: 'hi' }] });
-  check('unimplemented chat is honest NOT_IMPLEMENTED', chatResult.ok === false && chatResult.code === 'NOT_IMPLEMENTED');
+  global.fetch = savedFetch;
+  check('Gemini chat returns real parsed text', chatResult.ok === true && /stubbed gemini reply/.test(chatResult.text));
+  check('chat reports provider + model', chatResult.provider === 'gemini' && !!chatResult.model);
   const bad = await pm.chat({ provider: 'nope', messages: [] });
   check('unknown provider is VALIDATION', bad.ok === false && bad.code === 'VALIDATION');
 

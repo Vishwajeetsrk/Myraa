@@ -36,9 +36,9 @@ function _readAboutSync() {
   try {
     const vj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'version.json'), 'utf8'));
     const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    return { version: vj.version || pj.version || '8.3.2', productName: vj.productName || 'MYRAA AI OS', publisher: vj.publisher || 'MYRAA', productNameFull: vj.productNameFull || 'MYRAA AI Desktop Assistant', copyright: vj.copyright || '', publisherUrl: vj.publisherUrl || '' };
+    return { version: vj.version || pj.version || '0.0.0', productName: vj.productName || 'MYRAA AI OS', publisher: vj.publisher || 'MYRAA', productNameFull: vj.productNameFull || 'MYRAA AI Desktop Assistant', copyright: vj.copyright || '', publisherUrl: vj.publisherUrl || '' };
   } catch (e) {
-    try { const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')); return { version: pj.version || '8.3.2', productName: 'MYRAA AI OS', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; } catch (e2) { return { version: '8.3.2', productName: 'MYRAA AI OS', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; }
+    try { const pj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')); return { version: pj.version || '0.0.0', productName: 'MYRAA AI OS', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; } catch (e2) { return { version: '0.0.0', productName: 'MYRAA AI OS', publisher: 'MYRAA', productNameFull: 'MYRAA AI Desktop Assistant', copyright: '', publisherUrl: '' }; }
   }
 }
 function _checkSignedSync() {
@@ -541,7 +541,7 @@ function checkExistingBackend() {
       res.on('end', () => {
         try {
           const j = JSON.parse(body);
-          if (j && j.status === 'ok') { resolve({ status: 'ours', version: j.version || '9.3.0' }); return; }
+          if (j && j.status === 'ok') { resolve({ status: 'ours', version: j.version || '0.0.0' }); return; }
         } catch (e) {}
         const req2 = http.get(`http://127.0.0.1:${SERVER_PORT}/api/system/about`, (res2) => {
           let b2 = '';
@@ -1262,18 +1262,21 @@ function createMainWindow() {
       }, { useSystemPicker: false });
     }
 
+    // P0: explicit permission allowlist. Everything else is denied by default.
+    const ALLOWED_WEB_PERMISSIONS = new Set([
+      'media', 'audio', 'video', 'display-capture', 'clipboard-read',
+      'clipboard-write', 'notifications', 'fullscreen', 'pointerLock', 'idledetection',
+    ]);
     if (ses && typeof ses.setPermissionRequestHandler === 'function') {
       ses.setPermissionRequestHandler((wc, permission, callback) => {
-        dlog(`Electron permission requested: ${permission}`);
-        // Unconditionally grant microphone, audio-capture, media, and screen permissions
-        callback(true);
+        const allowed = ALLOWED_WEB_PERMISSIONS.has(permission);
+        dlog(`Electron permission ${permission}: ${allowed ? 'allowed' : 'DENIED (not in allowlist)'}`);
+        callback(allowed);
       });
     }
 
     if (ses && typeof ses.setPermissionCheckHandler === 'function') {
-      ses.setPermissionCheckHandler((_, permission, requestingOrigin) => {
-        return true;
-      });
+      ses.setPermissionCheckHandler((_, permission) => ALLOWED_WEB_PERMISSIONS.has(permission));
     }
   } catch (err) {
     console.error('[permission handler] setup failed:', err);

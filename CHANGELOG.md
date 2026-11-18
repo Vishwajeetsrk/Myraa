@@ -33,6 +33,14 @@ All notable changes to MYRAA AI OS are documented here.
 - Phase 17: `content-visibility` + intrinsic-size hints for long lists, screen-reader live region announcing real avatar states, icon labels/tooltips, reduced-motion and focus rings preserved. New suite `test_accessibility_perf.cjs` (12 checks).
 - Total 588 checks across 29 suites. All 17 phases of the product-repair plan have a real implementation slice; avatar/voice/working capabilities preserved.
 
+### P0 — security + correctness (v9.7+ upgrade)
+- `/api/chat` now routes through the single provider abstraction (`ai_provider_manager`) instead of calling the Gemini SDK directly; reports provider/model/source and has an honest offline fallback. Live-verified: reply returned via `provider_router` with Gemini.
+- Implemented a real Gemini chat adapter in the provider manager (host-allowlisted, bounded, parsed, no key leakage).
+- Privileged routes (`/api/mcp/call`, `/api/plugins/execute`, `/api/browser/*`, `/api/approvals/execute`, `/api/terminal/run`) now require a paired-device token from the LAN.
+- Electron permissions replaced unconditional `callback(true)` with an explicit allowlist; unknown permissions are denied and logged.
+- Removed the duplicate Apex route mount and hardcoded version fallbacks (`9.5.0`/`8.3.2`/`9.3.0`) — versions are read from `version.json`, with honest `0.0.0` when unavailable.
+- New `tests/test_p0_security.cjs` (16 checks); provider suite extended to 17. Total 606 checks across 30 suites.
+
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).
 - `/api/agent-health` no longer reports fake `online:true`/`operational`/92 tools; uses the real probe result. `/api/live/status` status now derives from actual WebSocket client count instead of a supervisor field that is never assigned.

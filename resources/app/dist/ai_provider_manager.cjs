@@ -13,8 +13,9 @@ const ADAPTERS = [
   {
     id: 'gemini', label: 'Google Gemini', keyEnv: 'GEMINI_API_KEY',
     modelsUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
+    chatUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
     capabilities: { chat: true, stream: true, tools: true, structuredOutput: true, vision: true, audio: true, realtime: true, embed: true, transcribe: false, speak: false },
-    implemented: { chat: false, listModels: true, probe: true },
+    implemented: { chat: true, listModels: true, probe: true },
     contextWindow: 'model-dependent',
   },
   {
@@ -182,6 +183,29 @@ async function chat(request, opts) {
   if (!a) return { ok: false, code: 'VALIDATION', error: 'provider is required' };
   if (!configured(a)) return { ok: false, code: 'AUTH_REQUIRED', provider: a.id };
   if (!a.implemented.chat) return { ok: false, code: 'NOT_IMPLEMENTED', provider: a.id, error: 'chat adapter not implemented yet - use a gateway lane provider' };
+  // Native adapters (currently Gemini) use their own real HTTP endpoint.
+  if (!a.laneId && a.chatUrl) {
+    const messages = (Array.isArray(r.messages) ? r.messages : []).filter((m) => m && typeof m.content === 'string');
+    if (!messages.length) return { ok: false, code: 'VALIDATION', error: 'messages are required' };
+    const t0 = Date.now();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 30000);
+    try {
+      const resp = await boundedFetch(a.chatUrl, {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': process.env[a.keyEnv] || '',
+      }, 30000);
+      const raw = await resp.text();
+      if (!resp.ok) return { ok: false, code: 'REMOTE_ERROR', provider: a.id, error: 'HTTP ' + resp.status + ': ' + raw.slice(0, 160) };
+      const json = JSON.parse(raw);
+      const parts = (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts) || [];
+      const text = parts.map((p) => String(p.text || '')).join('').slice(0, 8000);
+      if (!text.trim()) return { ok: false, code: 'REMOTE_ERROR', provider: a.id, error: 'empty completion text' };
+      return { ok: true, provider: a.id, model: r.model || 'gemini-2.5-flash', text, providerLatencyMs: Date.now() - t0 };
+    } catch (e) {
+      return { ok: false, code: 'WORKER_OFFLINE', provider: a.id, error: String(e && e.message).slice(0, 200) };
+    } finally { clearTimeout(timer); }
+  }
   return gateway.chat({ ...r, lane: a.laneId }, opts);
 }
 

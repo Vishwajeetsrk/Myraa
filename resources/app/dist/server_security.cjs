@@ -74,6 +74,12 @@ const AUTH_REQUIRED_PREFIXES = [
   '/api/remote/',
   '/api/mobile/',
   '/api/mcp/v1/tools/call',
+  // P0: privileged surfaces must carry a paired-device token from the LAN.
+  '/api/mcp/call',
+  '/api/plugins/execute',
+  '/api/browser/',
+  '/api/approvals/execute',
+  '/api/terminal/run',
 ];
 
 // Bootstrap pairing endpoints — reachable WITHOUT a token (they ARE the way a

@@ -8658,7 +8658,7 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
   app.use("/assets", import_express.default.static(import_path2.default.join(candidateDistPath, "assets")));
   app.use("/assets", import_express.default.static(appAssetsDir));
   app.get("/api/health", (req, res) => {
-    let ver = "9.5.0";
+    let ver = "0.0.0";
     try {
       const p = import_path2.default.join(__dirname, "..", "version.json");
       if (import_fs.default.existsSync(p)) ver = JSON.parse(import_fs.default.readFileSync(p, "utf8")).version || ver;
@@ -8706,32 +8706,33 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
         memoryContext = recalled.map(m => m.content).join("\n");
       } catch (_) {}
 
-      const apiKey = getGeminiApiKey();
-      if (!apiKey) {
+      // P0: one canonical chat path. No direct provider SDK call from this route.
+      const providerMod = require(import_path2.default.join(__dirname, "ai_provider_manager.cjs"));
+      const routed = providerMod.route({ task: "conversation" });
+      const systemPrompt = "You are Myraa, an autonomous, warm, polite, and caring anime heroine AI companion (age 18-22). You speak sweetly, naturally, and helpfully with deep general intelligence and technical reasoning. CRITICAL RULE: NEVER use emoji characters. Use only text, words, and clear language.";
+      const messages = [
+        { role: "system", content: systemPrompt + "\n\n[RECALLED MEMORIES]:\n" + (memoryContext || "None") },
+        { role: "user", content: userMessage },
+      ];
+      const out = await providerMod.chat({
+        provider: routed.ok ? routed.provider : "gemini",
+        messages,
+        need: "conversation",
+      });
+      if (!out.ok && (out.code === "AUTH_REQUIRED" || out.code === "NO_PROVIDER")) {
         return res.json({
           ok: true,
-          reply: "I can hear you, but my Gemini API key is not configured. Please add your key in Settings so we can chat!",
-          source: "offline_fallback"
+          reply: "I can hear you, but no AI provider is configured or reachable. Add a provider key in Settings, or start Ollama for local chat.",
+          source: "offline_fallback",
+          code: out.code,
         });
       }
+      if (!out.ok) {
+        return res.status(502).json({ ok: false, code: out.code, error: out.error });
+      }
 
-      const ai = new import_genai2.GoogleGenAI({ apiKey });
-      const systemPrompt = "You are Myraa, an autonomous, warm, polite, and caring anime heroine AI companion (age 18-22). You speak sweetly, naturally, and helpfully with deep general intelligence and technical reasoning. CRITICAL RULE: NEVER use emoji characters. Use only text, words, and clear language.";
-      
-      const contents = [
-        {
-          role: "user",
-          parts: [{ text: `${systemPrompt}\n\n[RECALLED MEMORIES]:\n${memoryContext || "None"}\n\nUser: ${userMessage}` }]
-        }
-      ];
-
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents,
-      });
-
-      let replyText = response.text || "I'm right here with you!";
-      replyText = replyText.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '').trim();
+      let replyText = String(out.text || "").replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '').trim();
+      if (!replyText) replyText = "I'm right here with you!";
 
       try {
         await cognition.memories.add({
@@ -8747,6 +8748,9 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
         ok: true,
         reply: replyText,
         role: "model",
+        provider: out.provider,
+        model: out.model || null,
+        source: "provider_router",
         timestamp: Date.now()
       });
     } catch (err) {
@@ -8755,7 +8759,7 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
     }
   });
   app.use(import_express.default.static(candidateDistPath));
-  try { const apexRoutes = require("./apex_v5_routes.cjs"); app.use(apexRoutes); } catch(e){ console.warn(e); }
+  // P0: duplicate apex mount removed - canonical mount is in startServer().
   try {
     const skillsMcp = require("./skills_mcp_engine.cjs");
     app.use(skillsMcp.router);
@@ -8793,7 +8797,7 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
     process.exit(1);
   });
   server.listen(PORT, "0.0.0.0", () => {
-    logStartup(`MYRAA v9.5.0 server started on http://0.0.0.0:${PORT}`);
+    logStartup(`MYRAA v${(() => { try { return JSON.parse(import_fs.default.readFileSync(import_path2.default.join(__dirname, "..", "version.json"), "utf8")).version || "0.0.0"; } catch (e) { return "0.0.0"; } })()} server started on http://0.0.0.0:${PORT}`);
     console.log(`[Server] Running on http://0.0.0.0:${PORT} (LAN & Mobile Remote Enabled)`);
     ensureDesktopAgent().then(async () => {
       await ensureDesktopObserver();
