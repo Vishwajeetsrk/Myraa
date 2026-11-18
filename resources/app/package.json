@@ -8,7 +8,7 @@
     "url": "https://github.com/vishwajeetsrk/JARVIS-AI-OS"
   },
   "private": true,
-  "version": "9.6.2",
+  "version": "9.6.3",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -46,6 +46,7 @@
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
+    "call-bind-apply-helpers": "^1.0.2",
     "dotenv": "^17.2.3",
     "electron-updater": "^6.3.9",
     "express": "^4.21.2",

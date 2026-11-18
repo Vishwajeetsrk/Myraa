@@ -39,6 +39,35 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   }
 })();
 
+// Packaged asar can hold a dependency only in a nested copy (npm dedupe):
+// e.g. call-bind/node_modules/call-bind-apply-helpers while dunder-proto
+// resolves it from the asar root. Register discovered nested node_modules
+// directories globally before Express loads so both forms resolve.
+(function() {
+  try {
+    const _fs = require("fs");
+    const _path = require("path");
+    const _Module = require("module");
+    const _roots = [
+      _path.join(__dirname, "..", "app.asar", "node_modules"),
+      process.resourcesPath ? _path.join(process.resourcesPath, "app.asar", "node_modules") : null,
+    ].filter(Boolean);
+    if (process.env.NODE_PATH) {
+      for (const p of process.env.NODE_PATH.split(_path.delimiter)) if (p) _roots.push(p);
+    }
+    for (const root of _roots) {
+      let entries = [];
+      try { entries = _fs.existsSync(root) ? _fs.readdirSync(root) : []; } catch (e) { continue; }
+      for (const name of entries) {
+        const nested = _path.join(root, name, "node_modules");
+        try {
+          if (_fs.existsSync(nested) && !_Module.globalPaths.includes(nested)) _Module.globalPaths.push(nested);
+        } catch (e) {}
+      }
+    }
+  } catch (e) {}
+})();
+
 // server.ts
 var import_express = __toESM(require("express"), 1);
 var import_http = __toESM(require("http"), 1);

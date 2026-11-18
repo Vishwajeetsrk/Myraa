@@ -691,7 +691,19 @@ async function startBackend() {
       // path.dirname() would strip 'resources' and point at the app root.
       const resourcesDir = SERVER_ENTRY.slice(0, idx);
       const asarModules = path.join(resourcesDir, 'app.asar', 'node_modules');
-      nodePathExtra = asarModules;
+      // electron-builder can pack a dependency only in a nested copy (npm
+      // dedupe): call-bind/node_modules/call-bind-apply-helpers exists while
+      // the asar root has no top-level copy, so dunder-proto cannot resolve it.
+      // NODE_PATH is read once at process start, so register every nested
+      // node_modules directory here (too late to do it from the backend).
+      const moduleRoots = [asarModules];
+      try {
+        for (const name of fs.readdirSync(asarModules)) {
+          const nested = path.join(asarModules, name, 'node_modules');
+          if (fs.existsSync(nested)) moduleRoots.push(nested);
+        }
+      } catch (e) { dlog(`[SPAWN] nested NODE_PATH scan failed: ${e.message}`); }
+      nodePathExtra = moduleRoots.join(path.delimiter);
       dlog(`[SPAWN] NODE_PATH extra: ${nodePathExtra}`);
     }
   } catch (e) { dlog(`[SPAWN] NODE_PATH resolve failed: ${e.message}`); }
