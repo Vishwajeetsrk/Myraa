@@ -7,7 +7,10 @@ All notable changes to MYRAA AI OS are documented here.
 ### Added
 - Phase 1 verified implementation map (`docs/myraa-audit/CAPABILITY_MAP.md`) and Phase 2 registry design (`CAPABILITY_REGISTRY_PLAN.md`): every subsystem traced to real entry points, storage, API and health state; fake vs real status catalogued.
 - Extended `agi/capability_registry.cjs` with the universal status enum, truthful public views (null latency when never measured), live counters and `/public` + `/summary` routes; new `agi/capability_bootstrap.cjs` registers 12 real subsystems with real health checks.
-- New `tests/test_capability_registry.cjs` (16 checks). Total 394 checks across 14 suites.
+- New `tests/test_capability_registry.cjs` (16 checks).
+- Phase 3 `health_manager.cjs`: one aggregate of measured checks (capabilities, AI lanes, MCP, memory DB, OCR, Windows agent, browser runtime, DNS). Every result carries a real status, measured latency and ISO timestamp; mounted at `/api/health-manager`.
+- Phase 4 `ai_provider_manager.cjs`: one adapter abstraction over Gemini, Anthropic, OpenRouter, Ollama, OpenAI, Groq. Reuses the existing gateway lanes; honest capability flags and `NOT_IMPLEMENTED` for unwritten adapters; keys never exposed; mounted at `/api/providers`.
+- New suites `test_health_manager.cjs` (12) + `test_ai_provider_manager.cjs` (15). Total 421 checks across 16 suites.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).

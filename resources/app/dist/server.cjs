@@ -5248,6 +5248,16 @@ async function startServer() {
     console.warn("[Server] Could not mount Phase 29 modules:", e.message);
   }
   try {
+    // Phase 3/4: aggregate real health + single provider abstraction
+    const healthMod31 = require(import_path2.default.join(__dirname, "health_manager.cjs"));
+    const providerMod31 = require(import_path2.default.join(__dirname, "ai_provider_manager.cjs"));
+    app.use("/api/health-manager", healthMod31.createRouter());
+    app.use("/api/providers", providerMod31.createRouter());
+    console.log("[Server] Health manager + provider abstraction mounted (Phase 3/4)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Phase 3/4 modules:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
