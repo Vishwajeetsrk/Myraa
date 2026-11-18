@@ -4,6 +4,10 @@ All notable changes to MYRAA AI OS are documented here.
 
 ## [Unreleased]
 
+## [9.7.0] - 2026-11-18
+
+First packaged release of the capability-repair program. Includes all work below: truthful capability/health/provider registries, provider-routed chat, screen intelligence with observation→verify, real brand icons, Activity Center / Design Doctor / Settings Workspace, Browser Agent and Capability Gap Analyzer. Installers are unsigned (SmartScreen warning until an EV certificate is supplied).
+
 ### Added
 - Phase 1 verified implementation map (`docs/myraa-audit/CAPABILITY_MAP.md`) and Phase 2 registry design (`CAPABILITY_REGISTRY_PLAN.md`): every subsystem traced to real entry points, storage, API and health state; fake vs real status catalogued.
 - Extended `agi/capability_registry.cjs` with the universal status enum, truthful public views (null latency when never measured), live counters and `/public` + `/summary` routes; new `agi/capability_bootstrap.cjs` registers 12 real subsystems with real health checks.

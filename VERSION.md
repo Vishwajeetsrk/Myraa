@@ -1,7 +1,7 @@
 # Version
 
-**Current Version:** 9.6.3
-**Build:** 20261118.2
+**Current Version:** 9.7.0
+**Build:** 20261118.1
 
 ## Release Strategy
 
@@ -29,4 +29,4 @@ Semantic Versioning (MAJOR.MINOR.PATCH)
 
 ## Build Metadata
 
-Generated: 2026-11-02T12:08:50.812Z
+Generated: 2026-11-18T11:20:08.840Z
