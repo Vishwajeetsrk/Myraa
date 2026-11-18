@@ -191,6 +191,48 @@
 #myraa-screen-hud .myraa-hud-events { border-top: 1px solid var(--myraa-border); margin-top: 5px; padding-top: 4px; }
 @media (max-width: 1100px) { #myraa-screen-hud { width: 220px; } }
 
+/* Settings Workspace: wide, searchable, scrollable. */
+#myraa-settings-workspace {
+  position: fixed;
+  inset: 0;
+  z-index: 88;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 3vh 16px;
+  background: rgba(3, 6, 12, 0.66);
+  backdrop-filter: blur(6px);
+}
+#myraa-settings-workspace.open { display: flex; }
+#myraa-settings-workspace .myraa-set-box {
+  width: min(1100px, 96vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--myraa-surface-2);
+  border: 1px solid var(--myraa-border-strong);
+  border-radius: 18px;
+  box-shadow: var(--myraa-shadow);
+  color: var(--myraa-text);
+  overflow: hidden;
+}
+#myraa-settings-workspace header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--myraa-border); }
+#myraa-settings-workspace header h2 { margin: 0; font-size: 16px; flex: 1; }
+#myraa-settings-workspace header input { flex: 1; max-width: 380px; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--myraa-border); background: rgba(7,11,20,.7); color: var(--myraa-text); }
+#myraa-settings-workspace header button, #myraa-consent-toggle { padding: 7px 12px; border-radius: 9px; border: 1px solid var(--myraa-border-strong); background: rgba(56,207,255,.1); color: var(--myraa-accent); cursor: pointer; }
+#myraa-settings-workspace .myraa-set-main { display: grid; grid-template-columns: 220px 1fr; min-height: 0; flex: 1; }
+#myraa-settings-workspace nav { padding: 10px; border-right: 1px solid var(--myraa-border); overflow: auto; }
+#myraa-settings-workspace nav button { display: block; width: 100%; text-align: left; padding: 9px 10px; margin-bottom: 4px; background: transparent; border: 0; border-radius: 8px; color: var(--myraa-muted); cursor: pointer; font-size: 12px; }
+#myraa-settings-workspace nav button:hover { background: rgba(56,207,255,.08); color: var(--myraa-text); }
+#myraa-settings-workspace #myraa-set-content { padding: 18px; overflow: auto; }
+#myraa-settings-workspace .myraa-set-head h3 { margin: 0 0 4px; font-size: 15px; }
+#myraa-settings-workspace .myraa-set-head span, #myraa-settings-workspace .myraa-set-muted { color: var(--myraa-muted); font-size: 11px; }
+#myraa-settings-workspace .myraa-set-row { display: flex; justify-content: space-between; gap: 14px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 12px; }
+#myraa-settings-workspace .myraa-set-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin: 10px 0; }
+#myraa-settings-workspace .myraa-set-card { padding: 10px; border: 1px solid var(--myraa-border); border-radius: 10px; font-size: 11px; color: var(--myraa-muted); }
+#myraa-settings-workspace .myraa-set-card b { color: var(--myraa-text); display: block; margin-bottom: 5px; }
+@media (max-width: 800px) { #myraa-settings-workspace .myraa-set-main { grid-template-columns: 1fr; } #myraa-settings-workspace nav { display: none; } }
+
 .myraa-launch-btn {
   padding: 6px 12px;
   border-radius: 9px;

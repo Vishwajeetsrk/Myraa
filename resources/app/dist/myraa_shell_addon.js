@@ -155,6 +155,7 @@
     var q = (query || '').trim().toLowerCase();
     var targets = [
       ['Capability Center', 'find what MYRAA can do', openCapabilityCenter],
+      ['Settings Workspace', 'wide, searchable settings from real backend state', function () { if (window.__myraaSettings) window.__myraaSettings.open(); }],
       ['Health report', 'open real diagnostics', function () { window.open('/api/diagnostics-center/report', '_blank'); }],
       ['Design Doctor', 'evidence-based UI critique from real source files', function () { window.open('/api/design-doctor/report', '_blank'); }],
       ['Tasks', 'open task registry', function () { window.open('/api/tasks/list', '_blank'); }],
