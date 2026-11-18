@@ -22,7 +22,9 @@ All notable changes to MYRAA AI OS are documented here.
 - Phase 11 `task_engine.cjs`: persistent task state machine (QUEUED/RUNNING/WAITING_FOR_APPROVAL/PAUSED/COMPLETED/FAILED/CANCELLED), approval attachment, real events and route CRUD. Mounted at `/api/tasks`.
 - New suites `test_agent_delegation.cjs` (13), `test_task_engine.cjs` (17).
 - Phase 12 `project_index.cjs`: real project discovery with bounded file counts/git facts and a memory overview across actual stores; unknown values are `null`, never zero or placeholders. Mounted at `/api/projects-v2`.
-- New suite `test_project_index.cjs` (13). Total 521 checks across 24 suites.
+- New suite `test_project_index.cjs` (13).
+- Phase 13 `avatar_state_bridge.cjs`: real voice/task/approval signals (conversation events, task events, approvals) drive an avatar state label at `/api/avatar/state`; a read-only frontend addon publishes `data-myraa-state` + `myraa:avatar-state`. The 3D model, meshes, shaders, eye tracking and camera are untouched. Voice-state events now emitted at the actual WebSocket conversation transitions.
+- New suite `test_avatar_state_bridge.cjs` (16). Total 537 checks across 25 suites.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).

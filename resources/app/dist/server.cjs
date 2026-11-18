@@ -5298,6 +5298,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Phase 12 modules:", e.message);
   }
   try {
+    // Phase 13: real runtime -> avatar state signal (3D model untouched)
+    const avatarBridge36 = require(import_path2.default.join(__dirname, "avatar_state_bridge.cjs"));
+    app.use("/api/avatar", avatarBridge36.createRouter());
+    console.log("[Server] Avatar state bridge mounted (Phase 13)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Phase 13 module:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
@@ -7867,6 +7875,9 @@ ${presenceInstructions}`,
             const modelText = formatSpokenTextWithSpaces(currentModelResponseText, rawModelText);
             if (modelText) {
               clientWs.send(JSON.stringify({ type: "transcription", role: "model", text: modelText }));
+              try {
+                require(import_path2.default.join(__dirname, "event_bus.cjs")).emit("task.voice_state", { state: "speaking", source: "geminiLive", detail: "model transcription" });
+              } catch (e) {}
               currentModelResponseText += modelText;
             }
             const userTextOutput = message.serverContent?.inputTranscription?.text ?? message.serverContent?.userTurn?.parts?.[0]?.text;
@@ -8373,6 +8384,10 @@ A fresh screenshot is attached. Analyze it and answer the spoken question direct
               "user_interrupted_myraa"
             ]);
             if (allowed.has(msg.event)) {
+              try {
+                var voiceState = msg.event === "user_started_speaking" ? "listening" : (msg.event === "user_stopped_speaking" ? "thinking" : "interrupted");
+                require(import_path2.default.join(__dirname, "event_bus.cjs")).emit("task.voice_state", { state: voiceState, source: "conversationEvent", detail: msg.event });
+              } catch (e) {}
               if (msg.event === "user_started_speaking") {
                 markUserPresenceActivity();
                 speechOrchestrator.onUserSpeechStarted();
@@ -8565,6 +8580,9 @@ The one-shot screen capture was unavailable. Say clearly that you could not acce
       });
       clientWs.on("close", () => {
         console.log("Client disconnected, closing Gemini session");
+        try {
+          require(import_path2.default.join(__dirname, "event_bus.cjs")).emit("task.voice_state", { state: "idle", source: "websocketClose" });
+        } catch (e) {}
         clearInterval(wsHeartbeatInterval);
         unsubscribeInitiative();
         screenVision?.dispose();
