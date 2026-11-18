@@ -330,7 +330,7 @@ Built-in zero-configuration access to 88 free public APIs across 14 categories:
 
 ## 17. Autonomous Operations Stack (v9.4.0)
 
-The v9.4.0 cycle adds nine governed autonomy subsystems, and the follow-up MCP transport phase makes the MCP registry real. Every subsystem ships with a live test suite -- **537 automated checks** across 25 suites -- and follows one safety contract: honest errors, additive-only data operations, and local-first storage under `%APPDATA%\MYRAA\`.
+The v9.4.0 cycle adds nine governed autonomy subsystems, and the follow-up MCP transport phase makes the MCP registry real. Every subsystem ships with a live test suite -- **554 automated checks** across 26 suites -- and follows one safety contract: honest errors, additive-only data operations, and local-first storage under `%APPDATA%\MYRAA\`.
 
 ### 17.1 Evidence Engine
 Turns observations into auditable findings.
@@ -404,7 +404,7 @@ Per-agent tool policy plus the Model Context Protocol server registry.
 - API: `GET/POST /api/permissions/*`, `GET/POST /api/mcp/*` (incl. `/api/mcp/call`, `/api/mcp/presets/add`)
 
 ### Verification
-All subsystems are covered by the live suites in `tests\` (evidence 29, investigation 37, workspace 43, connector market 26, model gateway 34, safety broker 31, event bus 25, timeline 27, permissions + MCP 34, MCP transport 32, action receipts 25, step watcher 14, response tags 21, capability registry 16, health manager 12, provider manager 15, connector registry 9, action registry 11, approval manager 10, MCP v2 13, skill registry 14, agent delegation 13, task engine 17, project index 13, avatar bridge 16 -- 537 checks total). The MCP transport suite additionally runs real-server checks against the official `server-everything` when `MYRAA_MCP_LIVE=1` is set (no fake fixtures shipped). Run suites individually with `node tests\test_<name>.cjs`, or boot the app and watch the per-phase mount log lines.
+All subsystems are covered by the live suites in `tests\` (evidence 29, investigation 37, workspace 43, connector market 26, model gateway 34, safety broker 31, event bus 25, timeline 27, permissions + MCP 34, MCP transport 32, action receipts 25, step watcher 14, response tags 21, capability registry 16, health manager 12, provider manager 15, connector registry 9, action registry 11, approval manager 10, MCP v2 13, skill registry 14, agent delegation 13, task engine 17, project index 13, avatar bridge 16, UI polish 17 -- 554 checks total). The MCP transport suite additionally runs real-server checks against the official `server-everything` when `MYRAA_MCP_LIVE=1` is set (no fake fixtures shipped). Run suites individually with `node tests\test_<name>.cjs`, or boot the app and watch the per-phase mount log lines.
 
 ---
 
@@ -484,7 +484,7 @@ Myraa/
 │       │   └── assets/                   # WebGL 3D models, textures & background.mp4
 │       ├── package.json                  # Application dependencies (v9.6.3)
 │       └── version.json                  # Dynamic version authority (9.6.3)
-├── tests/                        # 537 live checks across 25 suites (node tests\test_*.cjs)
+├── tests/                        # 554 live checks across 26 suites (node tests\test_*.cjs)
 ├── docs/                         # Per-phase integration docs (evidence, timeline, mcp-permissions, ...)
 ├── Projects/
 │   └── FigmaOutput/              # Generated HTML/CSS wireframes and mockups

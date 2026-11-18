@@ -24,7 +24,9 @@ All notable changes to MYRAA AI OS are documented here.
 - Phase 12 `project_index.cjs`: real project discovery with bounded file counts/git facts and a memory overview across actual stores; unknown values are `null`, never zero or placeholders. Mounted at `/api/projects-v2`.
 - New suite `test_project_index.cjs` (13).
 - Phase 13 `avatar_state_bridge.cjs`: real voice/task/approval signals (conversation events, task events, approvals) drive an avatar state label at `/api/avatar/state`; a read-only frontend addon publishes `data-myraa-state` + `myraa:avatar-state`. The 3D model, meshes, shaders, eye tracking and camera are untouched. Voice-state events now emitted at the actual WebSocket conversation transitions.
-- New suite `test_avatar_state_bridge.cjs` (16). Total 537 checks across 25 suites.
+- New suite `test_avatar_state_bridge.cjs` (16).
+- Phase 14 UI polish (additive overlays only): `ui_polish_phase14.css` (visible focus rings, scrollable panels/modals, 32px header hit areas, reduced-motion, header-safe floating bar), `ui_accessibility_addon.js` (raises sub-11px inline text, adds aria-label/title to icon-only controls, watches dynamic DOM), and moved the floating control bar below the header. The compiled React bundle and 3D avatar are untouched.
+- New suite `test_ui_polish.cjs` (17). Total 554 checks across 26 suites.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).

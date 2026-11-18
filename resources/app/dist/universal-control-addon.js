@@ -32,7 +32,7 @@
 
     const fixedBar = document.createElement('div');
     fixedBar.id = 'myraa-uctrl-top-bar';
-    fixedBar.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);right:auto;z-index:99998;display:flex;align-items:center;gap:8px;pointer-events:auto;';
+    fixedBar.style.cssText = 'position:fixed;top:66px;left:50%;transform:translateX(-50%);right:auto;z-index:60;display:flex;align-items:center;gap:8px;pointer-events:auto;';
 
     // Passive Learning Pill Indicator
     const pill = document.createElement('div');
