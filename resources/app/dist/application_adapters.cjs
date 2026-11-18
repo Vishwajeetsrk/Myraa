@@ -132,8 +132,11 @@ async function inspect(input) {
   if (!w.ok) return w;
   const max = Math.min(300, Math.max(1, Number((input || {}).maxElements) || 120));
   let r = await uia.getAppControlMap(w.title, max);
-  // UIA/PowerShell can fail transiently on a busy desktop; one bounded retry.
-  if (!r || r.ok === false) r = await uia.getAppControlMap(w.title, max);
+  // UIA/PowerShell can fail transiently under load; bounded retries with backoff.
+  for (let attempt = 0; (!r || r.ok === false) && attempt < 2; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 120 * (attempt + 1)));
+    r = await uia.getAppControlMap(w.title, max);
+  }
   return { ok: !!r && r.ok !== false, appId: input.appId, ...(r || {}) };
 }
 
