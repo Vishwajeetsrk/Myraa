@@ -5306,6 +5306,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Phase 13 module:", e.message);
   }
   try {
+    // Phase 15: unified diagnostics center (real checks only)
+    const diagCenter38 = require(import_path2.default.join(__dirname, "diagnostics_center.cjs"));
+    app.use("/api/diagnostics-center", diagCenter38.createRouter());
+    console.log("[Server] Diagnostics center mounted (Phase 15)");
+  } catch(e) {
+    console.warn("[Server] Could not mount Phase 15 module:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));

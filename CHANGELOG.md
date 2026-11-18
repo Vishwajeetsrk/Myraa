@@ -26,7 +26,9 @@ All notable changes to MYRAA AI OS are documented here.
 - Phase 13 `avatar_state_bridge.cjs`: real voice/task/approval signals (conversation events, task events, approvals) drive an avatar state label at `/api/avatar/state`; a read-only frontend addon publishes `data-myraa-state` + `myraa:avatar-state`. The 3D model, meshes, shaders, eye tracking and camera are untouched. Voice-state events now emitted at the actual WebSocket conversation transitions.
 - New suite `test_avatar_state_bridge.cjs` (16).
 - Phase 14 UI polish (additive overlays only): `ui_polish_phase14.css` (visible focus rings, scrollable panels/modals, 32px header hit areas, reduced-motion, header-safe floating bar), `ui_accessibility_addon.js` (raises sub-11px inline text, adds aria-label/title to icon-only controls, watches dynamic DOM), and moved the floating control bar below the header. The compiled React bundle and 3D avatar are untouched.
-- New suite `test_ui_polish.cjs` (17). Total 554 checks across 26 suites.
+- New suite `test_ui_polish.cjs` (17).
+- Phase 15 `diagnostics_center.cjs`: one diagnostics catalog aggregating the real HealthManager, capability registry, skill/project/memory state and asset checks; microphone/GPU are honestly UNAVAILABLE when no real probe exists. Exports a markdown report. Mounted at `/api/diagnostics-center`.
+- New suite `test_diagnostics_center.cjs` (14). Total 568 checks across 27 suites.
 
 ### Fixed
 - `GET /api/capabilities` no longer returns a hardcoded `REAL`/`verified:true`/`last_tested:now` catalog — it derives from the registry and runs real health checks (live: 12 capabilities, 10 READY, 2 ERROR).
