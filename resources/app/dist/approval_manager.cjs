@@ -39,6 +39,10 @@ async function execute(input) {
   if (!b) return { ok: false, code: 'NOT_FOUND', error: 'unknown binding' };
   return broker.executeBinding(b.id, { engine });
 }
+function find(input) {
+  const b = broker.findBinding((input || {}).bindingId);
+  return b ? { ok: true, binding: b } : { ok: false, code: 'NOT_FOUND', error: 'unknown approval binding' };
+}
 function status() { return broker.status(); }
 
 function createRouter() {
@@ -61,4 +65,4 @@ function createRouter() {
   return router;
 }
 
-module.exports = { request, pending, decide, execute, status, createRouter };
+module.exports = { request, pending, find, decide, execute, status, createRouter };

@@ -5322,6 +5322,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Screen Intelligence:", e.message);
   }
   try {
+    // Action -> Observe -> Verify (screen-agent spec phases 7-8)
+    const actionVerifier43 = require(import_path2.default.join(__dirname, "action_verifier.cjs"));
+    app.use("/api/action-verification", actionVerifier43.createRouter());
+    console.log("[Server] Action verification loop mounted (observe + verify)");
+  } catch(e) {
+    console.warn("[Server] Could not mount action verification:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));
