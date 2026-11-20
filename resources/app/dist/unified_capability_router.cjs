@@ -172,6 +172,28 @@ function detectBusinessIntent(lower) {
   return null;
 }
 
+// VBA intelligence patterns. These never invent macro source: code comes from
+// the caller or, on an explicit "this macro" request, the clipboard.
+const VBA_EXPLAIN_PATTERNS = [
+  /\b(?:explain|describe|what\s+does|what\s+is)\b.*\b(?:this|the|my)?\s*(?:vba|macro|module)\b/i,
+  /\b(?:vba|macro)\b.*\b(?:explain|explanation|what\s+does\s+it\s+do)\b/i
+];
+const VBA_REVIEW_PATTERNS = [
+  /\b(?:review|check|audit|inspect|find\s+bugs?\s+in)\b.*\b(?:this|the|my)?\s*(?:vba|macro|code)\b/i,
+  /\b(?:vba|macro)\b.*\b(?:bugs?|fragile|spelling|problems?)\b/i
+];
+const VBA_IMPROVE_PATTERNS = [
+  /\b(?:improve|fix|clean|rewrite|refactor|make\s+(?:it\s+)?safer)\b.*\b(?:this|the|my)?\s*(?:vba|macro|code)\b/i,
+  /\b(?:convert|turn)\b.*\b(?:recorded|recorder)\b.*\b(?:vba|macro)\b/i
+];
+
+function detectVbaIntent(lower) {
+  if (VBA_EXPLAIN_PATTERNS.some((p) => p.test(lower))) return 'explain';
+  if (VBA_REVIEW_PATTERNS.some((p) => p.test(lower))) return 'review';
+  if (VBA_IMPROVE_PATTERNS.some((p) => p.test(lower))) return 'improve';
+  return null;
+}
+
 // ── UTILITY HELPERS ──────────────────────────────────────────────────────────
 
 function extractTopic(text, removeRegex) {
@@ -299,6 +321,59 @@ class UnifiedCapabilityRouter {
         }
       } catch (err) {
         return { handled: true, action: 'BUSINESS_ERROR', reply: `[!] Business OS error: ${err.message}`, error: err.message };
+      }
+    }
+
+    // =========================================================================
+    // 0a-i. VBA INTELLIGENCE — explain / review / conservative rewrite
+    // =========================================================================
+    const vbaIntent = detectVbaIntent(lower);
+    if (vbaIntent) {
+      try {
+        let code = opts.code || opts.vbaCode || null;
+        if (!code && /\b(?:this|the|my|copied|pasted)\b/i.test(lower)) {
+          let clip = null;
+          try {
+            clip = desktopAutomation && typeof desktopAutomation.getClipboard === 'function'
+              ? desktopAutomation.getClipboard() : null;
+          } catch (e) { clip = null; }
+          if (typeof clip === 'string') code = clip;
+          else if (clip && typeof clip.text === 'string') code = clip.text;
+        }
+        if (!code || !/\b(?:Sub|Function|Property)\b/i.test(code)) {
+          return {
+            handled: true,
+            action: 'VBA_CODE_REQUIRED',
+            reply: '[!] No VBA source is available. Paste the macro and say "explain this macro", or POST the source to /api/vba/analyze. I do not invent macro contents.'
+          };
+        }
+        const vba = require(path.join(__dirname, 'vba_analyzer.cjs'));
+        if (vbaIntent === 'explain') {
+          const e = vba.explain(code);
+          return { handled: true, action: 'VBA_EXPLAIN', reply: `${e.summary}\n${e.targetNote}`, data: e };
+        }
+        if (vbaIntent === 'review') {
+          const r = vba.review(code);
+          const top = r.findings.slice(0, 8).map((f) => `[${f.severity}] ${f.type}${f.line ? ' (line ' + f.line + ')' : ''}: ${f.message}`);
+          return {
+            handled: true,
+            action: 'VBA_REVIEW',
+            reply: [`[OK] Static review: ${r.findingCount} finding(s). Source was not executed.`, ...top].join('\n'),
+            data: r
+          };
+        }
+        const a = vba.analyze(code);
+        const imp = a.improvement;
+        const lines = imp.generated
+          ? [
+              `[OK] Safer rewrite generated for ${imp.matchedRange}. NOT_VERIFIED in Excel.`,
+              ...imp.whyImproved.map((w) => `- ${w}`),
+              '- Generated code is in data.improvement.code. Review it before pasting into the VBA editor.'
+            ]
+          : [`[!] No safe rewrite generated: ${imp.reason}`];
+        return { handled: true, action: 'VBA_IMPROVE', reply: lines.join('\n'), data: a };
+      } catch (err) {
+        return { handled: true, action: 'VBA_ERROR', reply: `[!] VBA analysis error: ${err.message}`, error: err.message };
       }
     }
 

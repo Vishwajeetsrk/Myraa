@@ -2065,36 +2065,33 @@ router.post('/api/desktop/word/write', (req, res) => {
   });
 });
 
-router.post('/api/desktop/excel/write', (req, res) => {
-  const { cell, value, formula, sheetName } = req.body || {};
-  if (!cell) return res.status(400).json({ error: "cell is required (e.g. A1)" });
-
-  const psScript = `
-    try {
-        $excel = [System.Runtime.InteropServices.Marshal]::GetActiveObject("Excel.Application")
-    } catch {
-        $excel = New-Object -ComObject Excel.Application
-        $excel.Visible = $true
-    }
-    if ($excel.Workbooks.Count -eq 0) { $wb = $excel.Workbooks.Add() } else { $wb = $excel.ActiveWorkbook }
-    $sheet = $excel.ActiveSheet
-    if ("${sheetName || ''}" -ne "") { try { $sheet = $wb.Sheets.Item("${sheetName}") } catch {} }
-    $range = $sheet.Range("${cell}")
-    ${formula ? `$range.Formula = "${formula}"` : `$range.Value2 = "${value || ''}"`}
-    Write-Output "SUCCESS"
-  `;
-
-  const tempPs = path.join(os.tmpdir(), `myraa_excel_direct_${Date.now()}.ps1`);
-  fs.writeFileSync(tempPs, psScript);
-
-  exec(`powershell -NoProfile -ExecutionPolicy Bypass -File "${tempPs}"`, (err, stdout, stderr) => {
-    try { fs.unlinkSync(tempPs); } catch {}
-    if (!err && (stdout || '').includes('SUCCESS')) {
-      res.json({ success: true, message: `Cell ${cell} updated in Microsoft Excel without coordinates!` });
-    } else {
-      res.status(500).json({ success: false, error: stderr || stdout || err.message });
-    }
-  });
+// Legacy single-cell endpoint. It now delegates to the Excel COM bridge so
+// values/formulas travel as JSON (no PowerShell script interpolation) and an
+// absent workbook is reported instead of silently creating a hidden one.
+router.post('/api/desktop/excel/write', async (req, res) => {
+  const { cell, value, formula, sheetName, workbook } = req.body || {};
+  if (!cell) return res.status(400).json({ ok: false, success: false, error: "cell is required (e.g. A1)" });
+  try {
+    const bridge = require('./excel_bridge.cjs');
+    const result = formula
+      ? await bridge.setFormula({ workbook, sheet: sheetName, range: cell, formula: String(formula) })
+      : await bridge.writeRange({ workbook, sheet: sheetName, range: cell, values: value === undefined ? '' : value });
+    const http = result.ok ? 200 : ({ VALIDATION: 400, WORKBOOK_NOT_FOUND: 404, SHEET_NOT_FOUND: 404, NO_WORKBOOK: 409, AMBIGUOUS: 409, EXCEL_NOT_ATTACHED: 503 }[result.code] || 500);
+    return res.status(http).json({
+      ok: result.ok,
+      success: result.ok,
+      code: result.code || null,
+      error: result.error || null,
+      workbook: result.workbook || null,
+      sheet: result.sheet || null,
+      address: result.address || null,
+      message: result.ok
+        ? `Cell ${result.address || cell} updated in the resolved Excel workbook.`
+        : (result.error || 'Excel write failed.'),
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, success: false, error: err.message });
+  }
 });
 
 router.get('/api/desktop/verbal-evaluate', (req, res) => {

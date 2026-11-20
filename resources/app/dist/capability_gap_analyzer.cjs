@@ -70,9 +70,44 @@ const CATALOG = [
       const present = exists(path.join(DIST, 'office_doc_engine.cjs'));
       return {
         status: present ? 'PARTIAL' : 'UNAVAILABLE',
-        reason: present ? 'Word/Excel/PPT engine present; advanced chart/dashboard automation not yet verified' : 'office engine missing',
+        reason: present ? 'Word/Excel/PPT engine present; live Excel control is a separate COM bridge; pivots/conditional formatting not yet verified' : 'office engine missing',
         evidence: { file: 'office_doc_engine.cjs', present },
       };
+    },
+  },
+  {
+    id: 'office.excel_live',
+    keywords: ['live excel', 'open workbook', 'switch sheet', 'range', 'cell', 'formula', 'chart', 'save as', 'worksheet'],
+    check() {
+      try {
+        const bridge = require(path.join(DIST, 'excel_bridge.cjs'));
+        const present = exists(bridge.RUNNER_SCRIPT);
+        // This check stays side-effect free: it never attaches to Excel.
+        return {
+          status: present ? 'AVAILABLE' : 'UNAVAILABLE',
+          reason: present
+            ? 'live COM bridge present for workbook/sheet/range/formula/format/chart/save; call /api/excel/status for current attachment state'
+            : 'Excel COM runner missing',
+          evidence: { runner: bridge.RUNNER_SCRIPT, present, confirmRequired: ['sheet delete', 'row delete', 'workbook close'] },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'office.vba',
+    keywords: ['vba', 'macro', 'recorded macro', 'explain macro', 'review macro', 'improve macro'],
+    check() {
+      try {
+        const v = require(path.join(DIST, 'vba_analyzer.cjs'));
+        const r = v.review('Sub T()\n    Range("A1").Select\nEnd Sub');
+        return {
+          status: r.ok ? 'AVAILABLE' : 'DEGRADED',
+          reason: r.ok
+            ? 'static VBA explain/review/conservative rewrite; macros are never executed and security settings are never changed'
+            : 'analyzer returned an error',
+          evidence: { capabilities: v.STATUS.capabilities, rewritePolicy: v.STATUS.rewritePolicy, findingCount: r.findingCount },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
     },
   },
   {

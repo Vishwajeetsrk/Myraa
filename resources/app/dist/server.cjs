@@ -5406,6 +5406,24 @@ async function startServer() {
     console.warn("[Server] Could not mount Excel Intelligence:", e.message);
   }
   try {
+    // Excel COM Bridge: control the RUNNING Excel instance. Complements the
+    // offline openpyxl engine above; does not replace or duplicate it.
+    const excelBridge = require(import_path2.default.join(__dirname, "excel_bridge.cjs"));
+    app.use("/api/excel", excelBridge.createRouter());
+    console.log("[Server] Excel COM Bridge mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Excel COM Bridge:", e.message);
+  }
+  try {
+    // VBA Intelligence: static explanation, review and conservative rewrites.
+    // Never executes macros or changes macro security settings.
+    const vbaRoutes = require(import_path2.default.join(__dirname, "vba_routes.cjs"));
+    app.use("/api/vba", vbaRoutes);
+    console.log("[Server] VBA Intelligence mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount VBA Intelligence:", e.message);
+  }
+  try {
     // Business OS: read-only awareness over business/ (leads, finance, templates, email, spreadsheets)
     const businessOS = require(import_path2.default.join(__dirname, "business_os.cjs"));
     app.use("/api/business", businessOS.createRouter());
