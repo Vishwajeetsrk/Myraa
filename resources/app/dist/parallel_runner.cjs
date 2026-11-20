@@ -25,6 +25,8 @@ const JOBS = Object.freeze({
   'browser.capabilities': { risk: 'LOW', run: () => new (require(path.join(D, 'browser_agent.cjs')))().getCapabilities() },
   'gap.analyze': { risk: 'LOW', run: (p) => require(path.join(D, 'capability_gap_analyzer.cjs')).analyze(p && p.request) },
   'system.health': { risk: 'LOW', run: () => require(path.join(D, 'health_manager.cjs')).runAll() },
+  'research.probe': { risk: 'LOW', run: (p) => require(path.join(D, 'client_discovery.cjs')).probeWebsite(p && p.url, p && p.timeoutMs) },
+  'research.analyze': { risk: 'LOW', run: (p) => require(path.join(D, 'client_discovery.cjs')).analyze(p && p.input, p && p.evidence) },
 });
 
 function defaultStore() {

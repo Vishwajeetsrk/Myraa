@@ -132,6 +132,53 @@ const CATALOG = [
     },
   },
   {
+    id: 'workflow.cross_app',
+    keywords: ['cross application', 'client to word', 'client to excel', 'create report deck', 'outlook draft'],
+    check() {
+      try {
+        const x = require(path.join(DIST, 'cross_app_orchestrator.cjs'));
+        return { status: 'PARTIAL', reason: 'Excel/Word/PowerPoint generation via existing office engine; Outlook stage NOT_IMPLEMENTED', evidence: { stages: x.STAGES, officeEngine: !!require(path.join(DIST, 'office_doc_engine.cjs')) } };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'research.background',
+    keywords: ['background research', 'research 20 companies', 'background jobs', 'checkpointing', 'bounded concurrency'],
+    check() {
+      try {
+        const b = require(path.join(DIST, 'background_research.cjs'));
+        return { status: 'AVAILABLE', reason: 'submits research jobs into the existing bounded parallel_runner; no second queue', evidence: b.STATUS };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'legal.research_adapter',
+    keywords: ['legal research', 'official sources', 'dpdp rules', 'cert-in directions', 'gst source'],
+    check() {
+      try {
+        const l = require(path.join(DIST, 'legal_research.cjs'));
+        return { status: 'PARTIAL', reason: 'official-source allowlist with date-stamped fetches; no compliance claim and no interpretation', evidence: { allowlist: Object.keys(l.ALLOWED), neverClaimsCompliance: true } };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'system.screen_share_status',
+    keywords: ['screen sharing status', 'is sharing active', 'stop sharing'],
+    check() {
+      try {
+        const s = require(path.join(DIST, 'screen_share_status.cjs')).status();
+        return { status: 'PARTIAL', reason: 'observes meeting/recording windows; actual sharing state NOT_VERIFIED and sharing is never enabled silently', evidence: { sharingState: s.sharingState, observed: s.observedCount } };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'system.state_readback',
+    keywords: ['read wifi state', 'read bluetooth state', 'verify system state', 'state readback'],
+    check() {
+      return { status: 'PARTIAL', reason: 'Wi-Fi and Bluetooth readback implemented; other controls return NOT_VERIFIED instead of guessed state', evidence: { implemented: ['wifi', 'bluetooth'] } };
+    },
+  },
+  {
     id: 'skill.replay',
     keywords: ['run the workflow', 'run workflow', 'step by step workflow', 'replay skill', 'pause workflow', 'stop workflow', 'action center'],
     check() {

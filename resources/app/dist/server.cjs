@@ -5478,6 +5478,26 @@ async function startServer() {
     console.log("[Server] Performance Telemetry mounted");
   } catch(e) { console.warn("[Server] Could not mount Performance Telemetry:", e.message); }
   try {
+    const backgroundResearch = require(import_path2.default.join(__dirname, "background_research.cjs"));
+    app.use("/api/background-research", backgroundResearch.createRouter());
+    console.log("[Server] Background Research mounted");
+  } catch(e) { console.warn("[Server] Could not mount Background Research:", e.message); }
+  try {
+    const crossApp = require(import_path2.default.join(__dirname, "cross_app_orchestrator.cjs"));
+    app.use("/api/cross-app", crossApp.createRouter());
+    console.log("[Server] Cross-App Orchestrator mounted");
+  } catch(e) { console.warn("[Server] Could not mount Cross-App Orchestrator:", e.message); }
+  try {
+    const legalResearch = require(import_path2.default.join(__dirname, "legal_research.cjs"));
+    app.use("/api/legal-research", legalResearch.createRouter());
+    console.log("[Server] Legal Research mounted");
+  } catch(e) { console.warn("[Server] Could not mount Legal Research:", e.message); }
+  try {
+    const screenShare = require(import_path2.default.join(__dirname, "screen_share_status.cjs"));
+    app.use("/api/screen-share", screenShare.createRouter());
+    console.log("[Server] Screen Share Status mounted");
+  } catch(e) { console.warn("[Server] Could not mount Screen Share Status:", e.message); }
+  try {
     app.get('/action-center', (req, res) => res.sendFile(import_path2.default.join(__dirname, 'action_center.html')));
   } catch(e) { console.warn("[Server] Could not mount Action Center page:", e.message); }
   try {

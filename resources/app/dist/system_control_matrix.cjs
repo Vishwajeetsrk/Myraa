@@ -199,6 +199,42 @@ function execute(id, opts = {}) {
   }
 }
 
+function readState(id) {
+  const c = get(id);
+  if (!c) return { ok: false, code: 'UNKNOWN_CONTROL' };
+  const { execFileSync } = require('child_process');
+  function ps(script) {
+    try {
+      const out = execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+        encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      return String(out || '').trim().slice(0, 1000);
+    } catch (e) { return null; }
+  }
+  let raw = null;
+  let result = null;
+  if (c.id === 'wifi') {
+    raw = ps('netsh wlan show interfaces');
+    if (raw !== null) {
+      const m = raw.match(/State\s*:\s*([^\r\n]+)/i);
+      result = { wifiState: m ? m[1].trim() : 'unknown' };
+    }
+  } else if (c.id === 'bluetooth') {
+    raw = ps('@(Get-PnpDevice -Class Bluetooth -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq "OK" }).Count');
+    if (raw !== null) result = { bluetoothDevicesOk: Number(raw) || 0, note: 'Device presence is not the same as adapter radio state.' };
+  }
+  if (result) {
+    return { ok: true, control: c.id, readBack: true, checkedAt: new Date().toISOString(), ...result };
+  }
+  return {
+    ok: true,
+    control: c.id,
+    readBack: false,
+    status: 'NOT_VERIFIED',
+    reason: 'No reliable readback API is connected for this control. No state is guessed.',
+  };
+}
+
 function createRouter() {
   const express = require('express');
   const router = express.Router();
@@ -206,6 +242,10 @@ function createRouter() {
   router.get('/:id', (req, res) => {
     const c = get(req.params.id);
     res.status(c ? 200 : 404).json(c ? { ok: true, control: c } : { ok: false, code: 'UNKNOWN_CONTROL' });
+  });
+  router.get('/:id/read', (req, res) => {
+    const r = readState(req.params.id);
+    res.status(r.ok ? 200 : 404).json(r);
   });
   router.post('/prepare', (req, res) => {
     const r = prepare((req.body || {}).id, req.body || {});
@@ -225,4 +265,4 @@ const STATUS = {
   policy: status().policy,
 };
 
-module.exports = { STATUS, CONTROLS, get, status, prepare, execute, createRouter };
+module.exports = { STATUS, CONTROLS, get, status, prepare, execute, readState, createRouter };

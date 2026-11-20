@@ -36,6 +36,11 @@ MYRAA can see the desktop, drive Excel, review VBA, learn workflow candidates, a
 | 7 | UX/UI Action Center page | DONE | Additive page at `/action-center`; existing UI untouched. |
 | 8 | Tests, fixes, capability recheck | DONE | Direct module tests + full HTTP integration; two COM defects found and fixed. |
 | 9 | Push | BLOCKED | Requires explicit owner approval. |
+| 10 | Cross-app orchestrator | DONE | Excel/Word/PowerPoint via existing office engine; Outlook NOT_IMPLEMENTED, reported honestly. |
+| 11 | Live legal research adapter | DONE | Official-source allowlist with URL + date checked; no compliance claim. |
+| 12 | Background research jobs | DONE | Reuses existing parallel_runner (no second queue), progress/cancel/compose. |
+| 13 | Screen-share state detection | DONE | Observation only; actual sharing stays NOT_VERIFIED; never enables sharing. |
+| 14 | System state readback | PARTIAL | Wi-Fi and Bluetooth readback implemented; other controls NOT_VERIFIED. |
 
 ## 5. Evidence policy
 

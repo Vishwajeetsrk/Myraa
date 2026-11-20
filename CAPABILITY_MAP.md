@@ -35,6 +35,7 @@ This document is a status record, not a promise. A capability is called VERIFIED
 | Skill replay + Action Center (sections 23-25, 48, 58) | `skill_replay.cjs`, `/api/skill-replay/*`, `action_center.html`, voice intents | VERIFIED | Real opt-in action handlers, step/run, pause/resume/stop, audit traces, unsupported actions fail closed, additive live UI page. Test C passes for supported actions. |
 | Deep Excel operations (section 10) | `excel_bridge.cjs`, `excel_bridge_runner.ps1` | VERIFIED | Sort, autofilter, tables, named ranges, data validation, conditional formatting, sheet activation, column insert/delete with guard, verified on a throwaway workbook. |
 | IDE state + telemetry (sections 24, 40, 54) | `ide_state.cjs`, `performance_telemetry.cjs` | VERIFIED | Read-only git/UIA composition, diagnostics honestly NOT_IMPLEMENTED; latency and failure counters with event emission. |
+| Cross-app, legal, background, screen-share, readback (sections 7, 28, 34, 39-40, 55) | `cross_app_orchestrator.cjs`, `legal_research.cjs`, `background_research.cjs`, `screen_share_status.cjs`, `system_control_matrix.cjs` | VERIFIED | Office files generated end-to-end; official-source fetch with URL/date; background jobs reuse existing parallel runner; sharing state NOT_VERIFIED; Wi-Fi/Bluetooth readback real. |
 
 ## 2. Existing systems reused, not replaced
 
@@ -75,12 +76,13 @@ Evidence discipline: `Found / Verified / Inferred / Estimated / Suggested / Unkn
 | Excel CSV/template workflows | PARTIAL | `excel_intelligence.cjs` handles offline workbooks; CSV is intentionally handled by `business_os.cjs` with its own parser. Template workflows not built. |
 | Word live visual verification, tracked changes, mail merge, captions, citations | PARTIAL | Document generation/review exists; live visual verification and the listed advanced features are not verified. |
 | PowerPoint redesign, masters, themes, animations, transitions, speaker notes | PARTIAL | Generation exists; redesign and the listed features are not verified. |
-| Cross-application Excel to Word to PowerPoint to Outlook to browser workflow | NOT_IMPLEMENTED | No single orchestration endpoint exists yet. |
+| Cross-application Excel to Word to PowerPoint to browser workflow | PARTIAL | Orchestrator verified end-to-end: research, Excel, Word and PowerPoint files generated. Outlook draft remains NOT_IMPLEMENTED and is reported as such. |
 | Website design from screenshots/Figma/references | NOT_IMPLEMENTED | Existing site generator handles natural-language builds; screenshot/Figma ingestion not built. |
-| Live legal/compliance research with current official sources | FRAMEWORK + NOT_IMPLEMENTED | The structure exists. No live government-source fetch, no date-stamped citation verification. India DPDP Rules 2025 commencement, CERT-In directions and GST place-of-supply must be checked on official sources per transaction; nothing is asserted here. |
+| Live legal/compliance research with current official sources | PARTIAL | Official-source allowlist fetches real pages with URL and date checked. No compliance claim, no interpretation; applicability stays `Unclear` and professional review Required. |
+| Background research operations | AVAILABLE | Submits jobs into the existing bounded parallel_runner with progress, cancellation and evidence composition. No second queue. |
 | Repository health, code review, A/B, deployment, observability, maintenance, scale modes | FRAMEWORK + PARTIAL | Structured checklists exist; automated evidence collection is partial via existing coding/git/test services. No deployment engine, no monitoring dashboards. |
 | Skill replay coverage | PARTIAL | Real replay supports 9 opt-in action handlers with traces and pause/stop. Pivots, full Office cross-app actions and complex UI sequences remain unsupported and fail closed. |
-| System state readback | PARTIAL | The matrix reports status and opens settings pages; it does not read back Wi-Fi, Bluetooth, brightness or mute state. "Opened settings" is never reported as "setting changed". |
+| System state readback | PARTIAL | Wi-Fi state and Bluetooth device presence are read back with timestamps. Volume/mute/brightness return `NOT_VERIFIED` instead of a guessed value. |
 | IDE orchestration (open tabs, diagnostics, terminal state, branch, selected code) | PARTIAL | Unified read-only state endpoint exists. Diagnostics, open tabs and terminal task state require an IDE extension/API and are NOT_IMPLEMENTED, not guessed. |
 | GitHub PR automation, issue investigation | PARTIAL | Connector exists; token/OAuth is `AUTHENTICATION_REQUIRED`. |
 | Clipboard inference | FRAMEWORK + PARTIAL | `getClipboard()` exists; used only on explicit "this macro" voice request. No continuous retention, by design. |
@@ -89,12 +91,11 @@ Evidence discipline: `Found / Verified / Inferred / Estimated / Suggested / Unkn
 
 ## 5. Next increments, in order
 
-1. Cross-application orchestrator built on existing engines: client record -> Excel -> Word report -> PowerPoint summary -> Outlook draft.
-2. Live legal-awareness adapter with official-source allowlist and date-stamped citations.
-3. Background research jobs with checkpointing, bounded concurrency and cancellation.
-4. Screen sharing state detection (never enable silently).
-5. Expand replay action handlers for Office cross-app steps with verification.
-6. Push to remote only when the owner explicitly approves.
+1. Push the local commits to remote once the owner explicitly approves.
+2. Screenshot/Figma/reference-driven website generation (existing generator is natural-language only).
+3. Autonomy levels 0-5 as a visible, reversible control surface.
+4. Deployment, monitoring dashboards and maintenance mode (frameworks exist, engines do not).
+5. Signed installer (external EV certificate required).
 
 ## 6. Standing rules
 

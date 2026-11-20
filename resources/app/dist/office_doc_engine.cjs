@@ -1331,8 +1331,11 @@ except Exception as e:
   generatePresentation({ filename, title, subtitle, slides }) {
     return new Promise((resolve) => {
       const skills   = mistakeEngine.getDocSkillsForType('powerpoint');
-      const pptName  = (filename || `Presentation_${Date.now()}`).replace(/\.pptx$/i, '') + '.pptx';
-      const destPath = path.join(this.outputDir, pptName);
+      // Use the shared resolver so an absolute caller-supplied filename is
+      // honoured. Joining an absolute path onto outputDir produced invalid
+      // paths like ...\MYRAA_OfficeOutput\C:\Users\... on Windows.
+      const destPath = this._resolveOutputPath(filename, 'Presentation', '.pptx');
+      const pptName  = path.basename(destPath);
 
       const payload = {
         title:    title    || 'MYRAA AI OS Enterprise Deck',
