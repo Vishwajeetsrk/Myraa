@@ -5406,6 +5406,14 @@ async function startServer() {
     console.warn("[Server] Could not mount Excel Intelligence:", e.message);
   }
   try {
+    // Business OS: read-only awareness over business/ (leads, finance, templates, email, spreadsheets)
+    const businessOS = require(import_path2.default.join(__dirname, "business_os.cjs"));
+    app.use("/api/business", businessOS.createRouter());
+    console.log("[Server] Business OS mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Business OS:", e.message);
+  }
+  try {
     // Phase 24: per-agent tool permissions + MCP manager skeleton
     const phase24Engine = require(import_path2.default.join(__dirname, "agi", "tool_execution_engine.cjs"));
     const toolPermissions = require(import_path2.default.join(__dirname, "tool_permissions.cjs"));

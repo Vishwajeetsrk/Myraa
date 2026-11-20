@@ -63,3 +63,10 @@ coverage/
 
 # Scratch / temp tests
 resources/app/dist/scratch/
+
+# Business workspace data (client/lead/finance data must never reach GitHub)
+business/crm/*.csv
+business/finance/
+business/state/
+business/clients/
+business/reports/
