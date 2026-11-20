@@ -4,6 +4,12 @@ All notable changes to MYRAA AI OS are documented here.
 
 ## [Unreleased]
 
+## [9.8.1] - 2026-11-20
+
+- Added the MYRAA **Connections** option at `/connections`: enter credentials in the UI, store them with Windows DPAPI outside the repo, then run a real API test for Microsoft Graph, Figma, Vercel, Stripe, Razorpay, Gmail, GitHub and local EV certificate thumbprints. Secrets are never logged, returned by the API, committed or sent to chat.
+- Added real Devicons from `@dev.icons/react@1.3.0` (MIT): server-rendered SVG endpoint `/api/dev-icons/icon/:name`, 1,969 real icons, and a `Stack.jsx` component using `_React`, `_Vue` and `Nextjs`. Rendered in Action Center and Connections pages.
+- `/action-center` and `/connections` are additive pages; existing UI untouched.
+
 ## [9.8.0] - 2026-11-20
 
 Universal desktop operator upgrade. All items below were live-tested; features that could not be verified are explicitly marked `NOT_IMPLEMENTED` or `PARTIAL` in `CAPABILITY_MAP.md`.

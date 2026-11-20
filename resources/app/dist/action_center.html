@@ -30,6 +30,8 @@
   button:disabled { opacity:.45; cursor:not-allowed; }
   select { width:100%; padding:7px; background:#0b1016; color:var(--fg); border:1px solid var(--line); border-radius:6px; }
   .note { color:var(--dim); font-size:12px; margin-top:8px; }
+  .icons { display:flex; gap:12px; align-items:center; padding:6px 0; }
+  .icons img { width:36px; height:36px; }
   @media (max-width:600px){ header,main { padding-left:12px; padding-right:12px; } }
 </style>
 </head>
@@ -79,6 +81,12 @@
     <div class="row"><span class="label">Failure rate</span><span class="value" id="rate">0</span></div>
     <div class="row"><span class="label">Slowest operation</span><span class="value" id="slowest">-</span></div>
     <p class="note">Only reported operations are measured. No continuous screen capture.</p>
+  </section>
+
+  <section aria-labelledby="icons-title">
+    <h2 id="icons-title">Real developer icons</h2>
+    <div class="icons" id="devIcons" aria-label="Real Devicons from @dev.icons/react"></div>
+    <p class="note">Rendered from the installed @dev.icons/react package, not hand-drawn.</p>
   </section>
 </main>
 <script>
@@ -212,7 +220,20 @@
     post('/api/skill-replay/stop', { sessionId: selected, reason: 'operator emergency stop' }).then(refresh);
   });
 
+  function loadDevIcons() {
+    const box = document.getElementById('devIcons');
+    if (!box) return;
+    ['_React', '_Vue', 'Nextjs'].forEach(function (name) {
+      const img = document.createElement('img');
+      img.src = '/api/dev-icons/icon/' + name;
+      img.alt = name;
+      img.title = 'Real icon from @dev.icons/react';
+      box.appendChild(img);
+    });
+  }
+
   setInterval(function () { el('clock').textContent = new Date().toLocaleTimeString(); }, 1000);
+  loadDevIcons();
   refresh();
   setInterval(refresh, 2000);
 })();

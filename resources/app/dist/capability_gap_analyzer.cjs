@@ -132,6 +132,28 @@ const CATALOG = [
     },
   },
   {
+    id: 'connections.manager',
+    keywords: ['connections', 'connect api', 'add connection', 'enter api key', 'test connection', 'integrations settings'],
+    check() {
+      try {
+        const c = require(path.join(DIST, 'connections_manager.cjs'));
+        const s = c.status();
+        return { status: 'AVAILABLE', reason: `${s.connections.length} credential definitions; DPAPI-encrypted local storage; real API tests; no secret in API or logs`, evidence: { store: c.STORE, connections: s.connections.map((x) => x.id) } };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'icons.devicons',
+    keywords: ['real icons', 'devicons', 'react icons', 'icon library', 'figma icon'],
+    check() {
+      try {
+        const d = require(path.join(DIST, 'dev_icons_registry.cjs'));
+        const s = d.status();
+        return { status: s.ok ? 'AVAILABLE' : 'UNAVAILABLE', reason: `${s.icons} real icons rendered from ${s.source}`, evidence: s };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
     id: 'workflow.cross_app',
     keywords: ['cross application', 'client to word', 'client to excel', 'create report deck', 'outlook draft'],
     check() {

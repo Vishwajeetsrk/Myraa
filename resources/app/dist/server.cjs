@@ -5498,6 +5498,19 @@ async function startServer() {
     console.log("[Server] Screen Share Status mounted");
   } catch(e) { console.warn("[Server] Could not mount Screen Share Status:", e.message); }
   try {
+    const devIcons = require(import_path2.default.join(__dirname, "dev_icons_registry.cjs"));
+    app.use("/api/dev-icons", devIcons.createRouter());
+    console.log("[Server] Dev Icons mounted");
+  } catch(e) { console.warn("[Server] Could not mount Dev Icons:", e.message); }
+  try {
+    const connections = require(import_path2.default.join(__dirname, "connections_manager.cjs"));
+    app.use("/api/connections", connections.createRouter());
+    console.log("[Server] Connections Manager mounted");
+  } catch(e) { console.warn("[Server] Could not mount Connections Manager:", e.message); }
+  try {
+    app.get('/connections', (req, res) => res.sendFile(import_path2.default.join(__dirname, 'connections.html')));
+  } catch(e) { console.warn("[Server] Could not mount Connections page:", e.message); }
+  try {
     app.get('/action-center', (req, res) => res.sendFile(import_path2.default.join(__dirname, 'action_center.html')));
   } catch(e) { console.warn("[Server] Could not mount Action Center page:", e.message); }
   try {

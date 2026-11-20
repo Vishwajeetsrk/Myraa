@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MYRAA Connections</title>
+<style>
+  :root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--line:#30363d;--fg:#e6edf3;--dim:#9aa7b4;--ok:#3fb950;--bad:#f85149;--warn:#d29922;--accent:#58a6ff}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+  header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+  h1{font-size:18px;margin:0}h2{font-size:14px;margin:0 0 8px}a{color:var(--accent)}
+  main{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;padding:16px 20px 60px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .status{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
+  .CONNECTED{color:var(--ok);border-color:var(--ok)}.FAILED{color:var(--bad);border-color:var(--bad)}.SAVED_NOT_TESTED{color:var(--warn);border-color:var(--warn)}
+  .where{color:var(--dim);font-size:12px;margin:6px 0 10px}
+  label{display:block;color:var(--dim);font-size:12px;margin-top:8px}
+  input{width:100%;padding:8px;margin-top:3px;background:#0b1016;color:var(--fg);border:1px solid var(--line);border-radius:6px}
+  input:focus-visible{outline:2px solid var(--accent)}
+  .btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  button{padding:7px 12px;border-radius:6px;border:0;background:var(--accent);color:#06121f;font-weight:600;cursor:pointer}
+  button.secondary{background:transparent;color:var(--fg);border:1px solid var(--line)}button:disabled{opacity:.45}
+  .result{font-size:12px;margin-top:10px;color:var(--dim);word-break:break-word}
+  .pill{font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+  .icons{display:flex;gap:12px;align-items:center;padding:8px 0}.icons img{width:36px;height:36px}
+  footer{padding:0 20px 30px;color:var(--dim);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>MYRAA Connections</h1>
+  <div><a class="pill" href="/action-center">Action Center</a> <span id="msg" class="pill" role="status">Loading</span></div>
+</header>
+<main id="cards" aria-live="polite"></main>
+<footer>
+  <p>Credentials are encrypted with Windows DPAPI per user and stored outside the repository. They are never logged, printed in chat, committed to git, or returned by the API.</p>
+  <h2>Real developer icons</h2>
+  <div class="icons" id="icons" aria-label="Real Devicons from @dev.icons/react"></div>
+</footer>
+<script>
+(function(){
+  'use strict';
+  const cards=document.getElementById('cards');
+  const msg=document.getElementById('msg');
+  const iconsEl=document.getElementById('icons');
+  async function j(path,opts){const r=await fetch(path,opts);let b;try{b=await r.json()}catch(e){b={error:'HTTP '+r.status}}return {http:r.status,body:b}}
+  async function post(path,body){return j(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})}
+
+  function card(d){
+    const sec=document.createElement('section');
+    sec.innerHTML='<h2></h2><span class="status"></span><p class="where"></p><div class="fields"></div><div class="btns"><button class="save">Save</button><button class="test secondary">Test connection</button><button class="remove secondary">Remove</button></div><div class="result"></div>';
+    sec.querySelector('h2').textContent=d.label;
+    const st=sec.querySelector('.status');st.textContent=d.status;st.className='status '+d.status;
+    sec.querySelector('.where').textContent=d.where;
+    const fields=sec.querySelector('.fields');
+    d.fields.forEach(f=>{
+      const l=document.createElement('label');l.textContent=f.label;
+      const i=document.createElement('input');i.type=f.type==='password'?'password':'text';i.dataset.key=f.key;
+      i.placeholder=f.type==='password'?'Stored encrypted, never shown back':'Exact value';
+      l.appendChild(i);fields.appendChild(l);
+    });
+    const result=sec.querySelector('.result');
+    result.textContent=d.lastMessage?('Last test: '+d.lastMessage):'Not tested yet.';
+    sec.querySelector('.save').onclick=async()=>{
+      const values={};fields.querySelectorAll('input').forEach(i=>{values[i.dataset.key]=i.value});
+      msg.textContent='Saving '+d.label;
+      const r=await post('/api/connections/save',{id:d.id,values});
+      result.textContent=r.body.error||r.body.note||JSON.stringify(r.body);
+      fields.querySelectorAll('input').forEach(i=>{i.value=''});
+      msg.textContent=r.ok?'Saved':'Save failed';
+      refresh();
+    };
+    sec.querySelector('.test').onclick=async()=>{
+      msg.textContent='Testing '+d.label;
+      const r=await post('/api/connections/test',{id:d.id});
+      result.textContent=(r.body.message||r.body.error||JSON.stringify(r.body));
+      msg.textContent=r.ok?'Connected':'Test failed';
+      refresh();
+    };
+    sec.querySelector('.remove').onclick=async()=>{
+      if(!window.confirm('Remove stored credentials for '+d.label+'?'))return;
+      await post('/api/connections/remove',{id:d.id});refresh();
+    };
+    return sec;
+  }
+
+  async function refresh(){
+    const r=await j('/api/connections/status');
+    if(!r.ok){msg.textContent='Offline';return}
+    msg.textContent=r.body.connections.length+' connections';
+    cards.innerHTML='';
+    r.body.connections.forEach(d=>cards.appendChild(card(d)));
+  }
+
+  async function loadIcons(){
+    for(const name of ['_React','_Vue','Nextjs']){
+      try{
+        const res=await fetch('/api/dev-icons/icon/'+name);
+        if(!res.ok)continue;
+        const img=document.createElement('img');
+        img.src='/api/dev-icons/icon/'+name;img.alt=name;
+        img.title='Real icon from @dev.icons/react';
+        iconsEl.appendChild(img);
+      }catch(e){}
+    }
+  }
+
+  refresh();loadIcons();setInterval(refresh,15000);
+})();
+</script>
+</body>
+</html>

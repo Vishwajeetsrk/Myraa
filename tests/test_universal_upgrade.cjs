@@ -15,6 +15,7 @@ const TMP = path.join(os.tmpdir(), 'opencode', `myraa-upgrade-test-${Date.now()}
 process.env.MYRAA_WORKFLOW_SKILLS_DIR = path.join(TMP, 'workflow_skills');
 process.env.MYRAA_USER_SKILLS_DIR = path.join(TMP, 'skills');
 process.env.MYRAA_TRACE_DIR = path.join(TMP, 'traces');
+process.env.MYRAA_CONNECTIONS_STORE = path.join(TMP, 'connections.json');
 
 const req = (name) => require(path.join(DIST, name));
 
@@ -130,6 +131,31 @@ async function checkAsync(name, fn) {
     assert.match(html, /MYRAA Action Center/);
     assert.match(html, /api\/skill-replay\/sessions/);
     assert.doesNotMatch(html, /[\uD800-\uDBFF][\uDC00-\uDFFF]/);
+  });
+
+  check('real Devicons render from the installed package', () => {
+    const d = req('dev_icons_registry.cjs');
+    const s = d.status();
+    assert.ok(s.ok && s.icons > 1000);
+    for (const name of ['_React', '_Vue', 'Nextjs']) {
+      const r = d.svg(name, { size: 48 });
+      assert.strictEqual(r.ok, true, name);
+      assert.match(r.svg, /<svg/);
+      assert.match(r.svg, /<path/);
+      assert.match(r.svg, /@dev|currentColor|<title>/);
+    }
+    assert.strictEqual(d.svg('not-a-real-icon-xyz').code, 'NOT_FOUND');
+  });
+
+  check('connections store secrets encrypted and silent', () => {
+    const c = req('connections_manager.cjs');
+    const secret = 'dummy-' + Date.now();
+    const saved = c.save('figma', { token: secret });
+    assert.strictEqual(saved.ok, true);
+    const raw = fs.readFileSync(c.STORE, 'utf8');
+    assert.strictEqual(raw.includes(secret), false);
+    assert.strictEqual(JSON.stringify(c.status()).includes(secret), false);
+    assert.strictEqual(c.remove('figma').ok, true);
   });
 
   console.log(`\n${passed} checks passed`);
