@@ -17,6 +17,36 @@ Operating system for the 7-day website-service challenge. Single source of truth
 | `state/` | Pipeline + payment state models (all real zeros until real events) | **GIT-IGNORED** |
 | `finance/` | Invoices, payments, expenses, profit tracking | **GIT-IGNORED** (to be created) |
 | `clients/` | Per-client project workspaces (created on first deposit) | **GIT-IGNORED** |
+| `reports/` | Archived daily business reports (additive, never overwritten) | **GIT-IGNORED** |
+
+## MYRAA awareness API
+
+MYRAA reads this workspace directly through `resources/app/dist/business_os.cjs`, mounted at `/api/business`.
+
+| Route | Returns |
+|---|---|
+| `GET /api/business/status` | Workspace path, existence, route list |
+| `GET /api/business/summary` | Leads, revenue math, finance, templates, inventory, blockers |
+| `GET /api/business/report?format=markdown` | Daily report as Markdown |
+| `POST /api/business/report/save` | Archives a timestamped report in `reports/` |
+| `GET /api/business/reports` | Archived report list |
+| `GET /api/business/leads?status=&industry=&country=&q=` | Filtered lead query |
+| `GET /api/business/finance` | Collected, expenses, net, remaining target |
+| `GET /api/business/templates` | Template list |
+| `POST /api/business/templates/render` | Safe placeholder rendering (unresolved placeholders preserved) |
+| `GET /api/business/inventory` | Spreadsheets, documents, images, templates, data, email files |
+| `GET /api/business/excel` | Spreadsheet list |
+| `GET /api/business/excel/analyze?file=crm/leads.csv` | CSV parsed directly; XLSX routed through `excel_intelligence.cjs` |
+| `GET /api/business/email` | Email address, connection state, drafts, outreach templates |
+
+Voice/text intents routed through `unified_capability_router.cjs`:
+
+- "business report" -> `BUSINESS_REPORT`
+- "how many leads do I have" -> `BUSINESS_LEADS`
+- "revenue status" -> `BUSINESS_FINANCE`
+- "email status" -> `BUSINESS_EMAIL`
+
+All four are read-only. They never send email, move money, or write to the CRM.
 
 ## Hard rules
 
