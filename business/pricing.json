@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "currency": "USD",
+  "currencyNote": "All prices in USD unless a local-currency quote is explicitly agreed with the client.",
+  "packages": {
+    "starter": {
+      "id": "starter",
+      "name": "Starter",
+      "price": 150,
+      "priceLabel": "$150",
+      "deliverables": [
+        "One-page website",
+        "Responsive/mobile design",
+        "Contact form",
+        "Call-to-action section",
+        "Basic on-page SEO",
+        "Deployment"
+      ],
+      "revisionsIncluded": 2
+    },
+    "standard": {
+      "id": "standard",
+      "name": "Standard",
+      "price": 250,
+      "priceLabel": "$250",
+      "deliverables": [
+        "Up to 3 pages",
+        "Responsive design",
+        "Contact/lead form",
+        "Google Maps / location section",
+        "WhatsApp or booking CTA where appropriate",
+        "Basic on-page SEO",
+        "Analytics where authorized",
+        "Deployment"
+      ],
+      "revisionsIncluded": 2
+    },
+    "maintenance": {
+      "id": "maintenance",
+      "name": "Maintenance",
+      "price": 25,
+      "priceLabel": "$25/month",
+      "deliverables": [
+        "Hosting/support where applicable",
+        "Small edits",
+        "Content updates",
+        "Maintenance"
+      ],
+      "billingCadence": "monthly"
+    }
+  },
+  "paymentTerms": {
+    "depositPercent": 50,
+    "balancePercent": 50,
+    "balanceDue": "Before final transfer/handover",
+    "note": "Ownership/handover is not transferred until the configured payment condition is satisfied."
+  },
+  "discountPolicy": "No invented discounts. Any discount must be explicitly configured here by the owner.",
+  "target": {
+    "revenueTarget": 1000,
+    "averageDealAssumption": 200,
+    "requiredDealsAtAssumption": 5
+  }
+}

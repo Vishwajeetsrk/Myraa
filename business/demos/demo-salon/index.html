@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  DEMO WEBSITE — FICTIONAL BUSINESS
+  Liora Hair & Beauty Studio is a fictional salon created as a
+  portfolio example. All names, testimonials, prices, photos,
+  contact details, and locations are placeholders.
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liora Hair &amp; Beauty Studio | Demo Salon Website</title>
+  <meta name="description" content="Liora Hair &amp; Beauty Studio — a fictional demo salon website showcasing haircuts, color, balayage, styling, manicures, and facials. Portfolio example only.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#4B2340">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Liora Hair &amp; Beauty Studio | Demo Salon Website">
+  <meta property="og:description" content="A fictional salon website built as a portfolio example. Demo content only.">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ============ STICKY HEADER ============ -->
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="Liora Hair and Beauty Studio — home">
+        <svg class="brand-mark" width="36" height="36" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+          <ellipse cx="20" cy="20" rx="15" ry="5.5" transform="rotate(-40 20 20)" fill="none" stroke="currentColor" stroke-width="2.4"/>
+          <ellipse cx="20" cy="20" rx="15" ry="5.5" transform="rotate(40 20 20)" fill="none" stroke="currentColor" stroke-width="2.4"/>
+          <circle cx="20" cy="20" r="3.2" fill="currentColor"/>
+        </svg>
+        <span class="brand-text">
+          <span class="brand-name">Liora</span>
+          <span class="brand-tag">Hair &amp; Beauty Studio</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
+        <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <nav class="site-nav" id="primary-nav" aria-label="Primary">
+        <ul class="nav-list">
+          <li><a href="#services">Services</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#about">Our Team</a></li>
+          <li><a href="#testimonials">Reviews</a></li>
+          <li><a href="#visit">Visit Us</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+        <a class="btn btn-primary nav-cta" href="#booking">Book Now</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Warm modern salon &middot; Demo site</p>
+          <h1 id="hero-heading">Hair that feels like <em>you</em>, on your best day.</h1>
+          <p class="lede">
+            Liora Hair &amp; Beauty Studio is a fictional salon concept offering cuts, color,
+            balayage, styling, manicures, and facials in a calm, light-filled space.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#booking">Book an Appointment</a>
+            <a class="btn btn-ghost" href="#services">View Services &amp; Pricing</a>
+          </div>
+          <ul class="hero-highlights" aria-label="Studio highlights">
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 13l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Senior colorists on staff
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 13l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Vegan product lines
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 13l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Complimentary consultation
+            </li>
+          </ul>
+        </div>
+
+        <div class="hero-visual" role="img" aria-label="Placeholder visual: warm gradient artwork representing the salon interior">
+          <svg class="hero-art" viewBox="0 0 400 460" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#E9C9C4"/>
+                <stop offset="55%" stop-color="#C98B84"/>
+                <stop offset="100%" stop-color="#4B2340"/>
+              </linearGradient>
+            </defs>
+            <rect width="400" height="460" fill="url(#heroGrad)"/>
+            <g fill="none" stroke="#FDFAF6" stroke-opacity="0.35" stroke-width="1.5">
+              <path d="M-20 340 C 80 300, 140 240, 200 140 S 330 40, 420 60"/>
+              <path d="M-20 380 C 90 340, 150 280, 210 180 S 340 80, 420 100"/>
+              <path d="M-20 420 C 100 380, 160 320, 220 220 S 350 120, 420 140"/>
+              <circle cx="300" cy="120" r="58"/>
+              <circle cx="300" cy="120" r="82"/>
+            </g>
+            <g fill="none" stroke="#FDFAF6" stroke-opacity="0.6" stroke-width="2">
+              <ellipse cx="140" cy="300" rx="70" ry="24" transform="rotate(-35 140 300)"/>
+              <ellipse cx="140" cy="300" rx="70" ry="24" transform="rotate(35 140 300)"/>
+              <circle cx="140" cy="300" r="8" fill="#FDFAF6" fill-opacity="0.8" stroke="none"/>
+            </g>
+          </svg>
+          <span class="visual-chip">Visual placeholder — hero image</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SERVICES + PRICING ============ -->
+    <section class="section" id="services" aria-labelledby="services-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Services &amp; pricing</p>
+          <h2 id="services-heading">Everything your routine needs</h2>
+          <p class="section-sub">Six signature services with indicative durations and placeholder prices in USD.</p>
+        </header>
+
+        <ul class="service-grid">
+          <li class="service-card">
+            <span class="service-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" focusable="false">
+                <circle cx="6" cy="6.5" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                <circle cx="6" cy="17.5" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                <path d="M8.6 8.2 L20 17.5 M8.6 15.8 L20 6.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <h3>Signature Haircut</h3>
+            <p>Consultation, precision cut, and finish tailored to your hair texture and routine.</p>
+            <dl class="service-meta">
+              <div><dt>Duration</dt><dd>45 min</dd></div>
+              <div><dt>From</dt><dd>$55</dd></div>
+            </dl>
+          </li>
+
+          <li class="service-card">
+            <span class="service-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" focusable="false">
+                <path d="M12 3c0 0-7 7.5-7 11.5a7 7 0 0 0 14 0C19 10.5 12 3 12 3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                <path d="M9 15.5a3 3 0 0 0 3 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <h3>Color Refresh</h3>
+            <p>Root touch-up or all-over gloss to revive tone, shine, and evenness between visits.</p>
+            <dl class="service-meta">
+              <div><dt>Duration</dt><dd>90 min</dd></div>
+              <div><dt>From</dt><dd>$120</dd></div>
+            </dl>
+          </li>
+
+          <li class="service-card">
+            <span class="service-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" focusable="false">
+                <path d="M20 4l-7 7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="M13 11c-1.6-1.6-4.2-1.1-5.7.4L4 15l5 5 3.6-3.6c1.5-1.5 2-4.1.4-5.7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                <path d="M5.5 18.5L4 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <h3>Balayage</h3>
+            <p>Hand-painted, sun-kissed dimension that grows out softly with a blended finish.</p>
+            <dl class="service-meta">
+              <div><dt>Duration</dt><dd>150 min</dd></div>
+              <div><dt>From</dt><dd>$210</dd></div>
+            </dl>
+          </li>
+
+          <li class="service-card">
+            <span class="service-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" focusable="false">
+                <rect x="3" y="4" width="18" height="4.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                <path d="M6 8.5V20M9.5 8.5V20M13 8.5V20M16.5 8.5V20M19 8.5V16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <h3>Blowout &amp; Styling</h3>
+            <p>Smooth, voluminous finishing for events, shoots, or an elevated everyday look.</p>
+            <dl class="service-meta">
+              <div><dt>Duration</dt><dd>45 min</dd></div>
+              <div><dt>From</dt><dd>$65</dd></div>
+            </dl>
+          </li>
+
+          <li class="service-card">
+            <span class="service-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" focusable="false">
+                <rect x="10" y="2.5" width="4" height="4.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
+                <path d="M12 7v2.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                <path d="M8 9.5h8a1.5 1.5 0 0 1 1.5 1.5v8A3 3 0 0 1 14.5 22h-5A3 3 0 0 1 6.5 19v-8A1.5 1.5 0 0 1 8 9.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <h3>Manicure</h3>
+            <p>Shape, cuticle care, massage, and a flawless polish or buffed natural finish.</p>
+            <dl class="service-meta">
+              <div><dt>Duration</dt><dd>40 min</dd></div>
+              <div><dt>From</dt><dd>$35</dd></div>
+            </dl>
+          </li>
+
+          <li class="service-card">
+            <span class="service-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" focusable="false">
+                <path d="M12 3l1.9 5.4L19.5 10l-5.6 1.6L12 17l-1.9-5.4L4.5 10l5.6-1.6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                <path d="M18.5 16.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <h3>Glow Facial</h3>
+            <p>Cleansing, gentle exfoliation, and hydration for a calm, rested complexion.</p>
+            <dl class="service-meta">
+              <div><dt>Duration</dt><dd>60 min</dd></div>
+              <div><dt>From</dt><dd>$90</dd></div>
+            </dl>
+          </li>
+        </ul>
+        <p class="price-note">Prices shown are placeholder figures for demo purposes and do not represent a real business.</p>
+      </div>
+    </section>
+
+    <!-- ============ GALLERY ============ -->
+    <section class="section section-alt" id="gallery" aria-labelledby="gallery-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Gallery</p>
+          <h2 id="gallery-heading">Recent work</h2>
+          <p class="section-sub">Six styled placeholder tiles — no external images are loaded on this demo page.</p>
+        </header>
+
+        <ul class="gallery-grid">
+          <li class="tile tile-1"><span class="tile-label">Photo placeholder — salon work</span></li>
+          <li class="tile tile-2"><span class="tile-label">Photo placeholder — salon work</span></li>
+          <li class="tile tile-3"><span class="tile-label">Photo placeholder — salon work</span></li>
+          <li class="tile tile-4"><span class="tile-label">Photo placeholder — salon work</span></li>
+          <li class="tile tile-5"><span class="tile-label">Photo placeholder — salon work</span></li>
+          <li class="tile tile-6"><span class="tile-label">Photo placeholder — salon work</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ ABOUT / STYLISTS ============ -->
+    <section class="section" id="about" aria-labelledby="about-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">About the studio</p>
+          <h2 id="about-heading">A calm room, a careful craft</h2>
+          <p class="section-sub">
+            This fictional studio was imagined as a neighborhood salon where appointments are
+            unhurried, advice is honest, and every appointment starts with a proper consultation.
+          </p>
+        </header>
+
+        <ul class="team-grid">
+          <li class="team-card">
+            <span class="avatar" aria-hidden="true">
+              <svg viewBox="0 0 64 64" focusable="false"><circle cx="32" cy="24" r="12" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 56c2-12 10-18 20-18s18 6 20 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Placeholder Name</h3>
+            <p class="role">Lead Stylist (placeholder)</p>
+            <p class="bio">Short placeholder biography text describing experience, specialities, and philosophy would appear here.</p>
+          </li>
+          <li class="team-card">
+            <span class="avatar" aria-hidden="true">
+              <svg viewBox="0 0 64 64" focusable="false"><circle cx="32" cy="24" r="12" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 56c2-12 10-18 20-18s18 6 20 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Placeholder Name</h3>
+            <p class="role">Color Specialist (placeholder)</p>
+            <p class="bio">Short placeholder biography text describing experience, specialities, and philosophy would appear here.</p>
+          </li>
+          <li class="team-card">
+            <span class="avatar" aria-hidden="true">
+              <svg viewBox="0 0 64 64" focusable="false"><circle cx="32" cy="24" r="12" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 56c2-12 10-18 20-18s18 6 20 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Placeholder Name</h3>
+            <p class="role">Skin &amp; Beauty Therapist (placeholder)</p>
+            <p class="bio">Short placeholder biography text describing experience, specialities, and philosophy would appear here.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ TESTIMONIALS (PLACEHOLDER) ============ -->
+    <section class="section section-alt" id="testimonials" aria-labelledby="testimonials-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Client words</p>
+          <h2 id="testimonials-heading">Testimonials</h2>
+          <p class="demo-flag">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4l9 16H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4M12 17.2v.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Sample layout — placeholder content
+          </p>
+          <p class="section-sub">The quotes below are generic filler text, not real reviews from real people.</p>
+        </header>
+
+        <ul class="quote-grid">
+          <li class="quote-card">
+            <blockquote>
+              <p>&ldquo;Placeholder testimonial sentence describing a pleasant but entirely fictional salon visit would go here.&rdquo;</p>
+            </blockquote>
+            <p class="quote-source">— Placeholder Client, demo content</p>
+          </li>
+          <li class="quote-card">
+            <blockquote>
+              <p>&ldquo;Another generic placeholder quote stands in for a real customer review on this demo page.&rdquo;</p>
+            </blockquote>
+            <p class="quote-source">— Placeholder Client, demo content</p>
+          </li>
+          <li class="quote-card">
+            <blockquote>
+              <p>&ldquo;A third example line of filler text illustrates how a review card would be laid out.&rdquo;</p>
+            </blockquote>
+            <p class="quote-source">— Placeholder Client, demo content</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ BOOKING CTA ============ -->
+    <section class="section booking" id="booking" aria-labelledby="booking-heading">
+      <div class="container booking-grid">
+        <div class="booking-copy">
+          <p class="eyebrow eyebrow-light">Book now</p>
+          <h2 id="booking-heading">Reserve your chair</h2>
+          <p>
+            Tell us what you have in mind and your preferred time. This is a demonstration form —
+            it is not connected to any booking system or database.
+          </p>
+          <p class="demo-flag demo-flag-light">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4l9 16H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4M12 17.2v.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Demo form — not connected
+          </p>
+          <ul class="booking-points">
+            <li>Submitting opens your default email app with the details filled in.</li>
+            <li>No data is stored, sent to a server, or retained by this page.</li>
+            <li>Contact details below are fake and formatted for demonstration only.</li>
+          </ul>
+          <address class="booking-contact">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1.1 1A16 16 0 0 1 4 5.1 1 1 0 0 1 5 4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            <a href="tel:+15550100182">(555) 010-0182</a>
+            <span aria-hidden="true">·</span>
+            <a href="mailto:hello@liora-demo.example">hello@liora-demo.example</a>
+          </address>
+        </div>
+
+        <form class="booking-form" action="mailto:hello@liora-demo.example" method="post" enctype="text/plain" aria-describedby="form-note">
+          <p class="form-note" id="form-note">Demo form — not connected. Fields are required only to demonstrate validation states.</p>
+
+          <div class="field">
+            <label for="f-name">Full name</label>
+            <input id="f-name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-email">Email</label>
+              <input id="f-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+            <div class="field">
+              <label for="f-phone">Phone</label>
+              <input id="f-phone" name="phone" type="tel" autocomplete="tel" placeholder="(555) 000-0000">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-service">Service</label>
+              <select id="f-service" name="service" required>
+                <option value="" selected disabled>Choose a service</option>
+                <option>Signature Haircut</option>
+                <option>Color Refresh</option>
+                <option>Balayage</option>
+                <option>Blowout &amp; Styling</option>
+                <option>Manicure</option>
+                <option>Glow Facial</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-date">Preferred date</label>
+              <input id="f-date" name="date" type="date">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-notes">Notes</label>
+            <textarea id="f-notes" name="notes" rows="4" placeholder="Anything we should know before your visit?"></textarea>
+          </div>
+
+          <button class="btn btn-light" type="submit">Send Demo Request</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ HOURS + LOCATION ============ -->
+    <section class="section" id="visit" aria-labelledby="visit-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Hours &amp; location</p>
+          <h2 id="visit-heading">Find us on Demo Lane</h2>
+          <p class="section-sub">Fictional address and placeholder opening hours for this portfolio example.</p>
+        </header>
+
+        <div class="visit-grid">
+          <div class="visit-card">
+            <h3>Opening hours</h3>
+            <table class="hours">
+              <caption class="visually-hidden">Weekly opening hours for the demo salon</caption>
+              <tbody>
+                <tr><th scope="row">Monday</th><td>Closed</td></tr>
+                <tr><th scope="row">Tuesday</th><td>9:00 — 19:00</td></tr>
+                <tr><th scope="row">Wednesday</th><td>9:00 — 19:00</td></tr>
+                <tr><th scope="row">Thursday</th><td>9:00 — 20:00</td></tr>
+                <tr><th scope="row">Friday</th><td>9:00 — 20:00</td></tr>
+                <tr><th scope="row">Saturday</th><td>9:00 — 17:00</td></tr>
+                <tr><th scope="row">Sunday</th><td>10:00 — 16:00</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="visit-card">
+            <h3>Studio address</h3>
+            <address class="address-block">
+              Liora Hair &amp; Beauty Studio<br>
+              45 Demo Lane, Suite 2<br>
+              Springfield, ST 00000<br>
+              <a href="tel:+15550100182">(555) 010-0182</a>
+            </address>
+
+            <div class="map-placeholder" role="img" aria-label="Styled map placeholder indicating the fictional studio location">
+              <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <circle cx="12" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <span>Map placeholder — demo location</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section section-alt" id="faq" aria-labelledby="faq-heading">
+      <div class="container container-narrow">
+        <header class="section-head">
+          <p class="eyebrow">Good to know</p>
+          <h2 id="faq-heading">Frequently asked questions</h2>
+        </header>
+
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Do I need an appointment, or do you take walk-ins?</summary>
+            <p>Placeholder answer: appointments are recommended for this fictional studio, though a small number of walk-in slots are kept open each day. Demo content only.</p>
+          </details>
+          <details class="faq-item">
+            <summary>How long does a balayage appointment take?</summary>
+            <p>Placeholder answer: roughly 150 minutes including consultation, painting, processing, and finishing, depending on hair length and density. Demo content only.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What is your cancellation policy?</summary>
+            <p>Placeholder answer: this demo suggests 24 hours' notice for changes or cancellations, with late changes potentially requiring a deposit for the next booking. Demo content only.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Are consultations free?</summary>
+            <p>Placeholder answer: yes — a complimentary 15-minute consultation is offered before any color service so the plan and pricing are clear. Demo content only.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CLOSING CTA ============ -->
+    <section class="closing" aria-labelledby="closing-heading">
+      <div class="container closing-inner">
+        <h2 id="closing-heading">Ready when you are</h2>
+        <p>Book a visit, browse the services, or take a look behind the chair.</p>
+        <a class="btn btn-light" href="#booking">Book Now</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="Liora Hair and Beauty Studio — back to top">
+          <svg class="brand-mark" width="32" height="32" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+            <ellipse cx="20" cy="20" rx="15" ry="5.5" transform="rotate(-40 20 20)" fill="none" stroke="currentColor" stroke-width="2.4"/>
+            <ellipse cx="20" cy="20" rx="15" ry="5.5" transform="rotate(40 20 20)" fill="none" stroke="currentColor" stroke-width="2.4"/>
+            <circle cx="20" cy="20" r="3.2" fill="currentColor"/>
+          </svg>
+          <span class="brand-text">
+            <span class="brand-name">Liora</span>
+            <span class="brand-tag">Hair &amp; Beauty Studio</span>
+          </span>
+        </a>
+        <p class="footer-address">
+          45 Demo Lane, Suite 2, Springfield, ST 00000<br>
+          <a href="tel:+15550100182">(555) 010-0182</a> ·
+          <a href="mailto:hello@liora-demo.example">hello@liora-demo.example</a>
+        </p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer">
+        <h2 class="footer-heading">Explore</h2>
+        <ul>
+          <li><a href="#services">Services &amp; pricing</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#about">Our team</a></li>
+          <li><a href="#booking">Book now</a></li>
+        </ul>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Information">
+        <h2 class="footer-heading">Information</h2>
+        <ul>
+          <li><a href="#visit">Hours &amp; location</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#testimonials">Reviews</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="container footer-base">
+      <p class="demo-disclosure">Demo website — fictional business created as a portfolio example.</p>
+      <p class="copyright">&copy; <span id="year">2026</span> Liora Hair &amp; Beauty Studio (fictional). All content is placeholder material.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

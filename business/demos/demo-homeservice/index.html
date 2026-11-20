@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<!--
+  DEMO WEBSITE — FICTIONAL BUSINESS
+  "IronOak Home Services" is a fictional business created as a portfolio example.
+  All contact details, service areas, process claims, and content are placeholders
+  for demonstration purposes only. This form is not connected to any backend.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IronOak Home Services | 24/7 Local Plumbing, Electrical &amp; Handyman</title>
+  <meta name="description" content="IronOak Home Services (demo) — 24/7 local plumbing, electrical, HVAC, handyman and emergency repairs with upfront pricing before work starts.">
+  <meta name="keywords" content="home services, plumbing, electrical, handyman, emergency repair, demo website">
+  <meta name="author" content="IronOak Home Services (fictional demo)">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="IronOak Home Services | 24/7 Local Home Services">
+  <meta property="og:description" content="Demo website — fictional business. Upfront pricing, same-day slots when available, workmanship guarantee on completed jobs.">
+  <meta property="og:locale" content="en_US">
+  <meta name="theme-color" content="#0f2744">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="IronOak Home Services — home">
+        <!-- Original house + wrench mark -->
+        <svg class="brand-mark" width="40" height="40" viewBox="0 0 40 40" role="img" aria-label="IronOak logo" focusable="false">
+          <path d="M4 18 L20 5 L36 18" fill="none" stroke="#f5a623" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 17 V34 H32 V17" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M27 11 a6 6 0 0 0 -7.5 7.5 L14 24 l3 3 5.5 -5.5 A6 6 0 0 0 30 14 l-3 3 -3 -3 3 -3 z" fill="#f5a623" stroke="#0f2744" stroke-width="1.2" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand-text">
+          <span class="brand-name">IronOak</span>
+          <span class="brand-sub">Home Services</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteNav" aria-label="Open menu">
+        <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path class="bar bar-1" d="M3 6h18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+          <path class="bar bar-2" d="M3 12h18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+          <path class="bar bar-3" d="M3 18h18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <nav class="site-nav" id="siteNav" aria-label="Primary">
+        <ul class="nav-list">
+          <li><a href="#services">Services</a></li>
+          <li><a href="#why-us">Why Us</a></li>
+          <li><a href="#process">Process</a></li>
+          <li><a href="#service-area">Service Area</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#quote">Contact</a></li>
+        </ul>
+        <a class="btn btn-ghost nav-phone" href="tel:+15550142">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11 11 0 0 0 3.5.56 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11 11 0 0 0 .56 3.5 1 1 0 0 1-.25 1z" fill="currentColor"/>
+          </svg>
+          (555) 014-2000
+        </a>
+        <a class="btn btn-primary" href="#quote">Get a Free Quote</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Licensed &amp; insured &middot; Local technicians</p>
+          <h1 id="hero-heading">24/7 Local Home Services, Done Right the First Time</h1>
+          <p class="lead">Plumbing, electrical, HVAC and handyman repairs for your home — with upfront pricing before any work starts and same-day slots when available.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary btn-lg" href="tel:+15550142">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11 11 0 0 0 3.5.56 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11 11 0 0 0 .56 3.5 1 1 0 0 1-.25 1z" fill="currentColor"/>
+              </svg>
+              Call (555) 014-2000
+            </a>
+            <a class="btn btn-outline btn-lg" href="#quote">Request a Free Quote</a>
+          </div>
+          <ul class="hero-badges" aria-label="Service highlights">
+            <li>Upfront pricing</li>
+            <li>Same-day when available</li>
+            <li>Workmanship guarantee</li>
+          </ul>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <svg class="hero-art" viewBox="0 0 480 420" role="presentation" focusable="false">
+            <rect x="30" y="60" width="420" height="320" rx="14" fill="#14345c"/>
+            <path d="M60 200 L240 70 L420 200" fill="none" stroke="#f5a623" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="95" y="195" width="290" height="165" rx="8" fill="#0f2744" stroke="#2c5486" stroke-width="3"/>
+            <rect x="215" y="270" width="60" height="90" rx="6" fill="#f5a623"/>
+            <rect x="130" y="230" width="55" height="45" rx="5" fill="#8fc4f2"/>
+            <rect x="300" y="230" width="55" height="45" rx="5" fill="#8fc4f2"/>
+            <circle cx="392" cy="120" r="34" fill="#f5a623"/>
+            <path d="M392 104 v32 M376 120 h32" stroke="#0f2744" stroke-width="6" stroke-linecap="round"/>
+            <rect x="55" y="330" width="120" height="46" rx="23" fill="#f5a623"/>
+            <text x="115" y="360" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="#0f2744">24/7</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section class="section" id="services" aria-labelledby="services-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">What we do</p>
+          <h2 id="services-heading">Services for Every Home Job</h2>
+          <p class="section-sub">Six core service lines, one call. Demo content — sample layout.</p>
+        </header>
+        <ul class="card-grid">
+          <li class="card">
+            <span class="card-icon" aria-hidden="true">
+              <svg width="34" height="34" viewBox="0 0 24 24" focusable="false"><path d="M14 3v2a3 3 0 0 0 1 2.2l4.6 4.6a4.5 4.5 0 1 1-6.4 6.4L8.2 11.6A3 3 0 0 0 7 12.6H4A1.5 1.5 0 0 1 2.5 11V8A1.5 1.5 0 0 1 4 6.5h1.7A4.5 4.5 0 0 1 9 3h5zm-1.4 8.2 4.6 4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Plumbing</h3>
+            <p>Leaky faucets, clogged drains, running toilets and pipe repairs handled cleanly and quickly.</p>
+          </li>
+          <li class="card">
+            <span class="card-icon" aria-hidden="true">
+              <svg width="34" height="34" viewBox="0 0 24 24" focusable="false"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Electrical</h3>
+            <p>Outlets, switches, fixtures, dimmers and circuit troubleshooting by safety-first technicians.</p>
+          </li>
+          <li class="card">
+            <span class="card-icon" aria-hidden="true">
+              <svg width="34" height="34" viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
+            <h3>HVAC (Basic)</h3>
+            <p>Thermostat swaps, filter changes, airflow checks and seasonal tune-ups for comfort systems.</p>
+          </li>
+          <li class="card">
+            <span class="card-icon" aria-hidden="true">
+              <svg width="34" height="34" viewBox="0 0 24 24" focusable="false"><path d="M3 21h8M5 21 15 11l-2-2L3 19v2zm11-10 3-3m1-3a3.5 3.5 0 1 1 2 6.4V16l-3 3-3-3 3-3V9.4A3.5 3.5 0 0 1 17 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Handyman</h3>
+            <p>Shelving, drywall patches, doors, mounting and the small jobs that never leave your list.</p>
+          </li>
+          <li class="card">
+            <span class="card-icon" aria-hidden="true">
+              <svg width="34" height="34" viewBox="0 0 24 24" focusable="false"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 6h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Appliance Install</h3>
+            <p>Washers, dryers, dishwashers, ranges and disposals installed level, sealed and tested.</p>
+          </li>
+          <li class="card">
+            <span class="card-icon" aria-hidden="true">
+              <svg width="34" height="34" viewBox="0 0 24 24" focusable="false"><path d="M12 2 3 6v6c0 5 3.8 9.4 9 10 5.2-.6 9-5 9-10V6l-9-4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Emergency Repair</h3>
+            <p>Round-the-clock response for bursts, outages and no-heat calls. Call the line for availability.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- WHY US -->
+    <section class="section section-alt" id="why-us" aria-labelledby="why-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">How we work</p>
+          <h2 id="why-heading">Why Homeowners Book IronOak</h2>
+          <p class="section-sub">Process commitments, not marketing fluff.</p>
+        </header>
+        <ul class="why-grid">
+          <li class="why-item">
+            <span class="why-num" aria-hidden="true">01</span>
+            <h3>Upfront pricing before work starts</h3>
+            <p>You approve the price before a tool comes out of the bag. No surprise line items after the job.</p>
+          </li>
+          <li class="why-item">
+            <span class="why-num" aria-hidden="true">02</span>
+            <h3>Same-day slots when available</h3>
+            <p>Same-day appointments are offered whenever the day's schedule has room — call early for the best window.</p>
+          </li>
+          <li class="why-item">
+            <span class="why-num" aria-hidden="true">03</span>
+            <h3>Workmanship guarantee on completed jobs</h3>
+            <p>Every completed job is backed by our workmanship guarantee. If the repair isn't right, we come back.</p>
+          </li>
+          <li class="why-item">
+            <span class="why-num" aria-hidden="true">04</span>
+            <h3>Licensed &amp; insured crews</h3>
+            <p>Our technicians are licensed and insured, with ID shown on arrival and a clean-worksite promise.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section class="section" id="process" aria-labelledby="process-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">What to expect</p>
+          <h2 id="process-heading">Four Steps, Start to Finish</h2>
+        </header>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-dot" aria-hidden="true">1</span>
+            <h3>Call or request</h3>
+            <p>Phone us or send the demo form. We log your issue and the address.</p>
+          </li>
+          <li class="step">
+            <span class="step-dot" aria-hidden="true">2</span>
+            <h3>Diagnose</h3>
+            <p>A technician inspects the problem and explains the options in plain language.</p>
+          </li>
+          <li class="step">
+            <span class="step-dot" aria-hidden="true">3</span>
+            <h3>Upfront quote</h3>
+            <p>You get the full price in writing before any work begins.</p>
+          </li>
+          <li class="step">
+            <span class="step-dot" aria-hidden="true">4</span>
+            <h3>Fix + walkthrough</h3>
+            <p>We complete the job, clean up, and walk you through the result together.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- SERVICE AREA -->
+    <section class="section section-alt" id="service-area" aria-labelledby="area-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Where we go</p>
+          <h2 id="area-heading">Service Area</h2>
+          <p class="section-sub">Demo service area — generic placeholder suburb names for illustration only.</p>
+        </header>
+        <ul class="area-list">
+          <li>Northbridge <span class="tag">(demo service area)</span></li>
+          <li>Mapleton <span class="tag">(demo service area)</span></li>
+          <li>Cedar Falls <span class="tag">(demo service area)</span></li>
+          <li>Westbrook <span class="tag">(demo service area)</span></li>
+          <li>Riverbend <span class="tag">(demo service area)</span></li>
+          <li>Oak Hollow <span class="tag">(demo service area)</span></li>
+          <li>Pinecrest <span class="tag">(demo service area)</span></li>
+          <li>Lakeshore <span class="tag">(demo service area)</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS (PLACEHOLDER) -->
+    <section class="section" id="testimonials" aria-labelledby="testi-heading">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Social proof area</p>
+          <h2 id="testi-heading">What Customers Say</h2>
+          <p class="placeholder-note" role="note">Sample layout — placeholder content</p>
+        </header>
+        <ul class="card-grid testimonials">
+          <li class="card quote-card">
+            <blockquote>
+              <p>"Placeholder testimonial text goes here — a generic sentence about friendly service and tidy work for layout purposes only."</p>
+              <footer>— Placeholder Name, Demo Town</footer>
+            </blockquote>
+          </li>
+          <li class="card quote-card">
+            <blockquote>
+              <p>"Sample quote number two: lorem-style copy showing how a real customer review would sit inside this card layout."</p>
+              <footer>— Sample Client, Example City</footer>
+            </blockquote>
+          </li>
+          <li class="card quote-card">
+            <blockquote>
+              <p>"Third placeholder review — generic wording, no real person or real event. Included purely to demonstrate the design."</p>
+              <footer>— Demo Reviewer, Placeholder Suburb</footer>
+            </blockquote>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- QUOTE / CONTACT FORM -->
+    <section class="section section-alt" id="quote" aria-labelledby="quote-heading">
+      <div class="container quote-grid">
+        <div class="quote-copy">
+          <p class="eyebrow">Get started</p>
+          <h2 id="quote-heading">Request a Free Quote</h2>
+          <p>Tell us what's going on and we'll follow up with an upfront price. Prefer to talk? Call <a href="tel:+15550142">(555) 014-2000</a> — 24/7.</p>
+          <ul class="contact-facts">
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+              78 Demo Road, Demo City, ST 00000
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m3 7 9 6 9-6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+              hello@ironoak-demo.example
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Open 24/7 for emergencies
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 4 6.5V12c0 4.5 3.4 8.5 8 9.5 4.6-1 8-5 8-9.5V6.5L12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              License #XXX-DEMO (placeholder)
+            </li>
+          </ul>
+        </div>
+
+        <form class="quote-form" id="quoteForm" action="mailto:hello@ironoak-demo.example" method="post" enctype="text/plain" aria-describedby="form-note">
+          <p class="form-banner" id="form-note" role="note"><strong>Demo form — not connected.</strong> Submissions open your mail app; nothing is stored or sent to a server.</p>
+
+          <div class="field">
+            <label for="name">Full name</label>
+            <input type="text" id="name" name="name" autocomplete="name" required placeholder="Your name">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="phone">Phone</label>
+              <input type="tel" id="phone" name="phone" autocomplete="tel" required placeholder="(555) 000-0000">
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com">
+            </div>
+          </div>
+          <div class="field">
+            <label for="service">Service needed</label>
+            <select id="service" name="service" required>
+              <option value="">Select a service</option>
+              <option>Plumbing</option>
+              <option>Electrical</option>
+              <option>HVAC (Basic)</option>
+              <option>Handyman</option>
+              <option>Appliance Install</option>
+              <option>Emergency Repair</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="message">Describe the job</label>
+            <textarea id="message" name="message" rows="4" required placeholder="What's going on?"></textarea>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" type="submit">Send Quote Request</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq" aria-labelledby="faq-heading">
+      <div class="container narrow">
+        <header class="section-head">
+          <p class="eyebrow">Answers</p>
+          <h2 id="faq-heading">Frequently Asked Questions</h2>
+        </header>
+        <div class="faq-list">
+          <details>
+            <summary>How does pricing work?</summary>
+            <p>We diagnose the issue first, then give you upfront pricing before any work starts. You approve the price, and that's the price — no surprise additions after the job is done.</p>
+          </details>
+          <details>
+            <summary>Do you handle emergencies after hours?</summary>
+            <p>Yes. Our line is staffed 24/7 for emergencies such as bursts, power outages and no-heat calls. Call <a href="tel:+15550142">(555) 014-2000</a> to check current availability.</p>
+          </details>
+          <details>
+            <summary>Is the work guaranteed?</summary>
+            <p>Every completed job is covered by our workmanship guarantee. If something isn't right after we leave, contact us and we'll return to make it right.</p>
+          </details>
+          <details>
+            <summary>What payment methods do you accept?</summary>
+            <p>We accept major cards, bank transfer and cash. Payment is due on completion unless alternative terms were agreed in your written quote.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA BAND -->
+    <section class="cta-band" aria-labelledby="cta-heading">
+      <div class="container cta-inner">
+        <h2 id="cta-heading">Need a hand today?</h2>
+        <p>Call 24/7 or request a quote — upfront pricing before work starts.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary btn-lg" href="tel:+15550142">Call (555) 014-2000</a>
+          <a class="btn btn-outline btn-lg" href="#quote">Get a Free Quote</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="IronOak Home Services — back to top">
+          <svg class="brand-mark" width="36" height="36" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+            <path d="M4 18 L20 5 L36 18" fill="none" stroke="#f5a623" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 17 V34 H32 V17" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="brand-text">
+            <span class="brand-name">IronOak</span>
+            <span class="brand-sub">Home Services</span>
+          </span>
+        </a>
+        <p>Licensed &amp; insured. Upfront pricing. Workmanship guarantee on completed jobs.</p>
+        <p class="demo-line">Demo website — fictional business created as a portfolio example.</p>
+      </div>
+      <nav class="footer-col" aria-label="Footer services">
+        <h3>Services</h3>
+        <ul>
+          <li><a href="#services">Plumbing</a></li>
+          <li><a href="#services">Electrical</a></li>
+          <li><a href="#services">HVAC (Basic)</a></li>
+          <li><a href="#services">Handyman</a></li>
+        </ul>
+      </nav>
+      <nav class="footer-col" aria-label="Footer company">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#why-us">Why Us</a></li>
+          <li><a href="#process">Process</a></li>
+          <li><a href="#service-area">Service Area</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </nav>
+      <div class="footer-col">
+        <h3>Contact (demo)</h3>
+        <ul>
+          <li><a href="tel:+15550142">(555) 014-2000</a></li>
+          <li>78 Demo Road, Demo City</li>
+          <li>hello@ironoak-demo.example</li>
+          <li>License #XXX-DEMO (placeholder)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; <span id="year">2026</span> IronOak Home Services (fictional). All content is demo placeholder material. Demo website — fictional business created as a portfolio example.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

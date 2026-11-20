@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Website Proposal — {{CLIENT_BUSINESS}}</title>
+<style>
+  :root{--ink:#1a1f2e;--muted:#5b6472;--line:#e3e6ec;--accent:#1f6feb;--bg:#ffffff;--soft:#f6f8fa}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Georgia,'Times New Roman',serif;color:var(--ink);background:var(--soft);line-height:1.6}
+  .page{max-width:820px;margin:24px auto;background:var(--bg);padding:56px 64px;border:1px solid var(--line)}
+  .brand{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--ink);padding-bottom:16px;margin-bottom:32px}
+  .brand h1{font-size:20px;letter-spacing:.5px}
+  .brand .meta{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:var(--muted);text-align:right}
+  h2{font-size:15px;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin:28px 0 10px;font-family:Arial,Helvetica,sans-serif}
+  p,li{font-size:15px;color:var(--ink)}
+  ul{padding-left:20px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-family:Arial,Helvetica,sans-serif;font-size:14px}
+  .grid b{color:var(--muted);font-weight:normal;display:block;font-size:11px;text-transform:uppercase;letter-spacing:.8px}
+  table{width:100%;border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:14px;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left}
+  th{background:var(--soft);font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+  .total td{font-weight:bold;background:var(--soft)}
+  .box{border:1px solid var(--line);background:var(--soft);padding:16px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:var(--muted);margin-top:10px}
+  .sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;font-family:Arial,Helvetica,sans-serif;font-size:13px}
+  .sign .line{border-top:1px solid var(--ink);margin-top:40px;padding-top:8px;color:var(--muted)}
+  .foot{margin-top:40px;border-top:1px solid var(--line);padding-top:12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:var(--muted);text-align:center}
+  @media print{body{background:#fff}.page{border:none;margin:0;padding:24px}}
+  @media (max-width:640px){.page{padding:28px 20px;margin:0}.grid,.sign{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="brand">
+    <h1>VISHWAJEET SIDE INCOME</h1>
+    <div class="meta">
+      Website Proposal<br>
+      Reference: {{PROPOSAL_ID}}<br>
+      Date: {{DATE}}
+    </div>
+  </div>
+
+  <div class="grid">
+    <span><b>Prepared for</b>{{CLIENT_NAME}}</span>
+    <span><b>Business</b>{{CLIENT_BUSINESS}}</span>
+    <span><b>Email</b>{{CLIENT_EMAIL}}</span>
+    <span><b>Market</b>{{CLIENT_MARKET}}</span>
+  </div>
+
+  <h2>1. Identified problem</h2>
+  <p>{{OBSERVED_PROBLEMS}} <!-- e.g. "Site is not mobile-friendly (68/100 mobile), no visible contact CTA, no HTTPS on the booking page." Must be filled from a real audit — never invented. --></p>
+
+  <h2>2. Recommended solution</h2>
+  <p>{{RECOMMENDED_SOLUTION}}</p>
+
+  <h2>3. Package</h2>
+  <table>
+    <tr><th>Item</th><th>Detail</th></tr>
+    <tr><td>Package</td><td>{{PACKAGE_NAME}} — {{PACKAGE_PRICE}}</td></tr>
+    <tr><td>Deliverables</td><td>{{PACKAGE_DELIVERABLES}}</td></tr>
+    <tr><td>Timeline</td><td>{{TIMELINE}} (typical: 2-5 days for starter, 5-10 days for multi-page; confirmed at kickoff)</td></tr>
+    <tr><td>Revisions</td><td>{{REVISIONS}} rounds included; extra work quoted separately</td></tr>
+  </table>
+
+  <h2>4. Investment &amp; payment terms</h2>
+  <table>
+    <tr><td>Package price (USD)</td><td>{{PACKAGE_PRICE}}</td></tr>
+    <tr><td>Deposit due to start (50%)</td><td>{{DEPOSIT_AMOUNT}}</td></tr>
+    <tr><td>Balance before handover (50%)</td><td>{{BALANCE_AMOUNT}}</td></tr>
+    <tr class="total"><td>Total</td><td>{{TOTAL}}</td></tr>
+  </table>
+  <div class="box">Payment accepted via {{PAYMENT_METHOD}}. Invoice and payment link are issued separately. Work begins after the deposit is confirmed as received — issuing an invoice does not start work by itself.</div>
+
+  <h2>5. Maintenance (optional)</h2>
+  <p>Maintenance — $25/month: hosting/support where applicable, small edits, content updates. Optional after launch; cancel any time before the next monthly cycle.</p>
+
+  <h2>6. Assumptions</h2>
+  <ul>
+    <li>Client provides text, photos, and business details within 3 days of kickoff.</li>
+    <li>One domain and hosting account (or a free subdomain during the demo phase) arranged by the client or agreed in writing.</li>
+    <li>Analytics and maps integrated only where the client authorizes.</li>
+    <li>Scope beyond the listed deliverables is quoted separately before any work starts.</li>
+  </ul>
+
+  <h2>7. Acceptance</h2>
+  <p>Signing below confirms the package, price, and terms above. A countersigned copy is returned by email.</p>
+  <div class="sign">
+    <div><div class="line">Client signature / date</div></div>
+    <div><div class="line">Vishwajeet Side Income / date</div></div>
+  </div>
+
+  <div class="foot">Vishwajeet Side Income — {{EMAIL}} — proposal generated {{DATE}}. This document is a template draft until filled with verified client details and approved by the owner.</div>
+</div>
+</body>
+</html>
