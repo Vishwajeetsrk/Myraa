@@ -52,6 +52,22 @@ class PassiveLearningService {
     return this.isActive ? 'RECORDING' : 'IDLE';
   }
 
+  /**
+   * Screenpipe-inspired in-memory ring buffer retrieval
+   * Returns recent observation trajectory tuples (last N events)
+   */
+  getRecentTrajectories(limit = 20) {
+    const lim = Math.max(1, Math.min(100, Number(limit) || 20));
+    return {
+      ok: true,
+      isActive: this.isActive,
+      indicator: this.indicator,
+      sessionId: this.sessionId,
+      totalCount: this.capturedEvents.length,
+      trajectories: this.capturedEvents.slice(-lim)
+    };
+  }
+
   getStatus() {
     return {
       isActive: this.isActive,
@@ -133,6 +149,8 @@ class PassiveLearningService {
           controlName: e.controlName,
           controlType: e.controlType,
           automationId: e.automationId,
+          coordinates: e.coordinates || null,
+          boundingBox: e.boundingBox || null,
           value: e.value,
           hotkey: e.hotkey,
           timestamp: e.timestamp
@@ -167,6 +185,24 @@ class PassiveLearningService {
   }
 
   /**
+   * Discard an in-progress recording without consolidating or saving a
+   * workflow. Used by private mode so enabling privacy cannot silently create
+   * new learned artifacts. Saved workflows are never deleted.
+   */
+  discard(reason = 'discarded') {
+    const had = this.isActive || this.capturedEvents.length > 0;
+    this.isActive = false;
+    this.capturedEvents = [];
+    this.sessionId = null;
+    this.sessionName = '';
+    this.startedAt = null;
+    this.currentApp = null;
+    if (this.pollInterval) { clearInterval(this.pollInterval); this.pollInterval = null; }
+    this._saveLog();
+    return { ok: true, discarded: had, reason, status: this.indicator };
+  }
+
+  /**
    * Record an observed interaction event with GUARANTEED password exclusion
    */
   recordAction(event = {}) {
@@ -195,6 +231,8 @@ class PassiveLearningService {
       controlName: event.controlName || '',
       controlType: event.controlType || '',
       automationId: event.automationId || '',
+      coordinates: (event.x != null && event.y != null) ? { x: event.x, y: event.y } : (event.coordinates || null),
+      boundingBox: event.boundingBox || null,
       value: sanitizedValue,
       hotkey: event.hotkey || null,
       isPassword: isPasswordField,

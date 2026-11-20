@@ -20,7 +20,7 @@ const os = require('os');
 const EVENTS_CAP = 2000;
 const PAYLOAD_CAP = 800;
 const SECRET_RE = /key|token|secret|password|credential|apikey|authorization/i;
-const TYPE_RE = /^(system|task|tool|approval|broker|model|connector|evidence|investigation|routine|workspace|timeline|permission|mcp)\.[a-z0-9_.-]+$/;
+const TYPE_RE = /^(system|task|tool|approval|broker|model|connector|evidence|investigation|routine|workspace|timeline|permission|mcp|screen|app|window|desktop|workflow|skill|document|sheet|ui)\.[a-z0-9_.-]+$/;
 const SEVERITIES = ['info', 'warn', 'error'];
 
 function dataDir() {

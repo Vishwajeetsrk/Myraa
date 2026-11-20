@@ -20,7 +20,7 @@ function consentEnabled() {
   try {
     const p = path.join(settingsDir(), 'screen_awareness_consent.json');
     if (fs.existsSync(p)) {
-      const v = JSON.parse(fs.readFileSync(p, 'utf8'));
+      const v = JSON.parse(fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, ''));
       if (typeof v.enabled === 'boolean') return v.enabled;
     }
   } catch (e) {}
@@ -439,8 +439,8 @@ async function desktopState(opts = {}) {
       L0_window: 'AVAILABLE',
       L1_ui: 'AVAILABLE_ON_DEMAND',
       L2_content: 'AVAILABLE_ON_DEMAND',
-      L3_task: 'PARTIAL',
-      L4_workflow: 'PARTIAL',
+      L3_task: 'AVAILABLE_HEURISTIC',
+      L4_workflow: 'AVAILABLE_ON_DEMAND',
       L5_intent: 'NOT_IMPLEMENTED',
     },
     method: 'uia foreground + monitors + visible windows + focused element',
