@@ -194,6 +194,23 @@ function detectVbaIntent(lower) {
   return null;
 }
 
+const FRAMEWORK_PATTERNS = [
+  [/\b(?:reality\s*check|challenge\s+(?:this|the)\s+idea)\b/i, 'realityCheck', 'FRAMEWORK_REALITY_CHECK'],
+  [/\b(?:write|create|make|generate|draft)\b.*\b(?:prd|product\s+requirements?)\b/i, 'prd', 'FRAMEWORK_PRD'],
+  [/\b(?:what\s+will\s+break|how\s+would\s+this\s+(?:saas|product)\s+fail)\b/i, 'whatWillBreak', 'FRAMEWORK_WHAT_WILL_BREAK'],
+  [/\b(?:weakness\s+audit|audit\s+(?:this|the)\s+(?:saas|product))\b/i, 'weaknessAudit', 'FRAMEWORK_WEAKNESS_AUDIT'],
+  [/\b(?:do\s+we\s+(?:even\s+)?need\s+to\s+build|can\s+(?:an?\s+)?(?:api|mcp|script|excel)\s+(?:solve|do)\s+(?:this|it))\b/i, 'doWeNeedToBuild', 'FRAMEWORK_BUILD_NECESSITY'],
+  [/\b(?:legal\s+awareness|compliance\s+review)\b/i, 'legalAwareness', 'FRAMEWORK_LEGAL_AWARENESS'],
+  [/\b(?:final\s+task\s+report|task\s+summary)\b/i, 'finalReport', 'FRAMEWORK_FINAL_REPORT'],
+];
+
+function detectFrameworkIntent(lower) {
+  for (const [re, name, action] of FRAMEWORK_PATTERNS) {
+    if (re.test(lower)) return { name, action };
+  }
+  return null;
+}
+
 // ── UTILITY HELPERS ──────────────────────────────────────────────────────────
 
 function extractTopic(text, removeRegex) {
@@ -374,6 +391,35 @@ class UnifiedCapabilityRouter {
         return { handled: true, action: 'VBA_IMPROVE', reply: lines.join('\n'), data: a };
       } catch (err) {
         return { handled: true, action: 'VBA_ERROR', reply: `[!] VBA analysis error: ${err.message}`, error: err.message };
+      }
+    }
+
+    // =========================================================================
+    // 0a-ii. REASONING FRAMEWORKS - evidence-gated, never fabricated
+    // =========================================================================
+    const frameworkIntent = detectFrameworkIntent(lower);
+    if (frameworkIntent) {
+      try {
+        const rf = require(path.join(__dirname, 'reasoning_frameworks.cjs'));
+        const evidence = {};
+        for (const [k, v] of Object.entries(opts || {})) {
+          if (!['code', 'vbaCode', 'projectDir', 'userName'].includes(k)) evidence[k] = v;
+        }
+        const r = rf.invoke(frameworkIntent.name, evidence);
+        const sections = r.sections || (r.fields ? r.fields : []);
+        const shown = sections.slice(0, 12).map((s) => `- ${s.label}: ${s.status === 'PROVIDED' ? s.value : 'UNKNOWN'}`);
+        const prefix = frameworkIntent.name === 'legalAwareness'
+          ? `[OK] Compliance Review (status ${r.status}). Not legal advice; official sources ${r.currentOfficialSource}.`
+          : `[OK] ${r.title}: ${r.providedCount !== undefined ? r.providedCount + ' provided, ' + r.unknownCount + ' unknown.' : 'scaffold ready.'}`;
+        const suffix = sections.length > 12 ? `\n- ...${sections.length - 12} more sections in data.` : '';
+        return {
+          handled: true,
+          action: frameworkIntent.action,
+          reply: [prefix, ...shown].join('\n') + suffix + '\n[!] UNKNOWN fields need real evidence. Nothing is inferred or claimed.',
+          data: r
+        };
+      } catch (err) {
+        return { handled: true, action: 'FRAMEWORK_ERROR', reply: `[!] Framework error: ${err.message}`, error: err.message };
       }
     }
 

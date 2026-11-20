@@ -111,6 +111,23 @@ const CATALOG = [
     },
   },
   {
+    id: 'reasoning.frameworks',
+    keywords: ['reality check', 'prd', 'product requirements', 'threat model', 'security review', 'privacy review', 'legal awareness', 'compliance review', 'what will break', 'weakness audit', 'bug report', 'final report'],
+    check() {
+      try {
+        const rf = require(path.join(DIST, 'reasoning_frameworks.cjs'));
+        const r = rf.invoke('realityCheck', {});
+        return {
+          status: r.ok ? 'AVAILABLE' : 'DEGRADED',
+          reason: r.ok
+            ? 'evidence-gated frameworks present; unsupplied fields remain UNKNOWN and no research is executed by the framework itself'
+            : 'framework build failed',
+          evidence: { frameworks: rf.STATUS.frameworks.length, additional: rf.STATUS.additional, unknownByDefault: r.unknownCount },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
     id: 'business.operations',
     keywords: ['business', 'leads', 'crm', 'pipeline', 'revenue', 'profit', 'invoices', 'proposal', 'outreach', 'business report'],
     check() {

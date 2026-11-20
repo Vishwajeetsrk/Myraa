@@ -5424,6 +5424,15 @@ async function startServer() {
     console.warn("[Server] Could not mount VBA Intelligence:", e.message);
   }
   try {
+    // Reasoning Frameworks: evidence-gated scaffolds for product, security,
+    // legal-awareness and reporting. Never fabricates research or results.
+    const reasoningRoutes = require(import_path2.default.join(__dirname, "reasoning_routes.cjs"));
+    app.use("/api/frameworks", reasoningRoutes);
+    console.log("[Server] Reasoning Frameworks mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Reasoning Frameworks:", e.message);
+  }
+  try {
     // Business OS: read-only awareness over business/ (leads, finance, templates, email, spreadsheets)
     const businessOS = require(import_path2.default.join(__dirname, "business_os.cjs"));
     app.use("/api/business", businessOS.createRouter());
