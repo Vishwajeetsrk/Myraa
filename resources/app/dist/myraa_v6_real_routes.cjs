@@ -3404,6 +3404,100 @@ router.post('/api/desktop/control/set-value', (req, res) => {
   }
 });
 
+// ── DESKTOP AWARENESS + WINDOW CONTROL (extends the UIA routes above) ───────
+// These compose the existing UIA runner. No second window manager, no capture.
+
+function desktopService() {
+  return uiAutomationService || require('./ui_automation_service.cjs');
+}
+
+// Unified metadata snapshot: foreground, monitors, windows, focus, counts.
+router.get('/api/desktop/state', async (req, res) => {
+  try {
+    const screen = require('./screen_intelligence.cjs');
+    res.json(await screen.desktopState({ includeSelection: req.query.includeSelection === 'true' }));
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Real foreground window (not a list-order approximation).
+router.get('/api/desktop/foreground', async (req, res) => {
+  try {
+    res.json(await desktopService().getForegroundWindow());
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// All monitors with bounds and working area.
+router.get('/api/desktop/monitors', async (req, res) => {
+  try {
+    res.json(await desktopService().getMonitors());
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Focused element + selection (password fields are always redacted).
+router.get('/api/desktop/focus', async (req, res) => {
+  try {
+    const r = await desktopService().getFocusedElement();
+    if (r && r.element && r.element.isPassword) {
+      r.element.selectedText = null;
+      r.element.selectionRedacted = true;
+    }
+    res.json(r);
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Semantic screen search by control name / automation id / class.
+router.get('/api/desktop/find', async (req, res) => {
+  const q = req.query.q || req.query.query;
+  if (!q) return res.status(400).json({ ok: false, error: 'q is required' });
+  try {
+    res.json(await desktopService().findElement(q, req.query.max));
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Safe window action. close requires confirm:true.
+router.post('/api/desktop/window/action', async (req, res) => {
+  const { handle, action, x, y, width, height, confirm } = req.body || {};
+  try {
+    res.json(await desktopService().windowAction(handle, action, { x, y, width, height, confirm: confirm === true }));
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Resolve and activate a window by handle, process, class or title fragment.
+router.post('/api/desktop/window/activate', async (req, res) => {
+  const body = req.body || {};
+  const query = body.window || body.query || body.appName || body.title;
+  if (!query) return res.status(400).json({ ok: false, error: 'window/query/appName/title is required' });
+  try {
+    res.json(await desktopService().activateWindow(query));
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Move a resolved window to a monitor (0-based index).
+router.post('/api/desktop/window/move-to-monitor', async (req, res) => {
+  const body = req.body || {};
+  const query = body.window || body.query || body.appName || body.title;
+  if (!query) return res.status(400).json({ ok: false, error: 'window/query/appName/title is required' });
+  try {
+    res.json(await desktopService().moveWindowToMonitor(query, body.monitorIndex, { fullscreen: body.fullscreen === true }));
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ─── CONTINUOUS / PASSIVE LEARNING ROUTES ─────────────────────────────────────
 
 // Start continuous passive learning mode (default: off)

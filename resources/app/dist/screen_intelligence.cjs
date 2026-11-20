@@ -65,9 +65,10 @@ async function captureContext(opts) {
     return { ok: false, code: 'NEEDS_PERMISSION', error: 'screen-awareness consent is not enabled', context: ctx };
   }
 
-  const [windows, uiaStatus, shot, ocrStatus] = await Promise.all([
+  const [windows, foreground, focus, shot, ocrStatus] = await Promise.all([
     safe('windows', () => (typeof uia.listVisibleWindows === 'function' ? uia.listVisibleWindows() : null)),
-    safe('uia', () => null),
+    safe('foreground', () => (typeof uia.getForegroundWindow === 'function' ? uia.getForegroundWindow() : null)),
+    safe('focus', () => (typeof uia.getFocusedElement === 'function' ? uia.getFocusedElement() : null)),
     safe('screenshot', () => (typeof desktop.takeScreenshot === 'function' ? desktop.takeScreenshot() : null)),
     Promise.resolve(safe('ocr', () => ocr.status())),
   ]);
@@ -78,8 +79,21 @@ async function captureContext(opts) {
   ctx.sources.screenshot = { status: shot.ok && shot.value && shot.value.image ? registry.STATUS.READY : registry.STATUS.UNAVAILABLE, detail: shot.error || 'no image bytes returned by capture layer' };
   ctx.sources.ocr = { status: ocrStatus.ok && ocrStatus.value && ocrStatus.value.installed ? registry.STATUS.READY : registry.STATUS.UNAVAILABLE, detail: ocrStatus.error || (ocrStatus.value && ocrStatus.value.detail) || 'unknown' };
 
+  const fgWin = foreground && foreground.ok && foreground.value && foreground.value.window ? foreground.value.window : null;
   const list = windowList;
-  if (list.length) {
+  if (fgWin) {
+    ctx.activeWindow = {
+      hwnd: fgWin.handle || null,
+      title: fgWin.title || null,
+      process: fgWin.processName || null,
+      executable: null,
+      application: null,
+      state: fgWin.state || null,
+      monitor: fgWin.monitor || null,
+      bounds: fgWin.bounds || null,
+      method: 'uia.getForegroundWindow (real foreground)',
+    };
+  } else if (list.length) {
     const first = list[0] || {};
     ctx.activeWindow = {
       hwnd: first.hwnd || first.handle || null,
@@ -89,6 +103,19 @@ async function captureContext(opts) {
       application: first.application || null,
       method: 'uia.listVisibleWindows (first entry; foreground approximation)',
     };
+  }
+
+  const focusEl = focus && focus.ok && focus.value && focus.value.element ? focus.value.element : null;
+  if (focusEl) {
+    ctx.focusedElement = {
+      name: focusEl.name || null,
+      controlType: focusEl.controlType || null,
+      automationId: focusEl.automationId || null,
+      windowTitle: focusEl.windowTitle || null,
+      isPassword: focusEl.isPassword === true,
+      bounds: focusEl.rect || null,
+    };
+    ctx.selectedText = focusEl.isPassword ? null : (focusEl.selectedText || null);
   }
 
   if (ctx.activeWindow.title && typeof uia.getAppControlMap === 'function') {
@@ -361,6 +388,70 @@ function verifyScreenAction(input) {
   };
 }
 
+/**
+ * Unified desktop metadata snapshot (L0/L1). Composes the existing window,
+ * monitor, foreground and focus primitives. No screenshots, no OCR, no model
+ * calls. Selection text is withheld unless includeSelection is explicitly set.
+ */
+async function desktopState(opts = {}) {
+  const [fg, monitors, focus] = await Promise.all([
+    typeof uia.getForegroundWindow === 'function' ? uia.getForegroundWindow() : Promise.resolve({ ok: false, window: null }),
+    typeof uia.getMonitors === 'function' ? uia.getMonitors() : Promise.resolve({ ok: false, monitors: [] }),
+    typeof uia.getFocusedElement === 'function' ? uia.getFocusedElement() : Promise.resolve({ ok: false, element: null }),
+  ]);
+
+  const listed = typeof uia.listVisibleWindows === 'function' ? uia.listVisibleWindows() : { windows: [] };
+  const windows = (listed && listed.windows) || [];
+  const applications = {};
+  for (const w of windows) {
+    const key = String(w.processName || 'unknown').toLowerCase();
+    applications[key] = (applications[key] || 0) + 1;
+  }
+
+  const focusEl = focus && focus.ok && focus.element ? focus.element : null;
+  const safeFocus = focusEl ? {
+    name: focusEl.name || null,
+    controlType: focusEl.controlType || null,
+    automationId: focusEl.automationId || null,
+    windowTitle: focusEl.windowTitle || null,
+    isPassword: focusEl.isPassword === true,
+    hasSelection: focusEl.hasSelection === true,
+    bounds: focusEl.rect || null,
+    selectedText: opts.includeSelection === true && focusEl.isPassword !== true ? (focusEl.selectedText || null) : null,
+    selectionWithheld: focusEl.hasSelection === true && opts.includeSelection !== true,
+  } : null;
+
+  return {
+    ok: true,
+    timestamp: new Date().toISOString(),
+    consent: consentEnabled(),
+    foreground: (fg && fg.ok && fg.window) || null,
+    monitors: (monitors && monitors.monitors) || [],
+    focus: safeFocus,
+    windows,
+    counts: {
+      windows: windows.length,
+      monitors: ((monitors && monitors.monitors) || []).length,
+      applications: Object.keys(applications).length,
+    },
+    applications,
+    levels: {
+      L0_window: 'AVAILABLE',
+      L1_ui: 'AVAILABLE_ON_DEMAND',
+      L2_content: 'AVAILABLE_ON_DEMAND',
+      L3_task: 'PARTIAL',
+      L4_workflow: 'PARTIAL',
+      L5_intent: 'NOT_IMPLEMENTED',
+    },
+    method: 'uia foreground + monitors + visible windows + focused element',
+    limitations: [
+      'desktopState never captures pixels; use /api/screen/context for a consent-gated observation',
+      'L3/L4 come from live_awareness + passive_learning, not from this snapshot',
+      'L5 intent inference is NOT_IMPLEMENTED',
+    ],
+  };
+}
+
 function status() {
   return { ok: true, consent: consentEnabled(), sources: ['screenshot', 'ocr', 'uia', 'window'], engine: 'screen-intelligence-v2', capabilities: ['analyze', 'elements', 'diff', 'action-plan', 'verify'], note: 'consent gates observation; no data leaves this process from this module' };
 }
@@ -369,6 +460,7 @@ function createRouter() {
   let router = null;
   try { router = require('express').Router(); } catch (e) { return null; }
   router.get('/status', (req, res) => res.json(status()));
+  router.get('/desktop-state', async (req, res) => res.json(await desktopState({ includeSelection: req.query.includeSelection === 'true' })));
   router.get('/context', async (req, res) => res.json(await captureContext(req.query)));
   router.post('/observe', async (req, res) => res.json(await captureContext(req.body || {})));
   router.post('/resolve-target', (req, res) => res.json(resolveTarget(req.body || {})));
@@ -389,5 +481,5 @@ function createRouter() {
 module.exports = {
   captureContext, resolveTarget, status, createRouter,
   classifyElement, buildSemanticTree, detectLayoutIssues, analyzeScreen,
-  diffScreens, planScreenAction, verifyScreenAction,
+  diffScreens, planScreenAction, verifyScreenAction, desktopState,
 };
