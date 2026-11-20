@@ -142,8 +142,16 @@ async function checkAsync(name, fn) {
       assert.strictEqual(r.ok, true, name);
       assert.match(r.svg, /<svg/);
       assert.match(r.svg, /<path/);
-      assert.match(r.svg, /@dev|currentColor|<title>/);
+      assert.ok(r.svg.length > 300, name + ' has real path data');
     }
+    const react = d.svg('_React').svg;
+    const vue = d.svg('_Vue').svg;
+    const next = d.svg('Nextjs').svg;
+    assert.match(react, /#00D8FF/i, 'React official cyan');
+    assert.match(vue, /#41B883/i, 'Vue official green');
+    assert.match(next, /#000/i, 'Next.js official black');
+    assert.notStrictEqual(react, vue);
+    assert.notStrictEqual(vue, next);
     assert.strictEqual(d.svg('not-a-real-icon-xyz').code, 'NOT_FOUND');
   });
 
