@@ -1,0 +1,80 @@
+/* MYRAA Sidebar Design v9.8.2 - additive overlay for the REAL
+   #myraa-aceternity-sidebar injected by ui-health-patch.js.
+   Loaded as a link and re-appended by sidebar_design_v982.js so it wins.
+   No stacking changes; avatar, voice and 3D companion untouched. */
+
+:root {
+  --sb-pad-y: 14px;
+  --sb-pad-x: 10px;
+  --sb-item-h: 42px;
+  --sb-item-gap: 8px;
+  --sb-icon-w: 20px;
+  --sb-label-gap: 12px;
+  --sb-radius: 10px;
+}
+
+html body #myraa-aceternity-sidebar {
+  padding: var(--sb-pad-y) var(--sb-pad-x) !important;
+}
+
+html body #myraa-aceternity-sidebar .myraa-sidebar-links {
+  gap: var(--sb-item-gap) !important;
+  padding: 8px 0 !important;
+}
+
+html body #myraa-aceternity-sidebar .myraa-sidebar-link {
+  min-height: var(--sb-item-h) !important;
+  gap: var(--sb-label-gap) !important;
+  padding: 0 10px !important;
+  border-radius: var(--sb-radius) !important;
+  align-items: center !important;
+}
+
+html body #myraa-aceternity-sidebar .myraa-sidebar-link svg {
+  width: var(--sb-icon-w) !important;
+  height: var(--sb-icon-w) !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+}
+
+html body #myraa-aceternity-sidebar .myraa-sidebar-link-label {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  line-height: 1.3 !important;
+}
+
+html body #myraa-aceternity-sidebar .myraa-sidebar-link.is-active {
+  background: rgba(56, 207, 255, 0.14) !important;
+  color: var(--myraa-text, #f5f7fa) !important;
+  font-weight: 600 !important;
+}
+
+html body #myraa-aceternity-sidebar .myraa-sidebar-footer {
+  min-height: var(--sb-item-h) !important;
+  margin-top: auto !important;
+}
+
+html body #myraa-aceternity-sidebar .myraa-sidebar-logo {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+html body #myraa-aceternity-sidebar .myraa-sidebar-link:focus-visible {
+  outline: 2px solid var(--myraa-accent, #38cfff) !important;
+  outline-offset: 2px !important;
+}
+
+@media screen and (max-width: 899px) {
+  html body #myraa-aceternity-sidebar {
+    padding: 12px 8px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body #myraa-aceternity-sidebar .myraa-sidebar-link {
+    transition: none !important;
+  }
+}

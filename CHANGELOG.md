@@ -4,6 +4,12 @@ All notable changes to MYRAA AI OS are documented here.
 
 ## [Unreleased]
 
+## [9.8.2] - 2026-11-20
+
+- Upgraded navigation/sidebar design with an additive overlay targeting the real `#myraa-aceternity-sidebar`: unified 42px item rhythm, 8px grouping gap, 20px icon column with aligned labels, clear active state, aligned footer, focus outlines and reduced-motion support.
+- CSS is re-appended after the dynamically injected sidebar stylesheet so the refined layout actually takes effect.
+- Verified in a real browser at 1280x720 and 1920x1080: 7 nav items, uniform 42px heights, consistent icon/label x-positions, no horizontal overflow, both 3D canvases still present.
+
 ## [9.8.1] - 2026-11-20
 
 - Added the MYRAA **Connections** option at `/connections`: enter credentials in the UI, store them with Windows DPAPI outside the repo, then run a real API test for Microsoft Graph, Figma, Vercel, Stripe, Razorpay, Gmail, GitHub and local EV certificate thumbprints. Secrets are never logged, returned by the API, committed or sent to chat.

@@ -166,6 +166,22 @@ async function checkAsync(name, fn) {
     assert.strictEqual(c.remove('figma').ok, true);
   });
 
+  check('sidebar overlay is loaded last and scoped', () => {
+    const html = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
+    const css = fs.readFileSync(path.join(DIST, 'sidebar_design_v982.css'), 'utf8');
+    const linkAt = html.indexOf('/sidebar_design_v982.css');
+    const designAt = html.indexOf('/myraa_design_system.css');
+    assert.ok(linkAt > designAt, 'sidebar overlay loads after the design system');
+    assert.match(html, /sidebar_design_v982\.js/, 'late re-append script is present');
+    assert.match(css, /#myraa-aceternity-sidebar/);
+    assert.match(css, /\.myraa-sidebar-link \{/);
+    assert.match(css, /--sb-item-h: 42px/);
+    assert.match(css, /prefers-reduced-motion/);
+    assert.strictEqual((css.match(/\{/g) || []).length, (css.match(/\}/g) || []).length, 'balanced CSS blocks');
+    assert.doesNotMatch(css, /z-index/);
+    assert.doesNotMatch(css, /[\uD800-\uDBFF][\uDC00-\uDFFF]/);
+  });
+
   console.log(`\n${passed} checks passed`);
   try { fs.rmSync(TMP, { recursive: true, force: true }); } catch (e) { /* best effort */ }
 })().catch((e) => { console.error('FATAL', e); process.exit(1); });
