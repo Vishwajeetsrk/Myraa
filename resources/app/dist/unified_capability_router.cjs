@@ -143,6 +143,35 @@ const LISTENING_CHECK_PATTERNS = [
   /\b(?:are\s*you\s*listening|can\s*you\s*hear\s*me|sun\s*rahi\s*ho|are\s*you\s*there|am\s*i\s*audible|check\s*mic|listening\s*test|can\s*you\s*listen)\b/i
 ];
 
+// 8. Business OS Patterns (read-only awareness: leads, finance, email, reports)
+const BUSINESS_REPORT_PATTERNS = [
+  /\b(?:business|pipeline|sales|outreach)\b.*\b(?:report|status|summary|update|overview)\b/i,
+  /\b(?:report|status|summary|update|overview)\b.*\b(?:business|pipeline|sales|outreach)\b/i,
+  /\b(?:daily|today'?s?)\s+business\s+report\b/i
+];
+
+const BUSINESS_LEADS_PATTERNS = [
+  /\b(?:how\s+many|count|show|list|any)\b.*\b(?:leads?|prospects?|crm)\b/i,
+  /\b(?:leads?|prospects?)\b.*\b(?:status|count|list|summary)\b/i
+];
+
+const BUSINESS_FINANCE_PATTERNS = [
+  /\b(?:revenue|profit|earnings|collected|finance|financial)\b.*\b(?:report|status|summary|so\s+far|today|overview)\b/i,
+  /\bhow\s+much\b.*\b(?:earned|made|collected|revenue|profit)\b/i
+];
+
+const BUSINESS_EMAIL_PATTERNS = [
+  /\b(?:email|outreach)\b.*\b(?:status|drafts?|templates?|connected|connection)\b/i
+];
+
+function detectBusinessIntent(lower) {
+  if (BUSINESS_REPORT_PATTERNS.some((p) => p.test(lower))) return 'report';
+  if (BUSINESS_LEADS_PATTERNS.some((p) => p.test(lower))) return 'leads';
+  if (BUSINESS_FINANCE_PATTERNS.some((p) => p.test(lower))) return 'finance';
+  if (BUSINESS_EMAIL_PATTERNS.some((p) => p.test(lower))) return 'email';
+  return null;
+}
+
 // ── UTILITY HELPERS ──────────────────────────────────────────────────────────
 
 function extractTopic(text, removeRegex) {
@@ -192,6 +221,85 @@ class UnifiedCapabilityRouter {
         action: 'LISTENING_CHECK',
         reply: '[OK] Yes, I am listening to you loud and clear. My audio stream, microphone link, and autonomous execution systems are active. Speak your command or ask me to build, code, or automate anything on your desktop.'
       };
+    }
+
+    // =========================================================================
+    // 0a. BUSINESS OS - READ-ONLY AWARENESS (leads, finance, email, reports)
+    // =========================================================================
+    const businessIntent = detectBusinessIntent(lower);
+    if (businessIntent) {
+      try {
+        const bos = require(path.join(__dirname, 'business_os.cjs'));
+        if (businessIntent === 'report') {
+          const rep = bos.dailyReport();
+          if (rep.status !== 'OK') {
+            return { handled: true, action: 'BUSINESS_REPORT', reply: `[!] Business workspace unavailable: ${rep.detail || rep.status}` };
+          }
+          return { handled: true, action: 'BUSINESS_REPORT', reply: rep.markdown, data: rep.summary };
+        }
+        if (businessIntent === 'leads') {
+          const s = bos.summary();
+          if (s.status !== 'OK') {
+            return { handled: true, action: 'BUSINESS_LEADS', reply: `[!] Business workspace unavailable: ${s.detail || s.status}` };
+          }
+          const l = s.leads || {};
+          const byStatus = Object.entries(l.byStatus || {}).map(([k, v]) => `${k}=${v}`).join(', ') || 'none';
+          return {
+            handled: true,
+            action: 'BUSINESS_LEADS',
+            reply: [
+              `[OK] CRM: ${l.total || 0} leads on file.`,
+              `Status: ${byStatus}`,
+              `Contacted: ${l.contacted || 0} | Replied: ${l.replied || 0} | Interested: ${l.interested || 0}`,
+              `Public email on file: ${l.withPublicEmail || 0}`,
+              `Reply rate: ${l.replyRate === null || l.replyRate === undefined ? 'n/a until real sends exist' : l.replyRate + '%'}`,
+              `Note: ${l.note || 'No sends are inferred.'}`
+            ].join('\n'),
+            data: l
+          };
+        }
+        if (businessIntent === 'finance') {
+          const s = bos.summary();
+          if (s.status !== 'OK') {
+            return { handled: true, action: 'BUSINESS_FINANCE', reply: `[!] Business workspace unavailable: ${s.detail || s.status}` };
+          }
+          const r = s.revenue || {};
+          const f = s.finance || {};
+          return {
+            handled: true,
+            action: 'BUSINESS_FINANCE',
+            reply: [
+              `[OK] Finance (${r.currency || 'USD'}):`,
+              `Collected: $${r.collected || 0} of $${r.target || 0} target`,
+              `Remaining: $${r.remaining || 0}`,
+              `Expenses: $${f.expenses || 0} | Net: $${f.net || 0}`,
+              `Deals needed at $${r.averageDealAssumption || 0} average: ${r.requiredDealsAtAssumption || 0}`,
+              `Rule: ${r.label || 'Only verified money counts as collected.'}`
+            ].join('\n'),
+            data: { revenue: r, finance: f }
+          };
+        }
+        if (businessIntent === 'email') {
+          const e = bos.emailOverview(bos.workspaceDir());
+          const c = e.connection || {};
+          return {
+            handled: true,
+            action: 'BUSINESS_EMAIL',
+            reply: [
+              `[OK] Email awareness:`,
+              `Address: ${c.address || 'not recorded'}`,
+              `Connection: ${c.connection || 'UNKNOWN'}`,
+              `Drafts: ${e.drafts ? e.drafts.draftCount : 0} (${e.drafts && e.drafts.draftsFolder ? e.drafts.draftsFolder : 'no drafts folder'})`,
+              `Templates: ${(e.templates && e.templates.templates || []).map((t) => t.name).join(', ') || 'none'}`,
+              `Leads with public email: ${e.leadsWithPublicEmail || 0}`,
+              `Policy: ${e.outreachPolicy}`
+            ].join('\n'),
+            data: e
+          };
+        }
+      } catch (err) {
+        return { handled: true, action: 'BUSINESS_ERROR', reply: `[!] Business OS error: ${err.message}`, error: err.message };
+      }
     }
 
     // =========================================================================

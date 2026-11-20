@@ -76,6 +76,24 @@ const CATALOG = [
     },
   },
   {
+    id: 'business.operations',
+    keywords: ['business', 'leads', 'crm', 'pipeline', 'revenue', 'profit', 'invoices', 'proposal', 'outreach', 'business report'],
+    check() {
+      try {
+        const bos = require(path.join(DIST, 'business_os.cjs'));
+        const s = bos.summary();
+        if (s.status !== 'OK') {
+          return { status: 'DEGRADED', reason: s.detail || 'business workspace not readable', evidence: { workspace: s.workspace || null } };
+        }
+        return {
+          status: 'AVAILABLE',
+          reason: `read-only business workspace: ${s.leadCount} leads, collected $${s.revenue.collected} of $${s.revenue.target}`,
+          evidence: { workspace: s.workspace, leadCount: s.leadCount, revenue: s.revenue, blockers: s.blockers.length, warnings: s.warnings.length },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
     id: 'office.word',
     keywords: ['word', 'document', 'docx', 'format document', 'report'],
     check() {
