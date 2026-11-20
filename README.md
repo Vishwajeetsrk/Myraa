@@ -1,5 +1,12 @@
 # MYRAA AI OS -- Autonomous 3D Desktop Operating System
 
+> **v9.8.0 backend surfaces (2026-11-20).** New backend routes: `/api/excel` (live Excel COM),
+> `/api/vba` (macro review), `/api/client-discovery`, `/api/workflow-skills`, `/api/skill-replay`,
+> `/api/cross-app`, `/api/legal-research`, `/api/background-research`, `/api/system-control`,
+> `/api/ide`, `/api/telemetry`, `/api/screen-share`, `/api/frameworks`, and the visual
+> `/action-center` page. Statuses are recorded in `CAPABILITY_MAP.md`; the plan and test results
+> are in `UNIVERSAL_UPGRADE_PRD.md`. Existing identity, avatar, voice, memory, skills and MCP are unchanged.
+
 <p align="center">
   <img src="resources/app/build/icon.png" alt="MYRAA" width="96" height="96" />
 </p>

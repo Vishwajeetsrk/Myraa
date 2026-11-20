@@ -1,5 +1,12 @@
 # MYRAA AI OS v9.6.3 - Production Installer Status & Test Report
 
+> **Current status (2026-11-20, v9.8.0).** The source tree, version files and documentation have been
+> updated to 9.8.0 and the new backend services were live-tested from source. The installer binaries in
+> `resources/app/dist-release/` and the Desktop installer pack are **stale** (9.6.3 / 9.7.0 era) and do
+> **not** contain the 9.8.0 changes. They are unsigned; an EV certificate is still required for a signed
+> release. Do not claim the installed app has the 9.8.0 features until a new build is produced and
+> smoke-tested. The historical 9.6.3 report below is retained unchanged.
+
 Built: 2026-11-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, unsigned)
 
 > **Packaged startup fix.** v9.6.2 installers showed only "MYRAA is starting… Checking installation and

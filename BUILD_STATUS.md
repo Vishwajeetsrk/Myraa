@@ -1,5 +1,13 @@
 # MYRAA AI OS — Native Build Status (Deep Upgrade Complete — All Phases + Vault-to-Tile + Health Manager + Versioning)
 
+> **Addendum 2026-11-20 (v9.8.0).** The 9.8.0 backend upgrade was built in `resources/app/dist` and
+> verified from source: Excel COM bridge, VBA intelligence, screen sessions, workflow-to-skill compiler,
+> skill replay, client discovery, cross-app orchestration, legal research, background research, system
+> control matrix, IDE state, telemetry and the `/action-center` page. Version sources were bumped to
+> 9.8.0 with `scripts/version.cjs minor`. The native/Tauri build and the packaged installer have **not**
+> been rebuilt for 9.8.0; the per-module report below describes the earlier native build and is retained.
+> See `UNIVERSAL_UPGRADE_PRD.md` and `CAPABILITY_MAP.md` for current verified status.
+
 > **Hard constraint: no module renamed/removed/restructured.** All work inside `D:\Team of Vishwajeet\MYRAA` only. Same modules + cyan brand kept.
 
 ## Per-Module Report (§0 — Do Not Touch)

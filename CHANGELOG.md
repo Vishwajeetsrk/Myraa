@@ -4,6 +4,34 @@ All notable changes to MYRAA AI OS are documented here.
 
 ## [Unreleased]
 
+## [9.8.0] - 2026-11-20
+
+Universal desktop operator upgrade. All items below were live-tested; features that could not be verified are explicitly marked `NOT_IMPLEMENTED` or `PARTIAL` in `CAPABILITY_MAP.md`.
+
+### Added
+- Live Excel COM bridge (`/api/excel/*`) driving the running workbook: values, formulas, formatting, charts, sort, autofilter, tables, named ranges, data validation, conditional formatting, sheet activation, column operations, and verified readback.
+- VBA intelligence (`/api/vba/*`): explain, review, and conservative rewrite of recorded macros; macros are never executed.
+- Screen session and workflow-candidate detection with password redaction, private mode and consent revocation that halts capture.
+- Workflow-to-skill compiler (`/api/workflow-skills/*`) with approval token, editable steps, versioning, dry run and publishing into the existing skill registry.
+- Skill replay (`/api/skill-replay/*`) with real action handlers, pause/resume/stop, audit traces, and an additive Live Action Center at `/action-center`.
+- Client discovery (`/api/client-discovery/*`) with evidence labels, live public-URL probe, mandatory "Website: Not found", and verified 17-column Excel writeback.
+- Evidence-gated reasoning frameworks (`/api/frameworks/*`) for PRD, reality check, threat model, legal awareness and reporting; unsupplied fields stay UNKNOWN.
+- System control matrix (`/api/system-control/*`) with honest statuses, token-gated power actions, and Wi-Fi/Bluetooth state readback.
+- Background research using the existing bounded parallel runner; no second job queue.
+- Cross-app orchestrator (`/api/cross-app/*`) generating Excel, Word and PowerPoint artifacts from one client record.
+- Official-source legal research adapter (`/api/legal-research/*`) with URL and date checked; no compliance claim.
+- IDE state (`/api/ide/*`), performance telemetry (`/api/telemetry/*`), and screen-share observation (`/api/screen-share/*`).
+- `CAPABILITY_MAP.md`, `UNIVERSAL_UPGRADE_PRD.md`.
+
+### Fixed
+- Legacy Excel write route interpolated user values into PowerShell source; it now delegates to the JSON-transported bridge.
+- Data validation passed 7 COM arguments instead of 5; PowerPoint generation joined an absolute path onto the output directory. Both were found and fixed in live tests.
+- Background research initially called a non-existent module-level `submit`; it now uses the existing runner's `createPool()`.
+
+### Notes
+- Not implemented and reported honestly: Outlook draft stage, IDE diagnostics/open tabs, screenshot/Figma-to-site, deployment/monitoring engines, named autonomy levels.
+- Installer binaries have not been rebuilt for 9.8.0; see `INSTALLER_STATUS.md`.
+
 ## [9.7.0] - 2026-11-18
 
 First packaged release of the capability-repair program. Includes all work below: truthful capability/health/provider registries, provider-routed chat, screen intelligence with observation→verify, real brand icons, Activity Center / Design Doctor / Settings Workspace, Browser Agent and Capability Gap Analyzer. Installers are unsigned (SmartScreen warning until an EV certificate is supplied).

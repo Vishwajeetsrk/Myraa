@@ -180,7 +180,7 @@ const CATALOG = [
   },
   {
     id: 'skill.replay',
-    keywords: ['run the workflow', 'run workflow', 'step by step workflow', 'replay skill', 'pause workflow', 'stop workflow', 'action center'],
+    keywords: ['run the workflow', 'run workflow', 'skill replay', 'replay skill', 'step by step workflow', 'pause workflow', 'stop workflow', 'action center'],
     check() {
       try {
         const sr = require(path.join(DIST, 'skill_replay.cjs'));
