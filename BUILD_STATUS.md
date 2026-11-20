@@ -4,9 +4,9 @@
 > verified from source: Excel COM bridge, VBA intelligence, screen sessions, workflow-to-skill compiler,
 > skill replay, client discovery, cross-app orchestration, legal research, background research, system
 > control matrix, IDE state, telemetry and the `/action-center` page. Version sources were bumped to
-> 9.8.0 with `scripts/version.cjs minor`. The unsigned 9.8.0 Windows NSIS + portable installers were then
-> built successfully with `npm run dist:win` and verified (packaged version 9.8.0, new modules present).
-> The native/Tauri Rust build has not been rebuilt for 9.8.0. See `UNIVERSAL_UPGRADE_PRD.md` and
+> 9.8.2 with `scripts/version.cjs patch`. The unsigned 9.8.2 Windows NSIS + portable installers were
+> built successfully with `npm run dist:win` and verified (packaged version 9.8.2, new modules, real
+> Devicons, Connections and sidebar overlay present). The native/Tauri Rust build has not been rebuilt. See `UNIVERSAL_UPGRADE_PRD.md` and
 > `CAPABILITY_MAP.md` for current verified status.
 
 > **Hard constraint: no module renamed/removed/restructured.** All work inside `D:\Team of Vishwajeet\MYRAA` only. Same modules + cyan brand kept.

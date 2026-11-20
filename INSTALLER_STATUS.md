@@ -1,11 +1,12 @@
 # MYRAA AI OS v9.6.3 - Production Installer Status & Test Report
 
-> **Current status (2026-11-20, v9.8.0).** The unsigned 9.8.0 installers have been built with
-> `npm run dist:win` (`electron-builder.v2.yml`) and verified: `MYRAA-Setup-9.8.0.exe` (318,837,105 bytes),
-> `MYRAA-Portable-9.8.0.exe` (312,586,289 bytes), blockmap and `latest.yml` are present. The packaged
-> `app.asar.unpacked/version.json` reads `9.8.0` and the new backend modules are inside the package.
-> Signing is still skipped because no EV certificate is configured, so Windows SmartScreen will warn
-> until a signed release is produced. The historical 9.6.3 report below is retained unchanged.
+> **Current status (2026-11-20, v9.8.2).** The unsigned 9.8.2 installers have been built with
+> `npm run dist:win` (`electron-builder.v2.yml`) and verified: `MYRAA-Setup-9.8.2.exe` (322,378,032 bytes),
+> `MYRAA-Portable-9.8.2.exe` (316,127,222 bytes), blockmap and `latest.yml` are present. The packaged
+> `app.asar.unpacked/version.json` reads `9.8.2`; the new backend modules, Connections page, real
+> Devicons, and sidebar overlay CSS/JS are all inside the package, and `index.html` references the overlay.
+> Signing is still skipped because no EV certificate is configured, so Windows SmartScreen will warn.
+> The historical 9.6.3 report below is retained unchanged.
 
 Built: 2026-11-18 · Config: `electron-builder.v2.yml` (NSIS + portable, x64, unsigned)
 
