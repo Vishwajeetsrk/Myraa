@@ -159,6 +159,30 @@ function closeWorkbook(opts = {}) {
 }
 function recalculate() { return run('recalculate'); }
 
+function sortRange(opts = {}) {
+  return run('sort', { workbook: opts.workbook, sheet: opts.sheet, range: opts.range, key: opts.key, descending: opts.descending === true, header: opts.header !== false });
+}
+function autoFilter(opts = {}) {
+  return run('autofilter', { workbook: opts.workbook, sheet: opts.sheet, range: opts.range, field: opts.field, criteria: opts.criteria });
+}
+function tables(workbook) { return run('tables', { workbook }); }
+function createTable(opts = {}) {
+  return run('create-table', { workbook: opts.workbook, sheet: opts.sheet, range: opts.range, name: opts.name, header: opts.header !== false });
+}
+function namedRanges(workbook) { return run('named-ranges', { workbook }); }
+function addNamedRange(opts = {}) {
+  return run('add-named-range', { workbook: opts.workbook, sheet: opts.sheet, name: opts.name, range: opts.range });
+}
+function dataValidation(opts = {}) {
+  return run('data-validation', { workbook: opts.workbook, sheet: opts.sheet, range: opts.range, values: opts.values });
+}
+function conditionalFormat(opts = {}) {
+  return run('conditional-format', { workbook: opts.workbook, sheet: opts.sheet, range: opts.range, operator: opts.operator || 'greater', value: opts.value, fillColor: opts.fillColor });
+}
+function activateSheet(opts = {}) { return run('activate-sheet', { workbook: opts.workbook, sheet: opts.sheet }); }
+function insertColumns(opts = {}) { return run('insert-columns', { workbook: opts.workbook, sheet: opts.sheet, at: opts.at, count: opts.count }); }
+function deleteColumns(opts = {}) { return run('delete-columns', { workbook: opts.workbook, sheet: opts.sheet, at: opts.at, count: opts.count, confirm: opts.confirm === true }); }
+
 // ── HTTP layer ───────────────────────────────────────────────────────────────
 
 const STATUS_BY_CODE = {
@@ -221,6 +245,17 @@ function createRouter() {
   router.post('/chart', handler((b) => createChart(b)));
   router.post('/save', handler((b) => save(b)));
   router.post('/recalculate', handler(() => recalculate()));
+  router.post('/sort', handler((b) => sortRange(b)));
+  router.post('/autofilter', handler((b) => autoFilter(b)));
+  router.get('/tables', handler((q) => tables(q.workbook)));
+  router.post('/tables', handler((b) => createTable(b)));
+  router.get('/named-ranges', handler((q) => namedRanges(q.workbook)));
+  router.post('/named-ranges', handler((b) => addNamedRange(b)));
+  router.post('/data-validation', handler((b) => dataValidation(b)));
+  router.post('/conditional-format', handler((b) => conditionalFormat(b)));
+  router.post('/sheet/activate', handler((b) => activateSheet(b)));
+  router.post('/columns/insert', handler((b) => insertColumns(b)));
+  router.post('/columns/delete', handler((b) => deleteColumns(b)));
   router.post('/workbook/open', handler((b) => openWorkbook(b)));
   router.post('/workbook/create', handler((b) => createWorkbook(b)));
   router.post('/workbook/close', handler((b) => closeWorkbook(b)));
@@ -273,5 +308,16 @@ module.exports = {
   createWorkbook,
   closeWorkbook,
   recalculate,
+  sortRange,
+  autoFilter,
+  tables,
+  createTable,
+  namedRanges,
+  addNamedRange,
+  dataValidation,
+  conditionalFormat,
+  activateSheet,
+  insertColumns,
+  deleteColumns,
   createRouter,
 };

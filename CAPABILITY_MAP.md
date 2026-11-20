@@ -31,6 +31,10 @@ This document is a status record, not a promise. A capability is called VERIFIED
 | Honest capability reporting (section 59) | `capability_gap_analyzer.cjs` | VERIFIED | Reports `office.excel_live`, `office.vba`, `reasoning.frameworks`, `workflow.skill_compiler`, `system.controls` with real evidence; `office.excel` remains PARTIAL. |
 | Workflow-to-skill compiler (sections 11-13, 22, 44-46) | `workflow_skill_compiler.cjs`, `/api/workflow-skills/*`, voice intents | VERIFIED | Live session candidate -> compile (APPROVAL_REQUIRED + token) -> explicit confirm -> edit (version bump) -> dry run (no changes) -> publish into existing skill registry -> run recording -> improvement from failure. Replay execution is explicitly NOT_IMPLEMENTED. |
 | System control matrix (sections 26-27, 55) | `system_control_matrix.cjs`, `/api/system-control/*`, voice intents | VERIFIED | 27 controls with honest statuses (Supported/Partial/Requires confirmation/Requires elevation/Not implemented); reuses existing volume and token-gated power helpers; power actions require a token; destructive actions were not executed during testing. |
+| Client discovery (sections 15-20, 39) | `client_discovery.cjs`, `/api/client-discovery/*`, voice intents | VERIFIED | Evidence reconciliation, real public-URL probe, mandatory "Website: Not found" / "Phone number not verified", source URLs, confidence labels, verified 17-column Excel writeback with readback. Tests D + E pass. |
+| Skill replay + Action Center (sections 23-25, 48, 58) | `skill_replay.cjs`, `/api/skill-replay/*`, `action_center.html`, voice intents | VERIFIED | Real opt-in action handlers, step/run, pause/resume/stop, audit traces, unsupported actions fail closed, additive live UI page. Test C passes for supported actions. |
+| Deep Excel operations (section 10) | `excel_bridge.cjs`, `excel_bridge_runner.ps1` | VERIFIED | Sort, autofilter, tables, named ranges, data validation, conditional formatting, sheet activation, column insert/delete with guard, verified on a throwaway workbook. |
+| IDE state + telemetry (sections 24, 40, 54) | `ide_state.cjs`, `performance_telemetry.cjs` | VERIFIED | Read-only git/UIA composition, diagnostics honestly NOT_IMPLEMENTED; latency and failure counters with event emission. |
 
 ## 2. Existing systems reused, not replaced
 
@@ -75,9 +79,9 @@ Evidence discipline: `Found / Verified / Inferred / Estimated / Suggested / Unkn
 | Website design from screenshots/Figma/references | NOT_IMPLEMENTED | Existing site generator handles natural-language builds; screenshot/Figma ingestion not built. |
 | Live legal/compliance research with current official sources | FRAMEWORK + NOT_IMPLEMENTED | The structure exists. No live government-source fetch, no date-stamped citation verification. India DPDP Rules 2025 commencement, CERT-In directions and GST place-of-supply must be checked on official sources per transaction; nothing is asserted here. |
 | Repository health, code review, A/B, deployment, observability, maintenance, scale modes | FRAMEWORK + PARTIAL | Structured checklists exist; automated evidence collection is partial via existing coding/git/test services. No deployment engine, no monitoring dashboards. |
-| Skill replay execution | NOT_IMPLEMENTED | The compiler creates/edits/dry-runs/publishes instruction-only skills. "Run the workflow" honestly returns NOT_IMPLEMENTED; no automation is claimed to have executed. |
+| Skill replay coverage | PARTIAL | Real replay supports 9 opt-in action handlers with traces and pause/stop. Pivots, full Office cross-app actions and complex UI sequences remain unsupported and fail closed. |
 | System state readback | PARTIAL | The matrix reports status and opens settings pages; it does not read back Wi-Fi, Bluetooth, brightness or mute state. "Opened settings" is never reported as "setting changed". |
-| IDE orchestration (open tabs, diagnostics, terminal state, branch, selected code) | PARTIAL | UIA focus/selection and git services exist; no unified IDE state endpoint. |
+| IDE orchestration (open tabs, diagnostics, terminal state, branch, selected code) | PARTIAL | Unified read-only state endpoint exists. Diagnostics, open tabs and terminal task state require an IDE extension/API and are NOT_IMPLEMENTED, not guessed. |
 | GitHub PR automation, issue investigation | PARTIAL | Connector exists; token/OAuth is `AUTHENTICATION_REQUIRED`. |
 | Clipboard inference | FRAMEWORK + PARTIAL | `getClipboard()` exists; used only on explicit "this macro" voice request. No continuous retention, by design. |
 | Autonomy levels 0-5 | PARTIAL | Desktop actions have per-action confirmation and privacy mode; a named, visible, reversible autonomy-level control is not built. |
@@ -85,13 +89,12 @@ Evidence discipline: `Found / Verified / Inferred / Estimated / Suggested / Unkn
 
 ## 5. Next increments, in order
 
-1. Excel depth: named ranges, sort/filter, tables, conditional formatting, data validation, readback verification.
-2. Skill replay execution with step-by-step mode, pause/resume/stop and visible Action Playback view (never fake a run).
-3. IDE state endpoint composing existing git, terminal, UIA focus and diagnostics sources.
-4. Client discovery engine with strict "Website: Not found" rule, source URLs and confidence labels.
-5. Cross-application workflow orchestrator built on existing engines, not a new runner.
-6. Live legal-awareness research adapter with official-source allowlist and date-stamped citations.
-7. Performance telemetry: command latency, screen-analysis latency, tool startup and failure rate.
+1. Cross-application orchestrator built on existing engines: client record -> Excel -> Word report -> PowerPoint summary -> Outlook draft.
+2. Live legal-awareness adapter with official-source allowlist and date-stamped citations.
+3. Background research jobs with checkpointing, bounded concurrency and cancellation.
+4. Screen sharing state detection (never enable silently).
+5. Expand replay action handlers for Office cross-app steps with verification.
+6. Push to remote only when the owner explicitly approves.
 
 ## 6. Standing rules
 

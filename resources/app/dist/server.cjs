@@ -5451,6 +5451,36 @@ async function startServer() {
     console.warn("[Server] Could not mount System Control Matrix:", e.message);
   }
   try {
+    // Client Discovery: evidence-gated research records with mandatory
+    // "Website: Not found" and verified Excel writeback.
+    const clientDiscovery = require(import_path2.default.join(__dirname, "client_discovery.cjs"));
+    app.use("/api/client-discovery", clientDiscovery.createRouter());
+    console.log("[Server] Client Discovery mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Client Discovery:", e.message);
+  }
+  try {
+    // Skill Replay: real, opt-in step execution with pause/stop and audit trace.
+    const skillReplay = require(import_path2.default.join(__dirname, "skill_replay.cjs"));
+    app.use("/api/skill-replay", skillReplay.createRouter());
+    console.log("[Server] Skill Replay mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Skill Replay:", e.message);
+  }
+  try {
+    const ideState = require(import_path2.default.join(__dirname, "ide_state.cjs"));
+    app.use("/api/ide", ideState.createRouter());
+    console.log("[Server] IDE State mounted");
+  } catch(e) { console.warn("[Server] Could not mount IDE State:", e.message); }
+  try {
+    const telemetry = require(import_path2.default.join(__dirname, "performance_telemetry.cjs"));
+    app.use("/api/telemetry", telemetry.createRouter());
+    console.log("[Server] Performance Telemetry mounted");
+  } catch(e) { console.warn("[Server] Could not mount Performance Telemetry:", e.message); }
+  try {
+    app.get('/action-center', (req, res) => res.sendFile(import_path2.default.join(__dirname, 'action_center.html')));
+  } catch(e) { console.warn("[Server] Could not mount Action Center page:", e.message); }
+  try {
     // Business OS: read-only awareness over business/ (leads, finance, templates, email, spreadsheets)
     const businessOS = require(import_path2.default.join(__dirname, "business_os.cjs"));
     app.use("/api/business", businessOS.createRouter());

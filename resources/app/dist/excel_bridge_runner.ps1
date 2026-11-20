@@ -751,6 +751,178 @@ try {
       exit 0
     }
 
+    'sort' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $t = Resolve-Target $excel $true
+      if (-not $t.ok) { Write-Failure $t.code $t.error $t }
+      $ws = $t.sheet
+      $addr = [string](Arg 'range' '')
+      $key = [string](Arg 'key' '')
+      if (-not $addr -or -not $key) { Write-Failure 'VALIDATION' 'range and key are required.' }
+      $desc = ArgBool 'descending' $false
+      $hasHeader = ArgBool 'header' $true
+      $sort1 = $ws.Sort
+      $sort1.SortFields.Clear()
+      [void]$sort1.SortFields.Add($ws.Range($key), 0, $(if ($desc) { 2 } else { 1 }), [Type]::Missing, 0)
+      $sort1.SetRange($ws.Range($addr))
+      $sort1.Header = $(if ($hasHeader) { 1 } else { 2 })
+      $sort1.Apply()
+      Write-Result @{ ok = $true; command = 'sort'; workbook = [string]$t.workbook.Name; sheet = [string]$ws.Name; range = $addr; key = $key; descending = $desc; header = $hasHeader }
+      exit 0
+    }
+
+    'autofilter' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $t = Resolve-Target $excel $true
+      if (-not $t.ok) { Write-Failure $t.code $t.error $t }
+      $ws = $t.sheet
+      $addr = [string](Arg 'range' '')
+      if (-not $addr) { Write-Failure 'VALIDATION' 'range is required.' }
+      $rng = $ws.Range($addr)
+      $field = Arg 'field' $null
+      $criteria = [string](Arg 'criteria' '')
+      if ($criteria -ne '' -and $field -ne $null) {
+        [void]$rng.AutoFilter([int]$field, $criteria)
+        $mode = 'applied'
+      } else {
+        [void]$rng.AutoFilter()
+        $mode = 'cleared-or-toggled'
+      }
+      Write-Result @{ ok = $true; command = 'autofilter'; workbook = [string]$t.workbook.Name; sheet = [string]$ws.Name; range = $addr; criteria = $criteria; mode = $mode }
+      exit 0
+    }
+
+    'tables' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $wbr = Resolve-Workbook $excel (Arg 'workbook' '')
+      if (-not $wbr.ok) { Write-Failure $wbr.code $wbr.error $wbr }
+      $wb = $wbr.workbook
+      $list = @()
+      foreach ($ws in $wb.Worksheets) {
+        foreach ($lo in $ws.ListObjects) {
+          $list += @{ name = [string]$lo.Name; sheet = [string]$ws.Name; range = [string]$lo.Range.Address($false, $false); rows = [int]$lo.ListRows.Count; columns = [int]$lo.ListColumns.Count }
+        }
+      }
+      Write-Result @{ ok = $true; command = 'tables'; workbook = [string]$wb.Name; count = $list.Count; tables = $list }
+      exit 0
+    }
+
+    'create-table' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $t = Resolve-Target $excel $true
+      if (-not $t.ok) { Write-Failure $t.code $t.error $t }
+      $addr = [string](Arg 'range' '')
+      if (-not $addr) { Write-Failure 'VALIDATION' 'range is required.' }
+      $name = [string](Arg 'name' '')
+      $hasHeader = ArgBool 'header' $true
+      $lo = $t.sheet.ListObjects.Add(1, $t.sheet.Range($addr), [Type]::Missing, $(if ($hasHeader) { 1 } else { 2 }))
+      if ($name -ne '') { $lo.Name = $name }
+      Write-Result @{ ok = $true; command = 'create-table'; workbook = [string]$t.workbook.Name; sheet = [string]$t.sheet.Name; name = [string]$lo.Name; range = [string]$lo.Range.Address($false, $false) }
+      exit 0
+    }
+
+    'named-ranges' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $wbr = Resolve-Workbook $excel (Arg 'workbook' '')
+      if (-not $wbr.ok) { Write-Failure $wbr.code $wbr.error $wbr }
+      $list = @()
+      foreach ($n in $wbr.workbook.Names) { $list += @{ name = [string]$n.Name; refersTo = [string]$n.RefersTo } }
+      Write-Result @{ ok = $true; command = 'named-ranges'; workbook = [string]$wbr.workbook.Name; count = $list.Count; names = $list }
+      exit 0
+    }
+
+    'add-named-range' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $t = Resolve-Target $excel $true
+      if (-not $t.ok) { Write-Failure $t.code $t.error $t }
+      $name = [string](Arg 'name' '')
+      $addr = [string](Arg 'range' '')
+      if (-not $name -or -not $addr) { Write-Failure 'VALIDATION' 'name and range are required.' }
+      [void]$t.workbook.Names.Add($name, $t.sheet.Range($addr))
+      Write-Result @{ ok = $true; command = 'add-named-range'; workbook = [string]$t.workbook.Name; sheet = [string]$t.sheet.Name; name = $name; range = $addr }
+      exit 0
+    }
+
+    'data-validation' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $t = Resolve-Target $excel $true
+      if (-not $t.ok) { Write-Failure $t.code $t.error $t }
+      $addr = [string](Arg 'range' '')
+      $values = [string](Arg 'values' '')
+      if (-not $addr -or -not $values) { Write-Failure 'VALIDATION' 'range and values (comma separated list) are required.' }
+      $v = $t.sheet.Range($addr).Validation
+      $v.Delete()
+      [void]$v.Add(3, 1, 1, $values, [Type]::Missing)
+      $v.IgnoreBlank = $true
+      Write-Result @{ ok = $true; command = 'data-validation'; workbook = [string]$t.workbook.Name; sheet = [string]$t.sheet.Name; range = $addr; values = $values; type = 'list' }
+      exit 0
+    }
+
+    'conditional-format' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $t = Resolve-Target $excel $true
+      if (-not $t.ok) { Write-Failure $t.code $t.error $t }
+      $addr = [string](Arg 'range' '')
+      if (-not $addr) { Write-Failure 'VALIDATION' 'range is required.' }
+      $threshold = [string](Arg 'value' '0')
+      $op = ([string](Arg 'operator' 'greater')).ToLowerInvariant()
+      $opConst = $(if ($op -eq 'less') { 6 } else { 5 })
+      $cf = $t.sheet.Range($addr).FormatConditions.Add(1, $opConst, $threshold)
+      $color = Hex-ToOleColor (Arg 'fillColor' '#FFC7CE')
+      if ($color -ne $null) { $cf.Interior.Color = $color }
+      Write-Result @{ ok = $true; command = 'conditional-format'; workbook = [string]$t.workbook.Name; sheet = [string]$t.sheet.Name; range = $addr; operator = $op; value = $threshold }
+      exit 0
+    }
+
+    'activate-sheet' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $t = Resolve-Target $excel $true
+      if (-not $t.ok) { Write-Failure $t.code $t.error $t }
+      [void]$t.sheet.Activate()
+      Write-Result @{ ok = $true; command = 'activate-sheet'; workbook = [string]$t.workbook.Name; sheet = [string]$t.sheet.Name }
+      exit 0
+    }
+
+    'insert-columns' {
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $t = Resolve-Target $excel $true
+      if (-not $t.ok) { Write-Failure $t.code $t.error $t }
+      $at = [int](Arg 'at' 1)
+      $count = [int](Arg 'count' 1)
+      if ($at -lt 1 -or $count -lt 1) { Write-Failure 'VALIDATION' 'at and count must be positive integers.' }
+      for ($col = $at + $count - 1; $col -ge $at; $col--) {
+        [void]$t.sheet.Columns.Item($col).Insert()
+      }
+      Write-Result @{ ok = $true; command = 'insert-columns'; workbook = [string]$t.workbook.Name; sheet = [string]$t.sheet.Name; at = $at; count = $count }
+      exit 0
+    }
+
+    'delete-columns' {
+      if (-not (ArgBool 'confirm' $false)) { Write-Failure 'APPROVAL_REQUIRED' 'Deleting columns requires confirm = true.' }
+      $excel = Get-ExcelApp $false
+      if ($excel -eq $null) { Write-Failure 'EXCEL_NOT_ATTACHED' 'Microsoft Excel is not running or not registered for COM automation.' }
+      $t = Resolve-Target $excel $true
+      if (-not $t.ok) { Write-Failure $t.code $t.error $t }
+      $at = [int](Arg 'at' 1)
+      $count = [int](Arg 'count' 1)
+      if ($at -lt 1 -or $count -lt 1) { Write-Failure 'VALIDATION' 'at and count must be positive integers.' }
+      for ($col = $at + $count - 1; $col -ge $at; $col--) {
+        [void]$t.sheet.Columns.Item($col).Delete()
+      }
+      Write-Result @{ ok = $true; command = 'delete-columns'; workbook = [string]$t.workbook.Name; sheet = [string]$t.sheet.Name; at = $at; count = $count }
+      exit 0
+    }
+
     default {
       Write-Failure 'UNKNOWN_COMMAND' ('Unknown command "' + $Command + '".')
     }

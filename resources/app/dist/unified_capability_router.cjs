@@ -256,6 +256,13 @@ function detectSystemControlIntent(lower) {
   return detected;
 }
 
+function detectClientIntent(lower) {
+  if (/\badd\s+(?:all\s+of\s+)?(?:that|this|it)\s+to\s+excel\b/i.test(lower)) return 'addExcel';
+  if (/\b(?:check|find|look up|verify)\b.*\b(?:their|the|this)\s+website\b/i.test(lower)) return 'website';
+  if (/\b(?:find|research|look up)\s+(?:this|the)\s+client\b/i.test(lower)) return 'find';
+  return null;
+}
+
 // ── UTILITY HELPERS ──────────────────────────────────────────────────────────
 
 function extractTopic(text, removeRegex) {
@@ -469,6 +476,50 @@ class UnifiedCapabilityRouter {
     }
 
     // =========================================================================
+    // 0a-v. CLIENT DISCOVERY (evidence-gated, no fabricated contact data)
+    // =========================================================================
+    const clientIntent = detectClientIntent(lower);
+    if (clientIntent) {
+      try {
+        const cd = require(path.join(__dirname, 'client_discovery.cjs'));
+        const evidence = Array.isArray(opts.evidence) ? opts.evidence : [];
+        if (clientIntent === 'website') {
+          const url = opts.website || (trimmed.match(/https?:\/\/\S+/i) || [])[0];
+          if (!url) return { handled: true, action: 'WEBSITE_URL_REQUIRED', reply: '[!] No URL supplied. Give me the candidate website and I will probe it. I do not invent domains.' };
+          const r = await cd.probeWebsite(url);
+          return { handled: true, action: 'WEBSITE_PROBE', reply: r.ok ? `[OK] Website reachable: ${r.url}. Title: ${r.title || 'not available'}.` : `[!] ${cd.WEBSITE_NOT_FOUND}. ${r.reason || ''}`, data: r };
+        }
+        if (clientIntent === 'addExcel') {
+          if (opts.confirm !== true) {
+            return { handled: true, action: 'CLIENT_EXCEL_APPROVAL', reply: '[!] Writing a client record is a medium-risk action. Confirm explicitly and supply the workbook, or POST /api/client-discovery/add-to-excel with confirm:true.' };
+          }
+          const r = await cd.addToExcel(opts.input || opts, evidence, opts);
+          return {
+            handled: true,
+            action: r.ok ? 'CLIENT_EXCEL_WRITTEN' : 'CLIENT_EXCEL_FAILED',
+            reply: r.ok ? `[OK] Client ${r.clientId} written to ${r.wrote.workbook} (${r.wrote.sheet}). Verification: ${r.verification.companyCellMatches ? 'company cell matched' : 'readback did not match'}. ${r.websiteStatus}.` : `[!] ${r.error || r.code}`,
+            data: r
+          };
+        }
+        const name = opts.clientName || opts.companyName || (trimmed.match(/\bclient\s+(.+)$/i) || [])[1] || 'Unknown client';
+        const ev = [...evidence];
+        if (opts.website) {
+          const probe = await cd.probeWebsite(opts.website);
+          if (probe.ok) ev.push({ field: 'website', value: probe.url, source: 'live probe', url: probe.url, confidence: 'verified', checkedAt: new Date().toISOString() });
+        }
+        const a = cd.analyze({ companyName: name }, ev);
+        return {
+          handled: true,
+          action: 'CLIENT_FOUND',
+          reply: [cd.toMarkdown(a), `Confidence: ${a.overallConfidence}. No missing value was invented.`].join('\n'),
+          data: a
+        };
+      } catch (err) {
+        return { handled: true, action: 'CLIENT_ERROR', reply: `[!] Client research error: ${err.message}`, error: err.message };
+      }
+    }
+
+    // =========================================================================
     // 0a-iv. SYSTEM CONTROL MATRIX (honest statuses, token-gated power)
     // =========================================================================
     const systemControlIntent = detectSystemControlIntent(lower);
@@ -572,10 +623,34 @@ class UnifiedCapabilityRouter {
             data: r
           };
         }
+        const sr = require(path.join(__dirname, 'skill_replay.cjs'));
+        const items = w.list().skills;
+        const skill = opts.skill || (opts.skillId ? w.get(opts.skillId) : (items[0] && w.get(items[0].id)));
+        if (!skill) {
+          return { handled: true, action: 'WORKFLOW_NO_SKILL', reply: '[!] No saved skill candidate to replay.' };
+        }
+        if (opts.confirm !== true) {
+          const preview = w.dryRun(skill.id);
+          return {
+            handled: true,
+            action: 'WORKFLOW_REPLAY_APPROVAL',
+            reply: ['[!] Replay is opt-in. No action has been executed.', ...preview.steps.map((s) => `- ${s.order}. ${s.action} on ${s.wouldActOn}`), 'Confirm with confirm:true to start replay.'].join('\n'),
+            data: preview
+          };
+        }
+        const stepMode = /step by step|one step|single step/i.test(lower);
+        const started = sr.start(skill.id, { skill, mode: stepMode ? 'step' : 'run', requireConfirm: false });
+        if (!started.ok) return { handled: true, action: 'WORKFLOW_REPLAY_FAILED', reply: `[!] ${started.error}` };
+        if (stepMode) {
+          const step = await sr.executeStep(started.sessionId, { confirm: true });
+          return { handled: true, action: 'WORKFLOW_STEP_EXECUTED', reply: `[OK] Step result: ${step.trace ? step.trace.result : step.code}. Session ${started.sessionId}.`, data: step };
+        }
+        const result = await sr.runAll(started.sessionId, { autoConfirm: true });
         return {
           handled: true,
-          action: 'WORKFLOW_REPLAY_NOT_IMPLEMENTED',
-          reply: '[!] Replay execution is NOT_IMPLEMENTED. I will not claim a workflow ran. Ask for a dry run, or publish the skill for manual use.'
+          action: result.ok ? 'WORKFLOW_REPLAY_COMPLETED' : 'WORKFLOW_REPLAY_FAILED',
+          reply: `[${result.ok ? 'OK' : '!'}] Replay ${result.status}: ${result.stepsExecuted} step(s). ${result.error || 'No fabricated success.'}`,
+          data: result
         };
       } catch (err) {
         return { handled: true, action: 'WORKFLOW_ERROR', reply: `[!] Workflow error: ${err.message}`, error: err.message };

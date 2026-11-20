@@ -111,6 +111,56 @@ const CATALOG = [
     },
   },
   {
+    id: 'developer.ide_state',
+    keywords: ['ide state', 'current branch', 'open file', 'selected code', 'git status', 'current terminal', 'diagnostics'],
+    check() {
+      try {
+        const ide = require(path.join(DIST, 'ide_state.cjs'));
+        return { status: 'PARTIAL', reason: 'read-only git + UIA focus/window composition; diagnostics and open tabs NOT_IMPLEMENTED', evidence: { repository: ide.REPO } };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'system.telemetry',
+    keywords: ['performance telemetry', 'latency', 'failure rate', 'command latency', 'observability'],
+    check() {
+      try {
+        const t = require(path.join(DIST, 'performance_telemetry.cjs'));
+        const s = t.summary();
+        return { status: 'AVAILABLE', reason: 'reported-operation latency and failure counters; no continuous capture', evidence: { totalOperations: s.totalOperations, policy: s.policy } };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'skill.replay',
+    keywords: ['run the workflow', 'run workflow', 'step by step workflow', 'replay skill', 'pause workflow', 'stop workflow', 'action center'],
+    check() {
+      try {
+        const sr = require(path.join(DIST, 'skill_replay.cjs'));
+        return {
+          status: 'AVAILABLE',
+          reason: `${sr.STATUS.supportedActions.length} real action handlers; unsupported actions fail closed; traces written to disk`,
+          evidence: { actions: sr.STATUS.supportedActions, controls: sr.STATUS.controls, traceDir: sr.TRACE_DIR },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'research.client_discovery',
+    keywords: ['find this client', 'client research', 'company website', 'find client', 'google maps client', 'website not found'],
+    check() {
+      try {
+        const cd = require(path.join(DIST, 'client_discovery.cjs'));
+        const r = cd.analyze({ companyName: 'Test' }, []);
+        return {
+          status: r.record.website === cd.WEBSITE_NOT_FOUND && r.record.phone === cd.PHONE_NOT_VERIFIED ? 'AVAILABLE' : 'DEGRADED',
+          reason: 'evidence reconciliation, public URL probing and verified Excel writeback; missing data is reported verbatim',
+          evidence: { columns: cd.FIELDS.length, websiteRule: cd.WEBSITE_NOT_FOUND, phoneRule: cd.PHONE_NOT_VERIFIED },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
     id: 'system.controls',
     keywords: ['bluetooth', 'wifi', 'airplane mode', 'battery saver', 'night light', 'volume', 'brightness', 'restart the pc', 'shutdown', 'lock the computer', 'live captions', 'system control'],
     check() {
