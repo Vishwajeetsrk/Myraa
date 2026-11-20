@@ -30,7 +30,7 @@ Universal desktop operator upgrade. All items below were live-tested; features t
 
 ### Notes
 - Not implemented and reported honestly: Outlook draft stage, IDE diagnostics/open tabs, screenshot/Figma-to-site, deployment/monitoring engines, named autonomy levels.
-- Installer binaries have not been rebuilt for 9.8.0; see `INSTALLER_STATUS.md`.
+- Unsigned 9.8.0 NSIS and portable installers were built and verified; signing requires an EV certificate.
 
 ## [9.7.0] - 2026-11-18
 

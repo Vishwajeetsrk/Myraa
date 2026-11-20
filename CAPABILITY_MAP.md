@@ -91,7 +91,7 @@ Evidence discipline: `Found / Verified / Inferred / Estimated / Suggested / Unkn
 
 ## 5. Next increments, in order
 
-1. Push the local commits to remote once the owner explicitly approves.
+1. Signed installer (external EV certificate required; current 9.8.0 installers are unsigned).
 2. Screenshot/Figma/reference-driven website generation (existing generator is natural-language only).
 3. Autonomy levels 0-5 as a visible, reversible control surface.
 4. Deployment, monitoring dashboards and maintenance mode (frameworks exist, engines do not).
