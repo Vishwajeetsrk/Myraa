@@ -5433,6 +5433,24 @@ async function startServer() {
     console.warn("[Server] Could not mount Reasoning Frameworks:", e.message);
   }
   try {
+    // Workflow-to-Skill Compiler: compiles observed workflows into editable
+    // skill candidates and publishes into the existing skill registry.
+    const workflowSkills = require(import_path2.default.join(__dirname, "workflow_skill_compiler.cjs"));
+    app.use("/api/workflow-skills", workflowSkills.createRouter());
+    console.log("[Server] Workflow Skill Compiler mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount Workflow Skill Compiler:", e.message);
+  }
+  try {
+    // System Control Matrix: one honest interface for Windows settings and
+    // token-gated power actions. Reuses existing desktopAutomation helpers.
+    const systemControls = require(import_path2.default.join(__dirname, "system_control_matrix.cjs"));
+    app.use("/api/system-control", systemControls.createRouter());
+    console.log("[Server] System Control Matrix mounted");
+  } catch(e) {
+    console.warn("[Server] Could not mount System Control Matrix:", e.message);
+  }
+  try {
     // Business OS: read-only awareness over business/ (leads, finance, templates, email, spreadsheets)
     const businessOS = require(import_path2.default.join(__dirname, "business_os.cjs"));
     app.use("/api/business", businessOS.createRouter());

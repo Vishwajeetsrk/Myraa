@@ -211,6 +211,51 @@ function detectFrameworkIntent(lower) {
   return null;
 }
 
+let pendingWorkflowToken = null;
+
+function detectWorkflowIntent(lower) {
+  if (/\b(?:save this skill|confirm (?:the |this )?skill|yes save (?:it|this))\b/i.test(lower)) return 'confirm';
+  if (/\b(?:dry run|preview)\b.*\b(?:workflow|skill)\b/i.test(lower)) return 'dryRun';
+  if (/\brun\b.*\b(?:workflow|skill)\b/i.test(lower)) return 'run';
+  if (/\b(?:learn this|learn how i|watch what i(?:'|a)m doing|automate this|do what i just did|turn this into a skill|save this workflow)\b/i.test(lower)) return 'learn';
+  return null;
+}
+
+const SYSTEM_CONTROL_PHRASES = [
+  [/\bwifi\b|\bwi-fi\b/i, 'wifi'],
+  [/\bbluetooth\b/i, 'bluetooth'],
+  [/\bairplane\s*mode\b/i, 'airplaneMode'],
+  [/\bbattery\s*saver\b/i, 'batterySaver'],
+  [/\bnight\s*light\b/i, 'nightLight'],
+  [/\bmobile\s*hotspot\b/i, 'mobileHotspot'],
+  [/\blive\s*captions\b/i, 'liveCaptions'],
+  [/\bnearby\s*sharing\b/i, 'nearbySharing'],
+];
+
+function detectSystemControlIntent(lower) {
+  let detected = null;
+  if (/\b(?:lower|turn down|decrease|reduce)\s+(?:the\s+)?volume\b/i.test(lower)) detected = { id: 'volumeDown', mode: 'act' };
+  else if (/\b(?:raise|turn up|increase)\s+(?:the\s+)?volume\b/i.test(lower)) detected = { id: 'volumeUp', mode: 'act' };
+  else if (/\b(?:mute|unmute)\b/i.test(lower)) detected = { id: 'mute', mode: 'act' };
+  else if (/\b(?:set\s+volume\s+to|volume\s+to)\s*\d+/i.test(lower)) detected = { id: 'setVolume', mode: 'act' };
+  else if (/\b(?:restart|reboot)\b/i.test(lower)) detected = { id: 'restart', mode: 'prepare' };
+  else if (/\bshut\s*down\b/i.test(lower)) detected = { id: 'shutdown', mode: 'prepare' };
+  else if (/\b(?:put\s+(?:the\s+)?(?:pc|computer)\s+to\s+sleep|sleep\s+the\s+(?:pc|computer))\b/i.test(lower)) detected = { id: 'sleep', mode: 'prepare' };
+  else if (/\block\s+(?:the\s+)?(?:pc|computer|screen)\b/i.test(lower)) detected = { id: 'lock', mode: 'prepare' };
+  else {
+    for (const [re, id] of SYSTEM_CONTROL_PHRASES) {
+      if (re.test(lower)) { detected = { id, mode: 'act' }; break; }
+    }
+  }
+  if (!detected) return null;
+
+  // A question about a control is never an instruction to change it.
+  if (/\b(?:what|status|can you|could you|do you|does|is|are|check|tell me|support|supported|available)\b/i.test(lower)) {
+    return { id: detected.id, mode: 'status' };
+  }
+  return detected;
+}
+
 // ── UTILITY HELPERS ──────────────────────────────────────────────────────────
 
 function extractTopic(text, removeRegex) {
@@ -420,6 +465,120 @@ class UnifiedCapabilityRouter {
         };
       } catch (err) {
         return { handled: true, action: 'FRAMEWORK_ERROR', reply: `[!] Framework error: ${err.message}`, error: err.message };
+      }
+    }
+
+    // =========================================================================
+    // 0a-iv. SYSTEM CONTROL MATRIX (honest statuses, token-gated power)
+    // =========================================================================
+    const systemControlIntent = detectSystemControlIntent(lower);
+    if (systemControlIntent) {
+      try {
+        const sm = require(path.join(__dirname, 'system_control_matrix.cjs'));
+        const control = sm.get(systemControlIntent.id);
+        if (!control) return { handled: false };
+        if (systemControlIntent.mode === 'status') {
+          return {
+            handled: true,
+            action: 'SYSTEM_CONTROL_STATUS',
+            reply: `[OK] ${control.label}: ${control.status}. ${control.note} No action was taken.`,
+            data: control
+          };
+        }
+        if (systemControlIntent.mode === 'prepare') {
+          const r = sm.prepare(control.id, {});
+          return {
+            handled: true,
+            action: 'SYSTEM_CONTROL_CONFIRMATION',
+            reply: [
+              `[!] ${control.label} requires explicit confirmation.`,
+              `Token: ${r.confirmation_token || 'unavailable'}`,
+              r.warning || control.note,
+              `To proceed: POST /api/system-control/execute with id='${control.id}', confirmationToken and confirm:true.`
+            ].join('\n'),
+            data: r
+          };
+        }
+        const body = { id: control.id };
+        if (control.id === 'setVolume') {
+          const m = lower.match(/(\d{1,3})\s*(?:%|percent)?/);
+          body.level = m ? Math.min(100, Math.max(0, Number(m[1]))) : 50;
+        }
+        const r = sm.execute(control.id, body);
+        const line = r.ok
+          ? `[OK] ${control.label}: ${r.honestResult || r.verification || 'action attempted'}.`
+          : `[!] ${control.label} could not be completed: ${r.error || r.code}.`;
+        return {
+          handled: true,
+          action: 'SYSTEM_CONTROL',
+          reply: [line, `Status: ${control.status}. ${control.note}`.trim()].join('\n'),
+          data: r
+        };
+      } catch (err) {
+        return { handled: true, action: 'SYSTEM_CONTROL_ERROR', reply: `[!] System control error: ${err.message}`, error: err.message };
+      }
+    }
+
+    // =========================================================================
+    // 0a-iii. WORKFLOW LEARNING / SKILL COMPILER
+    // =========================================================================
+    const workflowIntent = detectWorkflowIntent(lower);
+    if (workflowIntent) {
+      try {
+        const w = require(path.join(__dirname, 'workflow_skill_compiler.cjs'));
+        if (workflowIntent === 'learn') {
+          const aw = require(path.join(__dirname, 'live_awareness_routes.cjs'));
+          const candidates = typeof aw.detectWorkflows === 'function' ? aw.detectWorkflows() : [];
+          if (!candidates.length) {
+            return {
+              handled: true,
+              action: 'WORKFLOW_NOT_DETECTED',
+              reply: '[!] No repeated workflow has been detected yet. Work through the task at least twice with observation enabled, then ask again. Nothing was invented.'
+            };
+          }
+          const r = w.compile(candidates[0], {});
+          if (r.token) pendingWorkflowToken = r.token;
+          const c = r.candidate;
+          return {
+            handled: true,
+            action: 'WORKFLOW_CANDIDATE',
+            reply: [
+              `[OK] Workflow candidate: ${c.name}`,
+              `Steps: ${c.steps.length} | Occurrences: ${c.occurrences === null ? 'unknown' : c.occurrences} | Confidence: ${c.confidence === null ? 'unknown' : c.confidence}`,
+              'Observation is separate from learning. This candidate was NOT saved.',
+              "Say 'save this skill' to confirm, or edit steps first through /api/workflow-skills."
+            ].join('\n'),
+            data: { candidate: c, approvalToken: r.token }
+          };
+        }
+        if (workflowIntent === 'confirm') {
+          if (!pendingWorkflowToken) {
+            return { handled: true, action: 'WORKFLOW_NO_PENDING', reply: '[!] No pending skill candidate to confirm. Ask to learn the workflow first.' };
+          }
+          const r = w.confirmPending(pendingWorkflowToken);
+          if (!r.ok) return { handled: true, action: 'WORKFLOW_CONFIRM_FAILED', reply: `[!] ${r.error}` };
+          pendingWorkflowToken = null;
+          return { handled: true, action: 'WORKFLOW_SKILL_SAVED', reply: `[OK] Skill candidate saved as DRAFT (${r.skill.id}, version ${r.skill.version}). Edit and dry run before publishing.`, data: r.skill };
+        }
+        if (workflowIntent === 'dryRun') {
+          const items = w.list().skills;
+          const id = opts.skillId || (items[0] && items[0].id);
+          if (!id) return { handled: true, action: 'WORKFLOW_NO_SKILL', reply: '[!] No saved skill candidate to dry run.' };
+          const r = w.dryRun(id);
+          return {
+            handled: true,
+            action: 'WORKFLOW_DRY_RUN',
+            reply: [`[OK] Dry run of ${r.name}: ${r.steps.length} step(s).`, ...r.steps.map((s) => `- ${s.order}. ${s.wouldUseApp}: ${s.wouldActOn} (${s.action})`), r.note, r.limitation].join('\n'),
+            data: r
+          };
+        }
+        return {
+          handled: true,
+          action: 'WORKFLOW_REPLAY_NOT_IMPLEMENTED',
+          reply: '[!] Replay execution is NOT_IMPLEMENTED. I will not claim a workflow ran. Ask for a dry run, or publish the skill for manual use.'
+        };
+      } catch (err) {
+        return { handled: true, action: 'WORKFLOW_ERROR', reply: `[!] Workflow error: ${err.message}`, error: err.message };
       }
     }
 

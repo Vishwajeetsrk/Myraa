@@ -111,6 +111,37 @@ const CATALOG = [
     },
   },
   {
+    id: 'system.controls',
+    keywords: ['bluetooth', 'wifi', 'airplane mode', 'battery saver', 'night light', 'volume', 'brightness', 'restart the pc', 'shutdown', 'lock the computer', 'live captions', 'system control'],
+    check() {
+      try {
+        const sm = require(path.join(DIST, 'system_control_matrix.cjs'));
+        const s = sm.status();
+        return {
+          status: 'PARTIAL',
+          reason: `${s.counts.Supported || 0} supported, ${s.counts.Partial || 0} settings-page only, ${s.counts['Requires confirmation'] || 0} token-gated power actions; no state readback`,
+          evidence: { counts: s.counts, policy: s.policy },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
+    id: 'workflow.skill_compiler',
+    keywords: ['learn this', 'learn workflow', 'turn into a skill', 'automate this', 'workflow skill', 'dry run workflow', 'repeatable workflow'],
+    check() {
+      try {
+        const w = require(path.join(DIST, 'workflow_skill_compiler.cjs'));
+        return {
+          status: 'AVAILABLE',
+          reason: w.STATUS.executionImplemented === false
+            ? 'candidate compilation, editing, dry run and publishing are implemented; replay execution is NOT_IMPLEMENTED'
+            : 'compiler present',
+          evidence: { storage: w.DATA_DIR, publicationDir: w.SKILLS_DIR, confirmationRequired: w.STATUS.safety.confirmationRequired },
+        };
+      } catch (e) { return { status: 'UNAVAILABLE', reason: e.message, evidence: null }; }
+    },
+  },
+  {
     id: 'reasoning.frameworks',
     keywords: ['reality check', 'prd', 'product requirements', 'threat model', 'security review', 'privacy review', 'legal awareness', 'compliance review', 'what will break', 'weakness audit', 'bug report', 'final report'],
     check() {

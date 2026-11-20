@@ -28,7 +28,9 @@ This document is a status record, not a promise. A capability is called VERIFIED
 | VBA explanation/review/rewrite (section 3) | `vba_analyzer.cjs`, `vba_routes.cjs`, `/api/vba/*`, voice intents | VERIFIED | Spec's `header` macro: 5 labels explained, `Donation Onwer` caught, 9 findings, safe rewrite generated with `H1:L1`, no `.Select`, no `FormulaR1C1`, error handler added. Complex macro correctly refused rewrite. |
 | Business awareness (sections 36-38, 60) | `business_os.cjs`, `/api/business/*`, business voice intents | VERIFIED | Earlier this project: 20 real leads, honest zeros, path-escape blocking, all routes HTTP 200. |
 | Reasoning frameworks (sections 9-17, 22, 28-30, 37-41, 51-52, 59-60) | `reasoning_frameworks.cjs`, `reasoning_routes.cjs` | VERIFIED | 17 frameworks plus plans/legal/report/decision. All fields UNKNOWN by default; India checklist has 25 items all `Unclear` with `NOT_CHECKED`. |
-| Honest capability reporting (section 59) | `capability_gap_analyzer.cjs` | VERIFIED | Reports `office.excel_live`, `office.vba`, `reasoning.frameworks` with real evidence; `office.excel` remains PARTIAL. |
+| Honest capability reporting (section 59) | `capability_gap_analyzer.cjs` | VERIFIED | Reports `office.excel_live`, `office.vba`, `reasoning.frameworks`, `workflow.skill_compiler`, `system.controls` with real evidence; `office.excel` remains PARTIAL. |
+| Workflow-to-skill compiler (sections 11-13, 22, 44-46) | `workflow_skill_compiler.cjs`, `/api/workflow-skills/*`, voice intents | VERIFIED | Live session candidate -> compile (APPROVAL_REQUIRED + token) -> explicit confirm -> edit (version bump) -> dry run (no changes) -> publish into existing skill registry -> run recording -> improvement from failure. Replay execution is explicitly NOT_IMPLEMENTED. |
+| System control matrix (sections 26-27, 55) | `system_control_matrix.cjs`, `/api/system-control/*`, voice intents | VERIFIED | 27 controls with honest statuses (Supported/Partial/Requires confirmation/Requires elevation/Not implemented); reuses existing volume and token-gated power helpers; power actions require a token; destructive actions were not executed during testing. |
 
 ## 2. Existing systems reused, not replaced
 
@@ -73,8 +75,8 @@ Evidence discipline: `Found / Verified / Inferred / Estimated / Suggested / Unkn
 | Website design from screenshots/Figma/references | NOT_IMPLEMENTED | Existing site generator handles natural-language builds; screenshot/Figma ingestion not built. |
 | Live legal/compliance research with current official sources | FRAMEWORK + NOT_IMPLEMENTED | The structure exists. No live government-source fetch, no date-stamped citation verification. India DPDP Rules 2025 commencement, CERT-In directions and GST place-of-supply must be checked on official sources per transaction; nothing is asserted here. |
 | Repository health, code review, A/B, deployment, observability, maintenance, scale modes | FRAMEWORK + PARTIAL | Structured checklists exist; automated evidence collection is partial via existing coding/git/test services. No deployment engine, no monitoring dashboards. |
-| Workflow-to-skill compiler | NOT_IMPLEMENTED | Passive learning records workflows; no confirmed-candidate-to-skill compilation with versioning and dry-run. |
-| System control matrix (Wi-Fi, Bluetooth, airplane mode, battery, night light, captions, power) | NOT_IMPLEMENTED | Not audited into one endpoint; no honest status matrix. |
+| Skill replay execution | NOT_IMPLEMENTED | The compiler creates/edits/dry-runs/publishes instruction-only skills. "Run the workflow" honestly returns NOT_IMPLEMENTED; no automation is claimed to have executed. |
+| System state readback | PARTIAL | The matrix reports status and opens settings pages; it does not read back Wi-Fi, Bluetooth, brightness or mute state. "Opened settings" is never reported as "setting changed". |
 | IDE orchestration (open tabs, diagnostics, terminal state, branch, selected code) | PARTIAL | UIA focus/selection and git services exist; no unified IDE state endpoint. |
 | GitHub PR automation, issue investigation | PARTIAL | Connector exists; token/OAuth is `AUTHENTICATION_REQUIRED`. |
 | Clipboard inference | FRAMEWORK + PARTIAL | `getClipboard()` exists; used only on explicit "this macro" voice request. No continuous retention, by design. |
@@ -83,13 +85,13 @@ Evidence discipline: `Found / Verified / Inferred / Estimated / Suggested / Unkn
 
 ## 5. Next increments, in order
 
-1. HTTP verification of `/api/frameworks` mount, then commit the framework work.
-2. System control matrix endpoint with `Supported / Partial / Requires confirmation / Requires elevation` statuses.
-3. Workflow-to-skill compiler with confidence threshold, confirmation, editable steps, dry-run and versioning.
-4. Excel depth: named ranges, sort/filter, tables, conditional formatting, data validation, readback verification.
-5. IDE state endpoint composing existing git, terminal, UIA focus and diagnostics sources.
-6. Cross-application workflow orchestrator built on existing engines, not a new runner.
-7. Live legal-awareness research adapter with official-source allowlist and date-stamped citations.
+1. Excel depth: named ranges, sort/filter, tables, conditional formatting, data validation, readback verification.
+2. Skill replay execution with step-by-step mode, pause/resume/stop and visible Action Playback view (never fake a run).
+3. IDE state endpoint composing existing git, terminal, UIA focus and diagnostics sources.
+4. Client discovery engine with strict "Website: Not found" rule, source URLs and confidence labels.
+5. Cross-application workflow orchestrator built on existing engines, not a new runner.
+6. Live legal-awareness research adapter with official-source allowlist and date-stamped citations.
+7. Performance telemetry: command latency, screen-analysis latency, tool startup and failure rate.
 
 ## 6. Standing rules
 
